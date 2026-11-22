@@ -96,7 +96,9 @@ def can_access_hospital(user: dict, hospital_id: str, hospital_info: dict | None
         return True
 
     if role == HOSPITAL:
-        return user.get("hospital_id") == hospital_id
+        u_hid = str(user.get("hospital_id") or "").strip().lower()
+        t_hid = str(hospital_id or "").strip().lower()
+        return bool(u_hid and u_hid == t_hid)
 
     # For district or state admins, fetch hospital geo metadata if not provided
     geo = hospital_info or get_hospital_geo(hospital_id)
@@ -142,13 +144,12 @@ def can_view_referral(user: dict, referral: dict) -> bool:
     # Hospital users can only view referrals where they are the sender or receiver
     if role == HOSPITAL:
         h_id = user.get("hospital_id")
-        return bool(
-            h_id
-            and (
-                referral.get("from_hospital_id") == h_id
-                or referral.get("to_hospital_id") == h_id
-            )
-        )
+        if not h_id:
+            return False
+        h_id_lower = str(h_id).lower()
+        from_id = str(referral.get("from_hospital_id") or "").lower()
+        to_id = str(referral.get("to_hospital_id") or "").lower()
+        return h_id_lower in (from_id, to_id)
 
     # For regional admins, inspect states and districts of both source and destination
     from_geo = {
@@ -240,9 +241,11 @@ def can_update_referral_status(user: dict, referral: dict, new_status: str | Non
     if user.get("role") != HOSPITAL:
         return False
 
-    hospital_id = user.get("hospital_id")
-    is_source = referral.get("from_hospital_id") == hospital_id
-    is_destination = referral.get("to_hospital_id") == hospital_id
+    hospital_id = str(user.get("hospital_id") or "").strip().lower()
+    from_id = str(referral.get("from_hospital_id") or "").strip().lower()
+    to_id = str(referral.get("to_hospital_id") or "").strip().lower()
+    is_source = bool(hospital_id and hospital_id == from_id)
+    is_destination = bool(hospital_id and hospital_id == to_id)
 
     if not is_source and not is_destination:
         return False
@@ -250,12 +253,13 @@ def can_update_referral_status(user: dict, referral: dict, new_status: str | Non
     if new_status is None:
         return True
 
-    current_status = referral.get("status")
+    current_status = str(referral.get("status") or "").upper().strip()
+    new_status = str(new_status).upper().strip()
 
     # Source hospital permissions
     if is_source:
         if new_status == "IN_TRANSIT":
-            return current_status == "ACCEPTED"
+            return current_status in ("ACCEPTED", "ACCEPTED_AND_RESERVED")
         if new_status == "CANCELLED":
             return current_status == "PENDING"
         # Source hospital cannot accept, reject, arrive, treat, or complete
@@ -266,13 +270,13 @@ def can_update_referral_status(user: dict, referral: dict, new_status: str | Non
         if new_status in ("ACCEPTED", "REJECTED"):
             return current_status == "PENDING"
         if new_status == "ARRIVED":
-            return current_status == "IN_TRANSIT"
-        if new_status == "TREATMENT_ACTIVE":
-            return current_status in ("ARRIVED", "ACCEPTED")
+            return current_status in ("IN_TRANSIT", "ACCEPTED", "ACCEPTED_AND_RESERVED")
+        if new_status in ("TREATMENT_ACTIVE", "IN_TREATMENT"):
+            return current_status in ("ARRIVED", "ACCEPTED", "IN_TRANSIT")
         if new_status in ("COMPLETED", "DISCHARGED"):
-            return current_status in ("TREATMENT_ACTIVE", "ARRIVED")
+            return current_status in ("TREATMENT_ACTIVE", "IN_TREATMENT", "ARRIVED")
         if new_status in ("TRANSFERRED", "DIED"):
-            return current_status in ("ARRIVED", "TREATMENT_ACTIVE", "ACCEPTED")
+            return current_status in ("ARRIVED", "TREATMENT_ACTIVE", "IN_TREATMENT", "ACCEPTED")
 
     return False
 

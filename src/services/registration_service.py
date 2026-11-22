@@ -535,7 +535,7 @@ class RegistrationService:
         try:
             from src.services.workflow_notification_service import WorkflowNotificationService
             workflow_notif_svc = WorkflowNotificationService(self.session)
-            workflow_notif_svc.notify_application_submitted(app, client_ip=client_ip)
+            workflow_notif_svc.notify_application_submitted(app, tracking_token=raw_token, client_ip=client_ip)
         except Exception as notif_err:
             logger.error("Failed to generate workflow notifications for submission %s: %s", app.application_id, notif_err)
 

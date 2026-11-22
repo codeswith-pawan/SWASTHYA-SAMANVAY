@@ -171,7 +171,8 @@ def test_applicant_registration_submission_notification_and_outbox(workflow_db_s
     """
     Test 1: When an applicant submits registration, they receive:
     - An in-app Notification (APPLICATION_SUBMITTED)
-    - A transactional RegistrationEmailOutbox record with tracking URL
+    - A transactional RegistrationEmailOutbox record containing Official Application Number,
+      Secret Tracking Token, and direct portal tracking URL.
     """
     app_record, res = _create_and_submit_test_application(workflow_db_session)
 
@@ -199,6 +200,13 @@ def test_applicant_registration_submission_notification_and_outbox(workflow_db_s
     assert payload["status"] == "SUBMITTED"
     assert "tracking_url" in payload
     assert app_record.application_number in payload["tracking_url"]
+    assert "tracking_token" in payload
+    assert payload["tracking_token"] == res["tracking_token"]
+    assert res["tracking_token"] in payload["tracking_url"]
+    assert payload["current_stage_display"] == "District Verification"
+    assert res["tracking_token"] in payload["body_text"]
+    assert app_record.application_number in payload["body_text"]
+    assert res["tracking_token"] in payload["body_html"]
 
 
 def test_hierarchical_reviewer_routing_district_hospital_application(workflow_db_session, auth_tokens, client):
@@ -714,7 +722,132 @@ def test_sensitive_credentials_never_in_notification_content(workflow_db_session
         .all()
     )
     for entry in outbox_entries:
-        if entry.event_type != "ACCOUNT_ACTIVATION":
+        if entry.event_type not in ("ACCOUNT_ACTIVATION", "APPLICATION_SUBMITTED"):
             payload_str = entry.payload.lower()
             for tok in forbidden_tokens:
                 assert tok not in payload_str, f"Forbidden token '{tok}' in outbox payload {entry.outbox_id}"
+        else:
+            # Transactional delivery payloads (activation links or submission tracking credentials)
+            # must strictly NEVER leak plaintext passwords, OTP verification codes, or JWT session tokens
+            payload_str = entry.payload.lower()
+            for leak_tok in ["password", "otp", "jwt", "bearer "]:
+                assert leak_tok not in payload_str, f"Critical credential leak '{leak_tok}' in {entry.event_type} payload"
+
+
+# ==============================================================================
+# 7. AUTOMATED APPLICATION SUBMISSION EMAIL CONFIRMATION SUITE
+# ==============================================================================
+
+def test_submission_email_confirmation_and_delivery(workflow_db_session):
+    """
+    Verifies automated email confirmation upon registration application submission:
+    1. Submitting an application atomically enqueues an outbox email.
+    2. The outbox payload contains the exact application_number and tracking_token.
+    3. The email body contains:
+       - Applicant Name / Organization Name
+       - Official Application Number
+       - Secret Tracking Token
+       - Human-readable Review Stage (District Verification)
+       - Direct portal tracking instructions (/track and direct link)
+       - Clear prototype identifier
+    4. OutboxWorker processes the enqueued email and delivers it via email provider.
+    """
+    from src.services.email_service import SimulatedEmailProvider
+    from src.workers.outbox_worker import OutboxWorker
+
+    sim_provider = SimulatedEmailProvider()
+    app_record, res = _create_and_submit_test_application(
+        workflow_db_session, applicant_type="HOSPITAL", state="Punjab", district="Mohali"
+    )
+
+    # 1. Verify outbox record was enqueued in the same database transaction
+    outbox_record = (
+        workflow_db_session.query(RegistrationEmailOutbox)
+        .filter_by(recipient_email=app_record.applicant_email, event_type="APPLICATION_SUBMITTED")
+        .first()
+    )
+    assert outbox_record is not None
+    assert outbox_record.status == "PENDING"
+    assert app_record.application_number in outbox_record.subject
+
+    # 2. Verify payload fields
+    payload = json.loads(outbox_record.payload)
+    assert payload["application_number"] == app_record.application_number
+    assert payload["applicant_name"] == app_record.applicant_name
+    assert payload["tracking_token"] == res["tracking_token"]
+    assert payload["current_stage_display"] == "District Verification"
+    assert "token=" in payload["tracking_url"]
+    assert res["tracking_token"] in payload["tracking_url"]
+
+    # 3. Verify text and HTML body contents
+    body_text = payload["body_text"]
+    assert app_record.applicant_name in body_text
+    assert app_record.application_number in body_text
+    assert res["tracking_token"] in body_text
+    assert "District Verification" in body_text
+    assert "/track" in body_text
+    assert "ArogyaSetu Grid" in body_text
+
+    body_html = payload["body_html"]
+    assert app_record.application_number in body_html
+    assert res["tracking_token"] in body_html
+    assert "District Verification" in body_html
+    assert "Track Application Status" in body_html
+
+    applicant_email = app_record.applicant_email
+    app_num = app_record.application_number
+
+    # 4. Process outbox via OutboxWorker
+    worker = OutboxWorker(
+        session_factory=lambda: workflow_db_session,
+        email_provider=sim_provider,
+        worker_id="test_sub_worker",
+    )
+    worker_result = worker.run_once()
+    assert worker_result["succeeded"] >= 1
+
+    # 5. Verify email was delivered by provider
+    sent_email = sim_provider.get_last_email(to_email=applicant_email)
+    assert sent_email is not None
+    assert app_num in sent_email["subject"]
+    assert res["tracking_token"] in sent_email["body_text"]
+    assert app_num in sent_email["body_text"]
+    assert res["tracking_token"] in sent_email["body_html"]
+
+
+def test_submission_duplicate_submission_idempotency(workflow_db_session):
+    """
+    Verifies that idempotency guarantees prevent duplicate submission confirmation emails:
+    1. Submitting once creates exactly 1 outbox record.
+    2. Attempting to submit an already SUBMITTED application is rejected.
+    3. Direct notification invocation on the same stage returns the existing record without duplicating.
+    """
+    from src.services.registration_service import RegistrationService, InvalidStageTransitionError
+
+    app_record, res = _create_and_submit_test_application(
+        workflow_db_session, applicant_type="DISTRICT", state="Punjab", district="Mohali"
+    )
+
+    initial_outbox_count = (
+        workflow_db_session.query(RegistrationEmailOutbox)
+        .filter_by(recipient_email=app_record.applicant_email, event_type="APPLICATION_SUBMITTED")
+        .count()
+    )
+    assert initial_outbox_count == 1
+
+    # Attempt to submit again on the domain service -> raises InvalidStageTransitionError
+    reg_svc = RegistrationService(workflow_db_session)
+    with pytest.raises(InvalidStageTransitionError, match="Only DRAFT applications can be submitted"):
+        reg_svc.submit_application(app_record.application_id)
+
+    # Calling notification service again directly with idempotency check
+    notif_svc = WorkflowNotificationService(workflow_db_session)
+    notif_svc.notify_application_submitted(app_record, tracking_token=res["tracking_token"])
+    workflow_db_session.commit()
+
+    after_outbox_count = (
+        workflow_db_session.query(RegistrationEmailOutbox)
+        .filter_by(recipient_email=app_record.applicant_email, event_type="APPLICATION_SUBMITTED")
+        .count()
+    )
+    assert after_outbox_count == 1

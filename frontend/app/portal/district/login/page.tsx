@@ -14,11 +14,11 @@ export default function DistrictLoginPage() {
       expectedRole="DISTRICT_ADMIN"
       icon={MapPin}
       accentColor={{
-        bg: "bg-indigo-600",
-        text: "text-indigo-700",
-        border: "border-indigo-200",
-        button: "bg-indigo-900 hover:bg-indigo-800",
-        lightBg: "bg-indigo-50",
+        bg: "bg-[#0B2345]",
+        text: "text-[#0B2345]",
+        border: "border-[#0B2345]/30",
+        button: "bg-[#0B2345] hover:bg-[#07182F]",
+        lightBg: "bg-[#0B2345]/10",
       }}
     />
   );

@@ -2,6 +2,23 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import {
+  Building2,
+  MapPin,
+  UserCheck,
+  FileText,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  ShieldCheck,
+  Phone,
+  Mail,
+  Info,
+  Clock,
+  Check,
+  Landmark,
+} from "lucide-react";
 import { RegistrationNavbar } from "@/components/registration/RegistrationNavbar";
 import { OTPModal } from "@/components/registration/OTPModal";
 import { DocumentUploader } from "@/components/registration/DocumentUploader";
@@ -160,96 +177,130 @@ export default function RegisterStatePage() {
     }
   };
 
+  const stepsList = [
+    { num: 1, label: "State Directorate", icon: Landmark },
+    { num: 2, label: "Directorate & OTP", icon: UserCheck },
+    { num: 3, label: "Mission Order", icon: FileText },
+    { num: 4, label: "Review & Submit", icon: ShieldCheck },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F4F8FC] text-[#14243B] flex flex-col font-sans">
       <RegistrationNavbar />
 
-      <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-8 sm:py-10 space-y-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
+        {/* Breadcrumb & Header Title */}
         <div>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <Link href="/register" className="hover:text-blue-400">Registration Hub</Link>
+          <nav className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-2">
+            <Link href="/" className="hover:text-cyan-700 transition">Portal Home</Link>
             <span>/</span>
-            <span className="text-slate-200">State Directorate</span>
-          </div>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
+            <Link href="/register" className="hover:text-cyan-700 transition">Registration Hub</Link>
+            <span>/</span>
+            <span className="text-slate-800 font-semibold">State Health Directorate</span>
+          </nav>
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-semibold mb-2">
+                <Landmark className="w-3.5 h-3.5 text-cyan-700" />
+                State Executive Tier I Onboarding
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                 State Health Directorate Registration
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Register a State Directorate of Health Services to oversee inter-district medical transfers and regional quotas.
+              <p className="text-sm text-slate-600 mt-1 max-w-2xl">
+                Register a State Directorate of Health Services to coordinate inter-district medical transfers, specialized triage allocations, and regional critical-care capacity.
               </p>
             </div>
             {application && (
-              <span className="rounded-full bg-teal-500/10 border border-teal-500/30 px-3 py-1 text-xs font-mono font-bold text-teal-300">
-                {application.application_number}
-              </span>
+              <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200/80 shadow-sm">
+                <span className="text-[11px] font-medium text-slate-500 uppercase">Draft Ref:</span>
+                <span className="rounded-lg bg-cyan-50 px-2.5 py-1 text-xs font-mono font-bold text-cyan-800 border border-cyan-200/60">
+                  {application.application_number}
+                </span>
+              </div>
             )}
           </div>
         </div>
 
+        {/* Interactive Step Progress Stepper */}
         {!submissionSuccess && (
-          <div className="grid grid-cols-4 gap-2 border-b border-slate-800 pb-5">
-            {[
-              { num: 1, title: "1. State Directorate" },
-              { num: 2, title: "2. Directorate & OTP" },
-              { num: 3, title: "3. Documents" },
-              { num: 4, title: "4. Review & Submit" },
-            ].map((s) => (
-              <div
-                key={s.num}
-                className={`text-center pb-2 border-b-2 font-medium text-xs transition ${
-                  step === s.num
-                    ? "border-teal-500 text-teal-400 font-bold"
-                    : step > s.num
-                    ? "border-emerald-500 text-emerald-400"
-                    : "border-transparent text-slate-500"
-                }`}
-              >
-                {step > s.num ? `✓ ${s.title}` : s.title}
-              </div>
-            ))}
+          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-[0_4px_20px_rgb(15,23,42,0.04)]">
+            <div className="grid grid-cols-4 gap-2 relative">
+              {stepsList.map((s, idx) => {
+                const isCompleted = step > s.num;
+                const isCurrent = step === s.num;
+                const IconComponent = s.icon;
+                return (
+                  <div key={s.num} className="flex flex-col items-center text-center relative z-10">
+                    <div
+                      className={`flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl font-bold text-xs sm:text-sm transition-all duration-200 ${
+                        isCompleted
+                          ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/20"
+                          : isCurrent
+                          ? "bg-cyan-700 text-white shadow-lg shadow-cyan-700/30 ring-4 ring-cyan-500/15"
+                          : "bg-slate-100 text-slate-400 border border-slate-200"
+                      }`}
+                    >
+                      {isCompleted ? <Check className="w-5 h-5 stroke-[2.5]" /> : <IconComponent className="w-5 h-5" />}
+                    </div>
+                    <span
+                      className={`mt-2 text-[11px] sm:text-xs font-semibold tracking-tight transition ${
+                        isCurrent
+                          ? "text-cyan-800 font-bold"
+                          : isCompleted
+                          ? "text-emerald-700"
+                          : "text-slate-400"
+                      }`}
+                    >
+                      Step {s.num}: {s.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
+        {/* Error Alert */}
         {error && (
-          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-start gap-3">
-            <span className="text-base">⚠</span>
-            <div className="flex-1">{error}</div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-xs sm:text-sm text-rose-800 flex items-start gap-3 shadow-sm animate-fade-in-up">
+            <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1 font-medium leading-relaxed">{error}</div>
           </div>
         )}
 
         {submissionSuccess ? (
-          <div className="rounded-3xl border border-emerald-500/40 bg-slate-900/90 p-8 sm:p-12 text-center space-y-6 shadow-2xl">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600/20 border border-emerald-500/40 text-3xl text-emerald-400 shadow-inner">
-              ✓
+          /* Submission Success Screen */
+          <div className="rounded-3xl border border-emerald-200 bg-white/95 backdrop-blur-sm p-8 sm:p-12 text-center space-y-6 shadow-[0_8px_30px_rgb(15,23,42,0.08)] max-w-2xl mx-auto">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-100 border border-emerald-200 text-emerald-600 shadow-sm">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
             <div>
-              <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400 border border-emerald-500/20 uppercase tracking-wider">
-                State Application Submitted
+              <span className="rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200 uppercase tracking-wider">
+                State Application Dispatched
               </span>
-              <h2 className="mt-3 text-2xl font-bold text-white">
+              <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900">
                 Application Submitted for Central National Verification
               </h2>
-              <p className="mt-2 text-xs text-slate-300 max-w-lg mx-auto">
-                Your State Directorate registration has been forwarded to the National Central Health Administration for review and provisioning.
+              <p className="mt-2 text-sm text-slate-600 max-w-lg mx-auto">
+                Your State Health Directorate registration has been securely forwarded to the National Central Health Administration for high-level validation and credentialing.
               </p>
             </div>
 
-            <div className="max-w-md mx-auto rounded-2xl border border-slate-700 bg-slate-950 p-5 text-left space-y-3 font-mono">
+            <div className="max-w-md mx-auto rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left space-y-3 font-mono">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-sans font-bold">
+                <span className="text-[10px] text-slate-500 uppercase font-sans font-bold tracking-wider">
                   Official Application Number
                 </span>
-                <p className="text-base font-bold text-teal-400 select-all">
+                <p className="text-base font-bold text-cyan-800 select-all">
                   {submissionSuccess.applicationNumber}
                 </p>
               </div>
-              <div className="border-t border-slate-800 pt-2">
-                <span className="text-[10px] text-slate-500 uppercase font-sans font-bold">
+              <div className="border-t border-slate-200 pt-2.5">
+                <span className="text-[10px] text-slate-500 uppercase font-sans font-bold tracking-wider">
                   Secret Tracking Token
                 </span>
-                <p className="text-xs text-emerald-400 select-all break-all">
+                <p className="text-xs text-emerald-700 select-all break-all">
                   {submissionSuccess.trackingToken}
                 </p>
               </div>
@@ -260,313 +311,423 @@ export default function RegisterStatePage() {
                 href={`/application/track?app=${encodeURIComponent(
                   submissionSuccess.applicationNumber
                 )}&token=${encodeURIComponent(submissionSuccess.trackingToken)}`}
-                className="rounded-xl bg-teal-600 px-6 py-3 text-xs font-bold text-white hover:bg-teal-500 transition shadow"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-700 to-teal-700 px-6 py-3 text-xs sm:text-sm font-bold text-white hover:from-cyan-800 hover:to-teal-800 transition shadow-md shadow-cyan-700/20"
               >
-                Track Live Application →
+                Track Live Application <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/application/status"
-                className="rounded-xl border border-slate-700 bg-slate-800 px-6 py-3 text-xs font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+                className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition shadow-sm"
               >
-                View Full Record
+                View Full Application Record
               </Link>
             </div>
           </div>
         ) : (
-          <>
-            {step === 1 && (
-              <form onSubmit={handleProceedToStep2} className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 space-y-5">
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-400">
-                    State Health Directorate
-                  </h3>
+          /* Desktop 2-Column Form Layout */
+          <div className="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+            {/* Left 8 Columns: Form Steps */}
+            <div className="lg:col-span-8">
+              {step === 1 && (
+                <form onSubmit={handleProceedToStep2} className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-cyan-700 bg-white/95 backdrop-blur-sm p-6 sm:p-8 space-y-6 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="p-2.5 rounded-xl bg-cyan-50 text-cyan-800">
+                        <Landmark className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Step 1: State Directorate Details
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Specify the official state health department / directorate identity and secretariat location.
+                        </p>
+                      </div>
+                    </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Directorate / Department Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={stateDirectorateName}
-                      onChange={(e) => setStateDirectorateName(e.target.value)}
-                      placeholder="e.g. Punjab Directorate of Health & Family Welfare"
-                      className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-teal-500"
-                      required
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        State Department / Directorate Title <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={stateDirectorateName}
+                        onChange={(e) => setStateDirectorateName(e.target.value)}
+                        placeholder="e.g. Directorate of Health Services, Government of Bihar"
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-1">
+                        State Jurisdiction <span className="text-rose-500">*</span>
+                      </label>
+                      <select
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                        required
+                      >
+                        <option value="">Select State</option>
+                        {CANONICAL_STATES.map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Secretariat / Directorate Address
+                        </label>
+                        <input
+                          type="text"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="e.g. Swasthya Bhawan, Secretariat"
+                          className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          PIN Code
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                          placeholder="e.g. 800015"
+                          className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-700 to-teal-700 px-6 py-3 text-xs sm:text-sm font-bold text-white hover:from-cyan-800 hover:to-teal-800 transition shadow-md shadow-cyan-700/20"
+                    >
+                      Proceed to Directorate Contact <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {step === 2 && (
+                <form onSubmit={handleCreateDraft} className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-cyan-700 bg-white/95 backdrop-blur-sm p-6 sm:p-8 space-y-6 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="p-2.5 rounded-xl bg-cyan-50 text-cyan-800">
+                        <UserCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Step 2: State Nodal Officer & Verification Contact
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Appoint the State Nodal Officer or Director of Health Services for official administrative authorization.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Designated Officer Name <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={nodalOfficerName}
+                          onChange={(e) => setNodalOfficerName(e.target.value)}
+                          placeholder="e.g. Dr. Sudhir Prasad"
+                          className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Official Designation <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={officialDesignation}
+                          onChange={(e) => setOfficialDesignation(e.target.value)}
+                          placeholder="e.g. Director of Health Services / State Nodal Officer"
+                          className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Official Government Email <span className="text-rose-500">*</span>
+                        </label>
+                        <div className="flex gap-2">
+                          <input
+                            type="email"
+                            value={applicantEmail}
+                            onChange={(e) => {
+                              setApplicantEmail(e.target.value);
+                              setEmailVerified(false);
+                            }}
+                            placeholder="e.g. director.health@bihar.gov.in"
+                            className="flex-1 rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!applicantEmail.includes("@")) {
+                                setError("Please enter a valid email address.");
+                                return;
+                              }
+                              setIsOtpModalOpen(true);
+                            }}
+                            className={`rounded-xl px-4 py-2 text-xs font-bold transition shadow-sm ${
+                              emailVerified
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                                : "bg-cyan-700 text-white hover:bg-cyan-800"
+                            }`}
+                          >
+                            {emailVerified ? "✓ Verified" : "Verify Email"}
+                          </button>
+                        </div>
+                        {emailVerified && (
+                          <p className="mt-1.5 text-xs text-emerald-600 font-medium flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            Email ownership confirmed via OTP verification
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1">
+                          Official Contact Phone <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          value={applicantPhone}
+                          onChange={(e) => setApplicantPhone(e.target.value)}
+                          placeholder="e.g. +91 94310 12345"
+                          className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-cyan-700 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
+                    >
+                      <ArrowLeft className="w-4 h-4" /> Back to State Details
+                    </button>
+
+                    <button
+                      type="submit"
+                      disabled={loading || !emailVerified}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-700 to-teal-700 px-6 py-3 text-xs sm:text-sm font-bold text-white hover:from-cyan-800 hover:to-teal-800 disabled:opacity-50 transition shadow-md shadow-cyan-700/20"
+                    >
+                      {loading ? "Creating Draft..." : "Save Draft & Proceed to Documents"}
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {step === 3 && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-cyan-700 bg-white/95 backdrop-blur-sm p-6 sm:p-8 space-y-6 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+                      <div className="p-2.5 rounded-xl bg-cyan-50 text-cyan-800">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-slate-900">
+                          Step 3: Upload State Directorate Health Mission Order
+                        </h2>
+                        <p className="text-xs text-slate-500">
+                          Upload the executive order or gazetted notification issued by the Department of Health and Family Welfare authorizing state-level network administration.
+                        </p>
+                      </div>
+                    </div>
+
+                    <DocumentUploader
+                      slots={STATE_DOC_SLOTS}
+                      existingDocuments={application?.documents || []}
+                      applicantToken={applicantToken}
+                      canEdit={true}
+                      onDocumentsChanged={refreshApplicationDocuments}
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-300">
-                      State Jurisdiction *
-                    </label>
-                    <select
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-teal-500"
-                      required
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
                     >
-                      <option value="">Select State</option>
-                      {CANONICAL_STATES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                      <ArrowLeft className="w-4 h-4" /> Back to Contact
+                    </button>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-semibold text-slate-300">Directorate Secretariat Address</label>
-                      <input
-                        type="text"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        placeholder="e.g. Parivar Kalyan Bhawan, Sector 34-A"
-                        className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-teal-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300">PIN Code</label>
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={pincode}
-                        onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
-                        placeholder="e.g. 160022"
-                        className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-teal-500"
-                      />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleProceedToStep4}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-700 to-teal-700 px-6 py-3 text-xs sm:text-sm font-bold text-white hover:from-cyan-800 hover:to-teal-800 transition shadow-md shadow-cyan-700/20"
+                    >
+                      Review Application Summary <ArrowRight className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
+              )}
 
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="rounded-xl bg-teal-600 px-6 py-3 text-xs font-bold text-white hover:bg-teal-500 transition shadow"
-                  >
-                    Proceed to Directorate Contact →
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {step === 2 && (
-              <form onSubmit={handleCreateDraft} className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 space-y-5">
-                  <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-400">
-                    State Health Official Credentials
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300">
-                        Designated Director / Officer Name *
-                      </label>
-                      <input
-                        type="text"
-                        value={nodalOfficerName}
-                        onChange={(e) => setNodalOfficerName(e.target.value)}
-                        placeholder="e.g. Dr. Balbir Singh"
-                        className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-teal-500"
-                        required
-                      />
+              {step === 4 && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-cyan-700 bg-white/95 backdrop-blur-sm p-6 sm:p-8 space-y-6 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+                    <div className="border-b border-slate-100 pb-4">
+                      <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-800 border border-cyan-200 uppercase tracking-wider">
+                        State Application Final Review
+                      </span>
+                      <h2 className="mt-3 text-xl sm:text-2xl font-bold text-slate-900">{stateDirectorateName}</h2>
+                      <p className="text-xs sm:text-sm text-slate-500">
+                        State Jurisdiction: {state}
+                      </p>
                     </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300">
-                        Official Designation *
-                      </label>
-                      <input
-                        type="text"
-                        value={officialDesignation}
-                        onChange={(e) => setOfficialDesignation(e.target.value)}
-                        placeholder="e.g. Director General of Health Services"
-                        className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-teal-500"
-                        required
-                      />
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-300">
-                        State Health Official Email *
-                      </label>
-                      <div className="mt-1.5 flex gap-2">
-                        <input
-                          type="email"
-                          value={applicantEmail}
-                          onChange={(e) => {
-                            setApplicantEmail(e.target.value);
-                            setEmailVerified(false);
-                          }}
-                          placeholder="e.g. dghs@punjab.gov.in"
-                          className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-teal-500"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!applicantEmail.includes("@")) {
-                              setError("Please enter a valid email address.");
-                              return;
-                            }
-                            setIsOtpModalOpen(true);
-                          }}
-                          className={`rounded-xl px-3 py-2 text-xs font-bold transition ${
-                            emailVerified
-                              ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/30"
-                              : "bg-teal-600 text-white hover:bg-teal-500"
-                          }`}
-                        >
-                          {emailVerified ? "✓ Verified" : "Verify Email"}
-                        </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                        <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                          State Nodal Authority
+                        </h4>
+                        <p className="text-slate-600">Officer: <strong className="text-slate-900">{nodalOfficerName}</strong></p>
+                        <p className="text-slate-600">Designation: <strong className="text-slate-900">{officialDesignation}</strong></p>
+                        <p className="text-slate-600">Secretariat: <strong className="text-slate-900">{address || "N/A"}</strong></p>
                       </div>
-                      {emailVerified && (
-                        <p className="mt-1.5 text-[11px] text-emerald-400">
-                          ✓ Two-Factor Email Ownership Confirmed
-                        </p>
-                      )}
+
+                      <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                        <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                          Verified Contact Details
+                        </h4>
+                        <p className="text-slate-600">Official Email: <strong className="text-slate-900">{applicantEmail}</strong></p>
+                        <p className="text-slate-600">Official Phone: <strong className="text-slate-900">{applicantPhone}</strong></p>
+                        <p className="text-slate-600">Attached Documents: <strong className="text-slate-900">{application?.documents.length || 0} File(s)</strong></p>
+                      </div>
                     </div>
 
+                    <div className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-4 text-xs text-cyan-950">
+                      <p className="font-bold text-slate-900">Statutory Legal Declaration:</p>
+                      <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                        I hereby declare that this onboarding application is submitted under official executive authorization on behalf of the State Directorate of Health Services under the Department of Health and Family Welfare.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <button
+                      type="button"
+                      onClick={() => setStep(3)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm"
+                    >
+                      <ArrowLeft className="w-4 h-4" /> Back to Documents
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={handleFinalSubmit}
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-8 py-3.5 text-xs sm:text-sm font-bold text-white hover:from-emerald-700 hover:to-teal-700 disabled:opacity-50 transition shadow-lg shadow-emerald-600/20"
+                    >
+                      {loading ? "Submitting Application..." : "Final Submit Application ✓"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right 4 Columns: Sticky State Authority Guidance Card */}
+            <div className="hidden lg:block lg:col-span-4 space-y-5">
+              <div className="sticky top-24 space-y-5">
+                {/* State Authority Mandate Card */}
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-5 shadow-[0_8px_30px_rgb(15,23,42,0.06)] space-y-4">
+                  <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                    <div className="p-2 rounded-lg bg-cyan-50 text-cyan-800">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
                     <div>
-                      <label className="block text-xs font-semibold text-slate-300">
-                        Official Phone Number *
-                      </label>
-                      <input
-                        type="tel"
-                        value={applicantPhone}
-                        onChange={(e) => setApplicantPhone(e.target.value)}
-                        placeholder="e.g. +91 172 260 0000"
-                        className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white outline-none focus:border-teal-500"
-                        required
-                      />
+                      <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                        State Authority Mandate
+                      </h3>
+                      <p className="text-[11px] text-slate-500">Tier I Regional Oversight</p>
+                    </div>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-slate-600">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Oversee District Health Authority onboarding across all constituent districts.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Coordinate inter-district referral protocols during mass casualty surges.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Enforce clinical SLA standards and ambulance dispatch turnaround targets.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <span>Direct integration with National Emergency Medical Relief Command.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Central Approval Path Card */}
+                <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200/80 p-5 shadow-[0_8px_30px_rgb(15,23,42,0.06)] space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
+                    <Clock className="w-4 h-4 text-cyan-700" />
+                    Central Approval Path
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>1. Application Submission</span>
+                      <span className="font-semibold text-emerald-700">Instant</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>2. National Ministry Clearance</span>
+                      <span className="font-semibold text-cyan-800">24 – 48 Hours</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-600">
+                      <span>3. Executive Credential Provisioning</span>
+                      <span className="font-semibold text-teal-700">Via Official Email</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="rounded-xl border border-slate-700 bg-slate-800 px-5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+                {/* Support Desk Card */}
+                <div className="bg-gradient-to-br from-cyan-50 to-slate-50 rounded-2xl border border-cyan-200/70 p-5 space-y-2 text-xs">
+                  <span className="font-bold text-slate-900 block">State Technical Coordination</span>
+                  <p className="text-slate-600 leading-relaxed text-[11px]">
+                    For inter-state protocols or health mission order assistance:
+                  </p>
+                  <a
+                    href="mailto:pawanbussiness108@gmail.com"
+                    className="inline-flex items-center gap-1.5 font-semibold text-cyan-800 hover:text-cyan-900 transition"
                   >
-                    ← Back to Directorate
-                  </button>
-
-                  <button
-                    type="submit"
-                    disabled={loading || !emailVerified}
-                    className="rounded-xl bg-teal-600 px-6 py-3 text-xs font-bold text-white hover:bg-teal-500 disabled:opacity-50 transition shadow"
-                  >
-                    {loading ? "Creating Draft..." : "Save Draft & Proceed to Documents →"}
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-white uppercase tracking-wider text-slate-400">
-                      Upload State Government Authorization Order
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Upload the official State Health Mission or Directorate Notification establishing this authority on the national healthcare exchange.
-                    </p>
-                  </div>
-
-                  <DocumentUploader
-                    slots={STATE_DOC_SLOTS}
-                    existingDocuments={application?.documents || []}
-                    applicantToken={applicantToken}
-                    canEdit={true}
-                    onDocumentsChanged={refreshApplicationDocuments}
-                  />
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep(2)}
-                    className="rounded-xl border border-slate-700 bg-slate-800 px-5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
-                  >
-                    ← Back to Contact
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleProceedToStep4}
-                    className="rounded-xl bg-teal-600 px-6 py-3 text-xs font-bold text-white hover:bg-teal-500 transition shadow"
-                  >
-                    Review Application Summary →
-                  </button>
+                    <Mail className="w-3.5 h-3.5" /> pawanbussiness108@gmail.com
+                  </a>
                 </div>
               </div>
-            )}
-
-            {step === 4 && (
-              <div className="space-y-6">
-                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 sm:p-8 space-y-6">
-                  <div className="border-b border-slate-800 pb-4">
-                    <span className="rounded-full bg-teal-500/10 px-2.5 py-0.5 text-[10px] font-bold text-teal-400 border border-teal-500/20 uppercase tracking-wider">
-                      State Directorate Review
-                    </span>
-                    <h3 className="mt-2 text-lg font-bold text-white">{stateDirectorateName}</h3>
-                    <p className="text-xs text-slate-400">
-                      Jurisdiction: {state} (State-Wide)
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2">
-                      <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                        Directorate Information
-                      </h4>
-                      <p className="text-slate-400">Director: <strong className="text-white">{nodalOfficerName}</strong></p>
-                      <p className="text-slate-400">Designation: <strong className="text-white">{officialDesignation}</strong></p>
-                      <p className="text-slate-400">Secretariat: <strong className="text-white">{address || "N/A"}</strong></p>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-4 space-y-2">
-                      <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                        Verified Credentials
-                      </h4>
-                      <p className="text-slate-400">Email: <strong className="text-white">{applicantEmail}</strong></p>
-                      <p className="text-slate-400">Phone: <strong className="text-white">{applicantPhone}</strong></p>
-                      <p className="text-slate-400">Documents: <strong className="text-white">{application?.documents.length || 0} Attached</strong></p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-teal-500/20 bg-teal-950/20 p-4 text-xs text-teal-200">
-                    <p className="font-semibold text-white">State Authority Declaration:</p>
-                    <p className="text-[11px] text-teal-300/80 mt-1 leading-relaxed">
-                      I certify that this registration is submitted on behalf of the State Directorate of Health Services under constitutional health authority guidelines.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <button
-                    type="button"
-                    onClick={() => setStep(3)}
-                    className="rounded-xl border border-slate-700 bg-slate-800 px-5 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
-                  >
-                    ← Back to Documents
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={loading}
-                    onClick={handleFinalSubmit}
-                    className="rounded-xl bg-emerald-600 px-8 py-3.5 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50 transition shadow-lg shadow-emerald-900/30"
-                  >
-                    {loading ? "Submitting Application..." : "Final Submit Application ✓"}
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+            </div>
+          </div>
         )}
 
         <OTPModal

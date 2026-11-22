@@ -1328,3 +1328,95 @@ def test_f5_otp_purpose_alignment_and_mismatch(client):
     assert bad_req.status_code == 422
 
 
+def test_api_application_submission_automated_email_confirmation(client, api_db_session):
+    """
+    Integration Test: Calling POST /api/registration/applications/submit
+    atomically transitions application to SUBMITTED and enqueues an outbox confirmation email
+    containing the official application number and secret tracking token.
+    """
+    import json
+    from src.database.pg_models import RegistrationEmailOutbox
+
+    email = "applicant.confirm@hospital.punjab.org"
+    create_resp = client.post(
+        "/api/registration/applications/hospital",
+        json={
+            "applicant_name": "Apollo Care Center",
+            "applicant_email": email,
+            "applicant_phone": "9876543210",
+            "state": "Punjab",
+            "district": "Mohali",
+            "ownership_type": "PRIVATE",
+            "facility_category": "TERTIARY",
+            "total_beds": 200,
+            "icu_beds": 40,
+            "ventilators": 15,
+            "oxygen_capacity_liters": 10000,
+            "emergency_tier": "LEVEL_1",
+            "specialties": ["Cardiology", "Neurology"],
+        },
+    )
+    assert create_resp.status_code == 200
+    create_data = create_resp.json()
+    app_id = create_data["application_id"]
+    app_num = create_data["application_number"]
+    app_token = create_data["applicant_token"]
+    headers = {"Authorization": f"Bearer {app_token}"}
+
+    # Upload mandatory documents
+    valid_pdf = b"%PDF-1.4 1 0 obj << /Type /Catalog >> endobj xref 0 1 trailer << /Root 1 0 R >> startxref 9 %%EOF"
+    client.post(
+        "/api/registration/applications/documents/upload",
+        files={"file": ("lic.pdf", valid_pdf, "application/pdf")},
+        data={"document_type": "CLINICAL_LICENSE"},
+        headers=headers,
+    )
+    client.post(
+        "/api/registration/applications/documents/upload",
+        files={"file": ("fire.pdf", valid_pdf, "application/pdf")},
+        data={"document_type": "FIRE_SAFETY_NOC"},
+        headers=headers,
+    )
+
+    # Submit application
+    sub_resp = client.post(
+        "/api/registration/applications/submit",
+        json={"remarks": "Submitting Apollo Care application"},
+        headers=headers,
+    )
+    assert sub_resp.status_code == 200
+    sub_data = sub_resp.json()
+    assert sub_data["status"] == "SUBMITTED"
+    assert sub_data["application_number"] == app_num
+    raw_tracking_token = sub_data["tracking_token"]
+    assert raw_tracking_token
+
+    # Verify outbox confirmation email record
+    outbox_entry = (
+        api_db_session.query(RegistrationEmailOutbox)
+        .filter_by(recipient_email=email, event_type="APPLICATION_SUBMITTED")
+        .first()
+    )
+    assert outbox_entry is not None
+    assert outbox_entry.status in ("PENDING", "SENT")
+    assert app_num in outbox_entry.subject
+
+    payload = json.loads(outbox_entry.payload)
+    assert payload["application_number"] == app_num
+    assert payload["tracking_token"] == raw_tracking_token
+    assert payload["current_stage"] == "DISTRICT_REVIEW"
+    assert payload["current_stage_display"] == "District Verification"
+    assert raw_tracking_token in payload["body_text"]
+    assert app_num in payload["body_text"]
+    assert "/track" in payload["body_text"]
+    assert raw_tracking_token in payload["body_html"]
+
+    # Verify duplicate submission is rejected (idempotency)
+    dup_resp = client.post(
+        "/api/registration/applications/submit",
+        json={"remarks": "Submitting again"},
+        headers=headers,
+    )
+    assert dup_resp.status_code in (400, 422)
+
+

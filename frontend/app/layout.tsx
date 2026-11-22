@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SIH Hospital AI — Smart Referral & Bed Allocation Platform",
+  title: "ArogyaSetu Grid | Unified Critical Care & Hospital Command Network",
   description:
-    "Intelligent Hospital Recommendation, Bed Reservation & Emergency Referral Management Platform under Smart India Hackathon guidelines.",
+    "Unified critical care telemetry, real-time bed & ICU reservation, and condition-based inter-hospital emergency referrals across accredited healthcare facilities.",
 };
 
 export default function RootLayout({
@@ -29,7 +30,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-slate-50 text-slate-900 font-sans">
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

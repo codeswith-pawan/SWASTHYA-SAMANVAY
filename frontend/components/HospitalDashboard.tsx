@@ -7,6 +7,8 @@ import {
   Referral,
   NotificationItem,
   Patient,
+  PatientIntakePayload,
+  ConditionAssessmentPayload,
   HospitalRecommendation,
 } from "@/lib/types";
 import {
@@ -22,6 +24,9 @@ import {
   apiCreateReferral,
   apiGetHospitalPatients,
   apiGetPatientReferrals,
+  apiAdmitPatient,
+  apiAssessAndRecommendHospitals,
+  apiInitiatePatientReferral,
 } from "@/lib/api";
 import { formatDateTime, formatDistance, formatModelFitScore } from "@/lib/formatters";
 import { DashboardLayout } from "./shared/DashboardLayout";
@@ -46,7 +51,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const [inventoryError, setInventoryError] = useState("");
 
   // Referrals State
-  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [allReferrals, setAllReferrals] = useState<Referral[]>([]);
   const [referralScope, setReferralScope] = useState<"incoming" | "outgoing" | "all">("incoming");
   const [referralLoading, setReferralLoading] = useState(false);
   const [referralError, setReferralError] = useState("");
@@ -83,8 +88,9 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const [patientReferrals, setPatientReferrals] = useState<Referral[]>([]);
   const [patientReferralLoading, setPatientReferralLoading] = useState(false);
 
-  // Referral Creation & AI Recommendations Modal
+  // Referral Creation & 2-Step AI Recommendations Modal
   const [referralModalPatient, setReferralModalPatient] = useState<Patient | null>(null);
+  const [referralModalStep, setReferralModalStep] = useState<1 | 2>(1);
   const [referralTargetHospitalId, setReferralTargetHospitalId] = useState("");
   const [referralPriority, setReferralPriority] = useState("Urgent");
   const [referralBedType, setReferralBedType] = useState<"ICU" | "GENERAL" | "EMERGENCY">("GENERAL");
@@ -95,6 +101,49 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const [createReferralLoading, setCreateReferralLoading] = useState(false);
   const [createReferralError, setCreateReferralError] = useState("");
   const [createReferralSuccess, setCreateReferralSuccess] = useState("");
+
+  // Step 1 Clinical Condition Assessment State
+  const [evalConditionSummary, setEvalConditionSummary] = useState("");
+  const [evalUrgency, setEvalUrgency] = useState<"ROUTINE" | "URGENT" | "EMERGENCY" | "CRITICAL">("URGENT");
+  const [evalSpecialty, setEvalSpecialty] = useState("Cardiology");
+  const [evalBedType, setEvalBedType] = useState<"GENERAL" | "ICU" | "VENTILATOR" | "EMERGENCY" | "NICU">("ICU");
+  const [evalTransport, setEvalTransport] = useState<"NONE" | "BASIC_AMBULANCE" | "ALS_AMBULANCE">("ALS_AMBULANCE");
+  const [evalHeartRate, setEvalHeartRate] = useState<number | "">("");
+  const [evalSystolicBP, setEvalSystolicBP] = useState<number | "">("");
+  const [evalDiastolicBP, setEvalDiastolicBP] = useState<number | "">("");
+  const [evalSpO2, setEvalSpO2] = useState<number | "">("");
+  const [evalTemp, setEvalTemp] = useState<number | "">("");
+  const [evalRespRate, setEvalRespRate] = useState<number | "">("");
+  const [evalGCS, setEvalGCS] = useState<number | "">("");
+
+  // New Patient Intake Modal State
+  const [intakeModalOpen, setIntakeModalOpen] = useState(false);
+  const [intakeLoading, setIntakeLoading] = useState(false);
+  const [intakeError, setIntakeError] = useState("");
+  const [intakeSuccessNotice, setIntakeSuccessNotice] = useState("");
+
+  // Intake Form Fields
+  const [intakeName, setIntakeName] = useState("");
+  const [intakeAge, setIntakeAge] = useState<number | "">("");
+  const [intakeGender, setIntakeGender] = useState("Male");
+  const [intakeBloodGroup, setIntakeBloodGroup] = useState("B+");
+  const [intakePhone, setIntakePhone] = useState("");
+  const [intakeEmergencyContact, setIntakeEmergencyContact] = useState("");
+  const [intakeAddress, setIntakeAddress] = useState("");
+  const [intakeDistrict, setIntakeDistrict] = useState(user.district || "Amritsar");
+  const [intakeState, setIntakeState] = useState(user.state || "Punjab");
+  const [intakeChiefComplaint, setIntakeChiefComplaint] = useState("");
+  const [intakeSpecialty, setIntakeSpecialty] = useState("Cardiology");
+  const [intakeBedType, setIntakeBedType] = useState<"GENERAL" | "ICU" | "VENTILATOR" | "OXYGEN" | "EMERGENCY_BAY">("GENERAL");
+  const [intakeSeverity, setIntakeSeverity] = useState<"LOW" | "MODERATE" | "HIGH" | "CRITICAL">("MODERATE");
+  const [intakeHeartRate, setIntakeHeartRate] = useState<number | "">("");
+  const [intakeSystolicBP, setIntakeSystolicBP] = useState<number | "">("");
+  const [intakeDiastolicBP, setIntakeDiastolicBP] = useState<number | "">("");
+  const [intakeSpO2, setIntakeSpO2] = useState<number | "">("");
+  const [intakeTemp, setIntakeTemp] = useState<number | "">("");
+  const [intakeRespRate, setIntakeRespRate] = useState<number | "">("");
+  const [intakeGCS, setIntakeGCS] = useState<number | "">("");
+  const [intakeNotes, setIntakeNotes] = useState("");
 
   // Bed & Resource Capacity Management State
   const [capacityModalOpen, setCapacityModalOpen] = useState(false);
@@ -203,12 +252,13 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     }
   };
 
-  const loadReferrals = async (scope: "incoming" | "outgoing" | "all" = referralScope) => {
+  const loadReferrals = async () => {
     setReferralLoading(true);
     setReferralError("");
     try {
-      const data = await apiGetHospitalReferrals(hospitalId, scope);
-      setReferrals(data.referrals || []);
+      const data = await apiGetHospitalReferrals(hospitalId, "all");
+      const fetched = data.referrals || [];
+      setAllReferrals(fetched);
     } catch (err: any) {
       setReferralError(err.message || "Failed to load hospital referral roster.");
     } finally {
@@ -244,7 +294,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
   const refreshAll = () => {
     loadInventory();
-    loadReferrals(referralScope);
+    loadReferrals();
     loadNotifications();
     loadPatients();
   };
@@ -252,6 +302,19 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   useEffect(() => {
     refreshAll();
   }, [hospitalId]);
+
+  // Automatically default to Outbound Referrals if hospital has only outbound cases
+  useEffect(() => {
+    const inCount = allReferrals.filter(
+      (r) => r.to_hospital_id?.toLowerCase() === hospitalId?.toLowerCase()
+    ).length;
+    const outCount = allReferrals.filter(
+      (r) => r.from_hospital_id?.toLowerCase() === hospitalId?.toLowerCase()
+    ).length;
+    if (inCount === 0 && outCount > 0 && referralScope === "incoming") {
+      setReferralScope("outgoing");
+    }
+  }, [allReferrals, hospitalId, referralScope]);
 
   // Status Transitions
   const handleUpdateStatus = async (
@@ -277,9 +340,10 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
         });
       }
 
-      await loadReferrals(referralScope);
+      await loadReferrals();
       await loadInventory();
       await loadNotifications();
+      await loadPatients();
     } catch (err: any) {
       setReferralError(err.message || "Failed to execute referral status transition.");
     } finally {
@@ -309,28 +373,167 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     setRejectReason("");
   };
 
-  // Referral Creation & AI Recommendations
+  // New Patient Intake Handlers
+  const openIntakeModal = () => {
+    setIntakeName("");
+    setIntakeAge("");
+    setIntakeGender("Male");
+    setIntakeBloodGroup("B+");
+    setIntakePhone("");
+    setIntakeEmergencyContact("");
+    setIntakeAddress("");
+    setIntakeDistrict(user.district || "Amritsar");
+    setIntakeState(user.state || "Punjab");
+    setIntakeChiefComplaint("");
+    setIntakeSpecialty("Cardiology");
+    setIntakeBedType("GENERAL");
+    setIntakeSeverity("MODERATE");
+    setIntakeHeartRate("");
+    setIntakeSystolicBP("");
+    setIntakeDiastolicBP("");
+    setIntakeSpO2("");
+    setIntakeTemp("");
+    setIntakeRespRate("");
+    setIntakeGCS("");
+    setIntakeNotes("");
+    setIntakeError("");
+    setIntakeSuccessNotice("");
+    setIntakeModalOpen(true);
+  };
+
+  const submitPatientIntake = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!intakeName.trim()) {
+      setIntakeError("Patient Full Name is required.");
+      return;
+    }
+    if (intakeAge === "" || Number(intakeAge) < 0 || Number(intakeAge) > 130) {
+      setIntakeError("Please provide a valid patient age (0-130).");
+      return;
+    }
+    if (!intakeChiefComplaint.trim()) {
+      setIntakeError("Chief Complaint / Primary Diagnosis is required.");
+      return;
+    }
+
+    setIntakeLoading(true);
+    setIntakeError("");
+    setIntakeSuccessNotice("");
+
+    const payload: PatientIntakePayload = {
+      name: intakeName.trim(),
+      age: Number(intakeAge),
+      gender: intakeGender,
+      blood_group: intakeBloodGroup,
+      contact_phone: intakePhone.trim() || undefined,
+      emergency_contact: intakeEmergencyContact.trim() || undefined,
+      address: intakeAddress.trim() || undefined,
+      district: intakeDistrict.trim() || undefined,
+      state: intakeState.trim() || undefined,
+      chief_complaint: intakeChiefComplaint.trim(),
+      required_specialty: intakeSpecialty,
+      bed_type_assigned: intakeBedType,
+      severity_level: intakeSeverity,
+      vitals: {
+        heart_rate: intakeHeartRate ? Number(intakeHeartRate) : undefined,
+        systolic_bp: intakeSystolicBP ? Number(intakeSystolicBP) : undefined,
+        diastolic_bp: intakeDiastolicBP ? Number(intakeDiastolicBP) : undefined,
+        blood_pressure: intakeSystolicBP && intakeDiastolicBP ? `${intakeSystolicBP}/${intakeDiastolicBP}` : undefined,
+        spo2: intakeSpO2 ? Number(intakeSpO2) : undefined,
+        temperature: intakeTemp ? Number(intakeTemp) : undefined,
+        respiratory_rate: intakeRespRate ? Number(intakeRespRate) : undefined,
+        gcs_score: intakeGCS ? Number(intakeGCS) : undefined,
+      },
+      clinical_notes: intakeNotes.trim() || undefined,
+    };
+
+    try {
+      const res = await apiAdmitPatient(payload);
+      const generatedId = res.patient.patient_id;
+      setIntakeSuccessNotice(`Patient admitted successfully with Official Patient ID: ${generatedId}`);
+      await loadPatients();
+      await loadInventory();
+      setTimeout(() => {
+        setIntakeModalOpen(false);
+        setActiveTab("patients");
+      }, 1500);
+    } catch (err: any) {
+      setIntakeError(err.message || "Failed to register patient admission.");
+    } finally {
+      setIntakeLoading(false);
+    }
+  };
+
+  // Referral Creation & 2-Step AI Recommendations
   const openReferralModal = (patient: Patient) => {
     setReferralModalPatient(patient);
+    setReferralModalStep(1); // Step 1: Current Clinical Condition Assessment
     setReferralTargetHospitalId("");
-    setReferralPriority(patient.priority || "Urgent");
-    setReferralBedType(patient.icu_required === "Yes" ? "ICU" : "GENERAL");
-    setReferralReason(`Transfer required for ${patient.disease || "specialized treatment"}. Patient: ${patient.name}`);
+
+    // Pre-fill doctor's assessment from patient's known records
+    setEvalConditionSummary(
+      patient.chief_complaint || patient.disease
+        ? `Patient admitted with ${patient.chief_complaint || patient.disease}. Evaluated for specialized inter-facility transfer.`
+        : ""
+    );
+    setEvalUrgency(
+      patient.priority === "Critical" ? "CRITICAL" : patient.priority === "Urgent" ? "URGENT" : "ROUTINE"
+    );
+    setEvalSpecialty(patient.required_specialty || "Cardiology");
+    setEvalBedType(patient.icu_required === "Yes" || patient.bed_type === "ICU" ? "ICU" : "GENERAL");
+    setEvalTransport(patient.priority === "Critical" ? "ALS_AMBULANCE" : "NONE");
+
+    const v = patient.vitals || {};
+    setEvalHeartRate(v.heart_rate || "");
+    setEvalSystolicBP(v.systolic_bp || "");
+    setEvalDiastolicBP(v.diastolic_bp || "");
+    setEvalSpO2(v.spo2 || "");
+    setEvalTemp(v.temperature || "");
+    setEvalRespRate(v.respiratory_rate || "");
+    setEvalGCS(v.gcs_score || "");
+
     setRecommendations([]);
     setRecError("");
     setCreateReferralError("");
     setCreateReferralSuccess("");
-    fetchRecommendations(patient.patient_id);
   };
 
-  const fetchRecommendations = async (pid: string) => {
+  const handleRunConditionAssessment = async () => {
+    if (!referralModalPatient) return;
+    if (!evalConditionSummary.trim()) {
+      setRecError("Please provide a Current Clinical Condition Assessment / Reason for Referral.");
+      return;
+    }
     setRecLoading(true);
     setRecError("");
+
+    const assessment: ConditionAssessmentPayload = {
+      condition_summary: evalConditionSummary.trim(),
+      urgency: evalUrgency,
+      required_specialty: evalSpecialty,
+      required_bed_type: evalBedType,
+      transport_requirement: evalTransport,
+      vitals: {
+        heart_rate: evalHeartRate ? Number(evalHeartRate) : undefined,
+        systolic_bp: evalSystolicBP ? Number(evalSystolicBP) : undefined,
+        diastolic_bp: evalDiastolicBP ? Number(evalDiastolicBP) : undefined,
+        blood_pressure: evalSystolicBP && evalDiastolicBP ? `${evalSystolicBP}/${evalDiastolicBP}` : undefined,
+        spo2: evalSpO2 ? Number(evalSpO2) : undefined,
+        temperature: evalTemp ? Number(evalTemp) : undefined,
+        respiratory_rate: evalRespRate ? Number(evalRespRate) : undefined,
+        gcs_score: evalGCS ? Number(evalGCS) : undefined,
+      },
+    };
+
     try {
-      const data = await apiGetRecommendations(pid);
+      const data = await apiAssessAndRecommendHospitals(referralModalPatient.patient_id, assessment);
       setRecommendations(data.hospitals || []);
+      if (data.hospitals && data.hospitals.length > 0) {
+        setReferralTargetHospitalId(data.hospitals[0].hospital_id);
+      }
+      setReferralModalStep(2); // Advance to Step 2: AI-Ranked Suitable Destination Hospitals
     } catch (err: any) {
-      setRecError(err.message || "Failed to retrieve AI-ranked hospital recommendations.");
+      setRecError(err.message || "Failed to calculate AI-ranked hospital recommendations.");
     } finally {
       setRecLoading(false);
     }
@@ -339,7 +542,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
   const submitCreateReferral = async () => {
     if (!referralModalPatient) return;
     if (!referralTargetHospitalId.trim()) {
-      setCreateReferralError("Please select or specify a destination hospital ID.");
+      setCreateReferralError("Please select a destination hospital from the AI recommendations.");
       return;
     }
     setCreateReferralLoading(true);
@@ -347,27 +550,35 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     setCreateReferralSuccess("");
 
     try {
-      const res = await apiCreateReferral({
-        patient_id: referralModalPatient.patient_id,
-        from_hospital_id: hospitalId,
+      const res = await apiInitiatePatientReferral(referralModalPatient.patient_id, {
         to_hospital_id: referralTargetHospitalId.trim().toUpperCase(),
-        priority: referralPriority,
-        bed_type: referralBedType,
-        reason: referralReason.trim() || `Clinical referral for ${referralModalPatient.disease}`,
+        reason: evalConditionSummary.trim() || `Clinical transfer for ${evalSpecialty}`,
+        priority: evalUrgency === "CRITICAL" ? "Critical" : evalUrgency === "URGENT" ? "Urgent" : "Stable",
+        bed_type: evalBedType,
+        transport_requirement: evalTransport,
+        clinical_condition_snapshot: {
+          specialty: evalSpecialty,
+          vitals: {
+            spo2: evalSpO2,
+            heart_rate: evalHeartRate,
+            bp: `${evalSystolicBP}/${evalDiastolicBP}`,
+          },
+        },
       });
 
       setCreateReferralSuccess(
-        `Referral ${res.referral?.referral_id || ""} submitted successfully! Awaiting destination facility acceptance.`
+        `Referral ${res.referral?.referral_id || ""} successfully created and dispatched to destination hospital queue!`
       );
       setTimeout(() => {
         setReferralModalPatient(null);
         setActiveTab("referrals");
         setReferralScope("outgoing");
-        loadReferrals("outgoing");
+        loadReferrals();
+        loadPatients();
         loadNotifications();
-      }, 1200);
+      }, 1400);
     } catch (err: any) {
-      setCreateReferralError(err.message || "Failed to submit patient referral.");
+      setCreateReferralError(err.message || "Failed to initiate network referral.");
     } finally {
       setCreateReferralLoading(false);
     }
@@ -387,16 +598,27 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     }
   };
 
-  // Computed Metrics
-  const activeReferralsCount = referrals.filter(
+  // Computed Metrics & Roster Slices
+  const inboundReferrals = allReferrals.filter(
+    (r) => r.to_hospital_id?.toLowerCase() === hospitalId?.toLowerCase()
+  );
+  const outboundReferrals = allReferrals.filter(
+    (r) => r.from_hospital_id?.toLowerCase() === hospitalId?.toLowerCase()
+  );
+  const displayedReferrals =
+    referralScope === "incoming"
+      ? inboundReferrals
+      : referralScope === "outgoing"
+      ? outboundReferrals
+      : allReferrals;
+
+  const activeReferralsCount = allReferrals.filter(
     (r) => !["COMPLETED", "REJECTED", "DIED", "CLOSED"].includes(r.status)
   ).length;
 
-  const pendingIncomingCount = referrals.filter(
-    (r) => r.to_hospital_id === hospitalId && r.status === "PENDING"
-  ).length;
+  const pendingIncomingCount = inboundReferrals.filter((r) => r.status === "PENDING").length;
 
-  const inTransitCount = referrals.filter((r) => r.status === "IN_TRANSIT").length;
+  const inTransitCount = allReferrals.filter((r) => r.status === "IN_TRANSIT").length;
 
   // Referral Columns Definition for DataTable
   const referralColumns: Column<Referral>[] = [
@@ -414,7 +636,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
       key: "direction",
       header: "Route",
       render: (r) => {
-        const isIncoming = r.to_hospital_id === hospitalId;
+        const isIncoming = r.to_hospital_id?.toLowerCase() === hospitalId?.toLowerCase();
         return (
           <div className="space-y-0.5">
             <span
@@ -466,8 +688,8 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
       header: "Operational Actions",
       align: "right",
       render: (r) => {
-        const isDestination = r.to_hospital_id === hospitalId;
-        const isSource = r.from_hospital_id === hospitalId;
+        const isDestination = r.to_hospital_id?.toLowerCase() === hospitalId?.toLowerCase();
+        const isSource = r.from_hospital_id?.toLowerCase() === hospitalId?.toLowerCase();
         const isBusy = statusLoading;
 
         return (
@@ -481,7 +703,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-50 transition"
                   title="Accept referral and reserve bed automatically"
                 >
-                  {acceptingId === r.referral_id ? "Reserving..." : "Accept & Reserve"}
+                  {acceptingId === r.referral_id ? "Reserving..." : "✓ Accept & Reserve"}
                 </button>
                 <button
                   onClick={() => setRejectModalReferral(r)}
@@ -489,7 +711,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-2.5 py-1 text-[11px] font-semibold text-rose-300 hover:bg-rose-500/20 disabled:opacity-50 transition"
                   title="Decline referral"
                 >
-                  Reject
+                  ✕ Reject
                 </button>
               </>
             )}
@@ -502,19 +724,19 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                 className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition"
                 title="Dispatch ambulance and enter ETA"
               >
-                Dispatch Ambulance
+                🚑 Dispatch Ambulance
               </button>
             )}
 
-            {/* INCOMING IN_TRANSIT -> CONFIRM ARRIVAL */}
-            {isDestination && r.status === "IN_TRANSIT" && (
+            {/* INCOMING IN_TRANSIT or ACCEPTED -> CONFIRM ARRIVAL */}
+            {isDestination && (r.status === "IN_TRANSIT" || r.status === "ACCEPTED") && (
               <button
                 onClick={() => handleUpdateStatus(r.referral_id, "ARRIVED")}
                 disabled={isBusy}
                 className="rounded-lg bg-cyan-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-cyan-500 disabled:opacity-50 transition"
                 title="Confirm patient arrived at emergency bay"
               >
-                Mark Arrived
+                🏥 Confirm Arrival
               </button>
             )}
 
@@ -526,19 +748,19 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                 className="rounded-lg bg-purple-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-purple-500 disabled:opacity-50 transition"
                 title="Admit to bed and start treatment"
               >
-                Start Treatment
+                🩺 Begin Treatment
               </button>
             )}
 
-            {/* INCOMING TREATMENT_ACTIVE -> COMPLETE & RELEASE BED */}
-            {isDestination && r.status === "TREATMENT_ACTIVE" && (
+            {/* INCOMING TREATMENT_ACTIVE or IN_TREATMENT -> COMPLETE & RELEASE BED */}
+            {isDestination && (r.status === "TREATMENT_ACTIVE" || r.status === "IN_TREATMENT") && (
               <button
                 onClick={() => handleUpdateStatus(r.referral_id, "COMPLETED")}
                 disabled={isBusy}
                 className="rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-600 disabled:opacity-50 transition"
                 title="Complete care and return reserved bed to inventory"
               >
-                Complete & Release Bed
+                ✅ Complete & Release Bed
               </button>
             )}
 
@@ -561,67 +783,165 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
     {
       key: "patient_id",
       header: "Patient ID",
-      render: (p) => <span className="font-mono font-bold text-slate-200">{p.patient_id}</span>,
+      render: (p) => (
+        <div>
+          <span className="font-mono font-bold text-blue-400 text-xs block">{p.patient_id}</span>
+          <span className="text-[10px] text-slate-400">
+            {p.admitted_at ? formatDateTime(p.admitted_at).split(" ")[0] : "Active"}
+          </span>
+        </div>
+      ),
     },
     {
       key: "name",
-      header: "Patient Name",
+      header: "Patient Demographics",
       render: (p) => (
         <div>
           <p className="font-semibold text-white">{p.name}</p>
-          <p className="text-[11px] text-slate-400">
-            {p.age}y • {p.gender}
-          </p>
+          <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+            <span>{p.age}y • {p.gender}</span>
+            {p.blood_group && (
+              <span className="rounded bg-rose-500/20 px-1 py-0.2 text-[10px] font-bold text-rose-300">
+                {p.blood_group}
+              </span>
+            )}
+          </div>
+          {p.contact_phone && (
+            <p className="text-[10px] text-slate-500">{p.contact_phone}</p>
+          )}
         </div>
       ),
     },
     {
       key: "disease",
-      header: "Diagnosis / Condition",
-      render: (p) => <span className="text-slate-300">{p.disease}</span>,
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      render: (p) => <PriorityBadge priority={p.priority} size="sm" />,
-    },
-    {
-      key: "icu_required",
-      header: "ICU Need",
+      header: "Diagnosis & Specialty",
       render: (p) => (
-        <span
-          className={`font-semibold text-[11px] px-2 py-0.5 rounded-full ${
-            p.icu_required === "Yes"
-              ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-              : "bg-slate-800 text-slate-400"
-          }`}
-        >
-          {p.icu_required === "Yes" ? "Required" : "Standard"}
-        </span>
+        <div>
+          <span className="text-slate-200 text-xs font-medium block">
+            {p.chief_complaint || p.disease}
+          </span>
+          {p.required_specialty && (
+            <span className="inline-block mt-0.5 rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-blue-400 border border-blue-500/20">
+              {p.required_specialty}
+            </span>
+          )}
+        </div>
       ),
+    },
+    {
+      key: "vitals",
+      header: "Vitals & Severity",
+      render: (p) => {
+        const v = p.vitals || {};
+        return (
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5">
+              <PriorityBadge priority={p.priority} size="sm" />
+            </div>
+            {(v.spo2 || v.heart_rate) && (
+              <div className="text-[10px] font-mono flex items-center gap-2">
+                {v.spo2 && (
+                  <span className={v.spo2 < 94 ? "text-rose-400 font-bold" : "text-emerald-400"}>
+                    SpO2: {v.spo2}%
+                  </span>
+                )}
+                {v.heart_rate && (
+                  <span className="text-slate-300">
+                    HR: {v.heart_rate} bpm
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: "bed_type",
+      header: "Bed Assigned",
+      render: (p) => {
+        const b = p.bed_type || (p.icu_required === "Yes" ? "ICU" : "GENERAL");
+        const isICU = b === "ICU" || b === "VENTILATOR";
+        return (
+          <span
+            className={`font-semibold text-[11px] px-2 py-0.5 rounded-full inline-block ${
+              isICU
+                ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                : "bg-slate-800 text-slate-300 border border-slate-700"
+            }`}
+          >
+            {b}
+          </span>
+        );
+      },
+    },
+    {
+      key: "referral_status",
+      header: "Referral Status",
+      render: (p) => {
+        const status = p.referral_status || "NOT_REFERRED";
+        if (status === "NOT_REFERRED") {
+          return (
+            <span className="rounded-full bg-slate-800/80 px-2 py-0.5 text-[10px] font-medium text-slate-400 border border-slate-700/60">
+              Not Referred
+            </span>
+          );
+        }
+        return <StatusBadge status={status} size="sm" />;
+      },
     },
     {
       key: "actions",
       header: "Clinical Workflow",
       align: "right",
-      render: (p) => (
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => openReferralModal(p)}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500 transition"
-            title="Launch AI-assisted destination hospital recommendations"
-          >
-            Create Referral
-          </button>
-          <button
-            onClick={() => openPatientHistory(p)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700 transition"
-            title="View referral history across network"
-          >
-            History
-          </button>
-        </div>
-      ),
+      render: (p) => {
+        const matchingAcceptedRef = allReferrals.find(
+          (r) =>
+            r.patient_id === p.patient_id &&
+            r.from_hospital_id?.toLowerCase() === hospitalId?.toLowerCase() &&
+            r.status === "ACCEPTED"
+        );
+        const matchingInTransitRef = allReferrals.find(
+          (r) =>
+            r.patient_id === p.patient_id &&
+            r.from_hospital_id?.toLowerCase() === hospitalId?.toLowerCase() &&
+            r.status === "IN_TRANSIT"
+        );
+
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {matchingAcceptedRef ? (
+              <button
+                onClick={() => setDispatchModalReferral(matchingAcceptedRef)}
+                className="flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-500 shadow-md shadow-amber-600/20 transition active:scale-95"
+                title="Referral accepted by destination facility. Click to dispatch ambulance."
+              >
+                <span>🚑 Dispatch</span>
+              </button>
+            ) : matchingInTransitRef ? (
+              <span className="rounded-lg bg-cyan-950/80 border border-cyan-800/80 px-2.5 py-1 text-[11px] font-semibold text-cyan-300">
+                En Route 🚑
+              </span>
+            ) : (
+              <button
+                onClick={() => openReferralModal(p)}
+                className="flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-blue-500 shadow-md shadow-blue-600/20 transition active:scale-95"
+                title="Evaluate clinical condition and launch AI-ranked destination referrals"
+              >
+                <span>Refer Patient</span>
+                <span>→</span>
+              </button>
+            )}
+            <button
+              onClick={() => openPatientHistory(p)}
+              className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700 transition"
+              title="View referral history across network"
+            >
+              History
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -631,6 +951,17 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
       tierBadge={{ label: "Hospital Clinical Command", color: "blue" }}
       title={user.name || `Hospital Facility ${hospitalId}`}
       subtitle={`Facility ID: ${hospitalId} • Jurisdiction: ${user.district || "Amritsar"}, ${user.state || "Punjab"}`}
+      headerAction={
+        <button
+          onClick={openIntakeModal}
+          className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 text-xs font-bold shadow-lg shadow-blue-600/25 transition active:scale-95"
+          title="Admit fresh patient into clinical registry"
+        >
+          <span className="text-base font-bold leading-none">+</span>
+          <span className="hidden sm:inline">Register New Patient</span>
+          <span className="sm:hidden">Intake</span>
+        </button>
+      }
       tabs={[
         { id: "overview", label: "Operations Overview", icon: "📊" },
         { id: "referrals", label: "Referrals Command", icon: "🔄", badge: activeReferralsCount },
@@ -671,7 +1002,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
         <ErrorState
           title="Referral Operations Notice"
           message={referralError}
-          onRetry={() => loadReferrals(referralScope)}
+          onRetry={() => loadReferrals()}
           className="mb-6"
         />
       )}
@@ -737,7 +1068,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
 
             <DataTable
               columns={referralColumns}
-              data={referrals.filter((r) => r.to_hospital_id === hospitalId && r.status === "PENDING")}
+              data={inboundReferrals.filter((r) => r.status === "PENDING")}
               keyExtractor={(r) => r.referral_id}
               loading={referralLoading}
               emptyTitle="Inbound Queue Clear"
@@ -759,10 +1090,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
               {(["incoming", "outgoing", "all"] as const).map((scope) => (
                 <button
                   key={scope}
-                  onClick={() => {
-                    setReferralScope(scope);
-                    loadReferrals(scope);
-                  }}
+                  onClick={() => setReferralScope(scope)}
                   className={`rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition ${
                     referralScope === scope
                       ? "bg-blue-600 text-white shadow-sm"
@@ -770,23 +1098,23 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   }`}
                 >
                   {scope === "incoming"
-                    ? "Inbound Requests"
+                    ? `Inbound Requests (${inboundReferrals.length})`
                     : scope === "outgoing"
-                    ? "Outbound Referrals"
-                    : "All Hospital Cases"}
+                    ? `Outbound Referrals (${outboundReferrals.length})`
+                    : `All Hospital Cases (${allReferrals.length})`}
                 </button>
               ))}
             </div>
 
             <p className="text-xs text-slate-400">
-              Showing <span className="font-bold text-slate-200">{referrals.length}</span> total cases
+              Showing <span className="font-bold text-slate-200">{displayedReferrals.length}</span> total cases
             </p>
           </div>
 
           {/* Full Referrals Table */}
           <DataTable
             columns={referralColumns}
-            data={referrals}
+            data={displayedReferrals}
             keyExtractor={(r) => r.referral_id}
             loading={referralLoading}
             searchPlaceholder="Search Case ID, Patient ID, or Hospital..."
@@ -1003,16 +1331,25 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
             <div>
               <h3 className="text-base font-bold text-white">Hospital Inpatient Registry</h3>
               <p className="text-xs text-slate-400">
-                Patients admitted under local care available for network transfer
+                Patients admitted under local care available for clinical management and AI network transfer
               </p>
             </div>
-            <button
-              onClick={loadPatients}
-              disabled={patientLoading}
-              className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
-            >
-              {patientLoading ? "Refreshing..." : "Refresh Patients"}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={openIntakeModal}
+                className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 text-xs font-bold shadow-md shadow-blue-600/25 transition active:scale-95"
+              >
+                <span>+</span>
+                <span>Register New Patient</span>
+              </button>
+              <button
+                onClick={loadPatients}
+                disabled={patientLoading}
+                className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+              >
+                {patientLoading ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
           </div>
 
           {patientError && (
@@ -1148,200 +1485,803 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
       )}
 
       {/* ============================================================ */}
-      {/* MODAL: CREATE REFERRAL WITH AI RECOMMENDATIONS */}
+      {/* MODAL: NEW PATIENT INTAKE & ADMISSION */}
       {/* ============================================================ */}
-      {referralModalPatient && (
+      {intakeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5">
+          <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div>
-                <h3 className="text-base font-bold text-white">
-                  Initiate Network Patient Referral
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-blue-500/20 px-2.5 py-0.5 text-[11px] font-bold text-blue-400 border border-blue-500/30 uppercase tracking-wide">
+                    Hospital Clinical Command
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">Facility: {hospitalId}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white mt-1">
+                  New Inpatient Intake & Bed Allocation
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Patient: <span className="text-white font-semibold">{referralModalPatient.name}</span> (
-                  {referralModalPatient.patient_id}) • {referralModalPatient.age}y {referralModalPatient.gender}
+                  Register demographics, baseline clinical vitals, and admission ward for local care and network referral eligibility.
                 </p>
               </div>
               <button
-                onClick={() => setReferralModalPatient(null)}
-                className="rounded-lg p-1 text-slate-400 hover:text-white"
+                onClick={() => setIntakeModalOpen(false)}
+                className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition"
               >
                 ✕
               </button>
             </div>
 
-            {/* Clinical Decision Support Disclaimer */}
-            <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200 flex items-start gap-2.5">
-              <span className="text-sm">ℹ️</span>
-              <div>
-                <span className="font-bold">Clinical Decision Support (CDS) Notice: </span>
-                AI rankings estimate historical capability and bed capacity. Attending physician clinical verification and destination acceptance are required before patient dispatch.
+            {intakeSuccessNotice && (
+              <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 flex items-center gap-2">
+                <span>✓</span>
+                <span className="font-semibold">{intakeSuccessNotice}</span>
               </div>
-            </div>
+            )}
 
-            {/* AI Hospital Recommendations Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  AI-Ranked Eligible Facilities
+            {intakeError && (
+              <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-center gap-2">
+                <span>⚠️</span>
+                <span>{intakeError}</span>
+              </div>
+            )}
+
+            <form onSubmit={submitPatientIntake} className="space-y-5">
+              {/* SECTION 1: DEMOGRAPHICS */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800/80 pb-1 flex items-center gap-2">
+                  <span>👤</span>
+                  <span>1. Patient Demographics</span>
                 </h4>
-                {recLoading && (
-                  <span className="text-xs text-blue-400 flex items-center gap-1">
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-blue-400 border-t-transparent" />
-                    Calculating rankings...
-                  </span>
-                )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Full Legal Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={intakeName}
+                      onChange={(e) => setIntakeName(e.target.value)}
+                      placeholder="e.g. Ramesh Kumar"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Age (Years) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      max={130}
+                      value={intakeAge}
+                      onChange={(e) => setIntakeAge(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 54"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Gender *
+                    </label>
+                    <select
+                      value={intakeGender}
+                      onChange={(e) => setIntakeGender(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Blood Group
+                    </label>
+                    <select
+                      value={intakeBloodGroup}
+                      onChange={(e) => setIntakeBloodGroup(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                      <option value="Unknown">Unknown</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={intakePhone}
+                      onChange={(e) => setIntakePhone(e.target.value)}
+                      placeholder="+91-9876543210"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Emergency Contact / Guardian
+                    </label>
+                    <input
+                      type="text"
+                      value={intakeEmergencyContact}
+                      onChange={(e) => setIntakeEmergencyContact(e.target.value)}
+                      placeholder="e.g. Sunita Devi (Spouse) - 9876543211"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      District & State
+                    </label>
+                    <input
+                      type="text"
+                      value={`${intakeDistrict}, ${intakeState}`}
+                      disabled
+                      className="mt-1 w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-400 outline-none cursor-not-allowed"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {recError && <p className="text-xs text-rose-400">{recError}</p>}
+              {/* SECTION 2: CLINICAL ADMISSION & BED ALLOCATION */}
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800/80 pb-1 flex items-center gap-2">
+                  <span>🩺</span>
+                  <span>2. Clinical Diagnosis & Bed Allocation</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-3">
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Chief Complaint / Primary Diagnosis *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={intakeChiefComplaint}
+                      onChange={(e) => setIntakeChiefComplaint(e.target.value)}
+                      placeholder="e.g. Acute Coronary Syndrome, STEMI anterior wall"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
 
-              {recommendations.length > 0 ? (
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {recommendations.slice(0, 5).map((h, i) => {
-                    const isSelected = referralTargetHospitalId === h.hospital_id;
-                    return (
-                      <div
-                        key={h.hospital_id || i}
-                        onClick={() => setReferralTargetHospitalId(h.hospital_id)}
-                        className={`cursor-pointer rounded-xl border p-3 transition ${
-                          isSelected
-                            ? "border-blue-500 bg-blue-950/40 ring-1 ring-blue-500"
-                            : "border-slate-800 bg-slate-950 hover:border-slate-700"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-400">
-                              #{i + 1}
-                            </span>
-                            <span className="text-xs font-bold text-white">
-                              {h.hospital_name || h.name || h.hospital_id}
-                            </span>
-                            <span className="text-[10px] font-mono text-slate-400">
-                              ({h.hospital_id})
-                            </span>
-                          </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Required Specialty *
+                    </label>
+                    <select
+                      value={intakeSpecialty}
+                      onChange={(e) => setIntakeSpecialty(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="Cardiology">Cardiology</option>
+                      <option value="Neurology">Neurology</option>
+                      <option value="Trauma/Emergency">Trauma & Emergency</option>
+                      <option value="General Medicine">General Medicine</option>
+                      <option value="Orthopedics">Orthopedics</option>
+                      <option value="Pediatrics">Pediatrics</option>
+                      <option value="Pulmonology">Pulmonology</option>
+                      <option value="Critical Care">Critical Care / ICU</option>
+                      <option value="Nephrology">Nephrology / Dialysis</option>
+                      <option value="General Surgery">General Surgery</option>
+                    </select>
+                  </div>
 
-                          <div className="flex items-center gap-3 text-xs">
-                            <span className="text-slate-400">
-                              {formatDistance(h.distance_km)}
-                            </span>
-                            <span className="text-emerald-400 font-semibold">
-                              {h.available_icu_beds} ICU Beds
-                            </span>
-                            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-blue-300 font-mono">
-                              Fit: {formatModelFitScore(h.success_probability)}
-                            </span>
-                          </div>
-                        </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Assigned Bed Category *
+                    </label>
+                    <select
+                      value={intakeBedType}
+                      onChange={(e) => setIntakeBedType(e.target.value as any)}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500 font-semibold"
+                    >
+                      <option value="GENERAL">General Inpatient Bed</option>
+                      <option value="ICU">Intensive Care Unit (ICU)</option>
+                      <option value="VENTILATOR">ICU Ventilator Bed</option>
+                      <option value="OXYGEN">Oxygen Supported Bay</option>
+                      <option value="EMERGENCY_BAY">Emergency Triage Bay</option>
+                    </select>
+                  </div>
 
-                        {h.reasons && h.reasons.length > 0 && (
-                          <p className="mt-1.5 text-[11px] text-slate-400 line-clamp-1">
-                            ✓ {h.reasons.join(" • ")}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Triage Severity Level *
+                    </label>
+                    <select
+                      value={intakeSeverity}
+                      onChange={(e) => setIntakeSeverity(e.target.value as any)}
+                      className={`mt-1 w-full rounded-xl border px-3 py-2 text-xs font-bold outline-none focus:border-blue-500 ${
+                        intakeSeverity === "CRITICAL"
+                          ? "border-rose-500/50 bg-rose-950/30 text-rose-400"
+                          : intakeSeverity === "HIGH"
+                          ? "border-amber-500/50 bg-amber-950/30 text-amber-400"
+                          : "border-slate-700 bg-slate-950 text-emerald-400"
+                      }`}
+                    >
+                      <option value="CRITICAL">CRITICAL (Immediate Care)</option>
+                      <option value="HIGH">HIGH (Urgent Attention)</option>
+                      <option value="MODERATE">MODERATE (Standard Inpatient)</option>
+                      <option value="LOW">LOW (Mild / Observation)</option>
+                    </select>
+                  </div>
                 </div>
-              ) : (
-                !recLoading && (
-                  <p className="text-xs text-slate-500 italic">
-                    Enter hospital ID manually or reload AI rankings.
-                  </p>
-                )
-              )}
-            </div>
+              </div>
 
-            {/* Referral Form Fields */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 pt-2 border-t border-slate-800">
-              <div>
+              {/* SECTION 3: BASELINE VITALS */}
+              <div className="space-y-3 pt-2">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800/80 pb-1 flex items-center gap-2">
+                  <span>💓</span>
+                  <span>3. Baseline Clinical Vitals</span>
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      SpO2 (%)
+                    </label>
+                    <input
+                      type="number"
+                      min={40}
+                      max={100}
+                      value={intakeSpO2}
+                      onChange={(e) => setIntakeSpO2(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 96"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      Heart Rate (bpm)
+                    </label>
+                    <input
+                      type="number"
+                      min={30}
+                      max={250}
+                      value={intakeHeartRate}
+                      onChange={(e) => setIntakeHeartRate(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="e.g. 84"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      Systolic BP
+                    </label>
+                    <input
+                      type="number"
+                      min={50}
+                      max={260}
+                      value={intakeSystolicBP}
+                      onChange={(e) => setIntakeSystolicBP(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="120"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      Diastolic BP
+                    </label>
+                    <input
+                      type="number"
+                      min={30}
+                      max={180}
+                      value={intakeDiastolicBP}
+                      onChange={(e) => setIntakeDiastolicBP(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="80"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      Temp (°F)
+                    </label>
+                    <input
+                      type="number"
+                      step={0.1}
+                      min={85}
+                      max={112}
+                      value={intakeTemp}
+                      onChange={(e) => setIntakeTemp(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="98.6"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-400">
+                      Resp Rate (/min)
+                    </label>
+                    <input
+                      type="number"
+                      min={6}
+                      max={70}
+                      value={intakeRespRate}
+                      onChange={(e) => setIntakeRespRate(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="18"
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 4: CLINICAL NOTES */}
+              <div className="space-y-1.5 pt-2">
                 <label className="block text-xs font-semibold text-slate-300">
-                  Target Destination Hospital ID *
+                  Initial Clinical Admission Notes
                 </label>
-                <input
-                  type="text"
-                  value={referralTargetHospitalId}
-                  onChange={(e) => setReferralTargetHospitalId(e.target.value.toUpperCase())}
-                  placeholder="e.g. GH00119"
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white font-mono outline-none focus:border-blue-500"
+                <textarea
+                  rows={2}
+                  value={intakeNotes}
+                  onChange={(e) => setIntakeNotes(e.target.value)}
+                  placeholder="Record initial findings, pre-existing comorbidities, medication orders..."
+                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-300">
-                  Required Bed Type
-                </label>
-                <select
-                  value={referralBedType}
-                  onChange={(e) => setReferralBedType(e.target.value as any)}
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+              {/* Form Actions */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIntakeModalOpen(false)}
+                  disabled={intakeLoading}
+                  className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
                 >
-                  <option value="GENERAL">General Inpatient Bed</option>
-                  <option value="ICU">Intensive Care Unit (ICU)</option>
-                  <option value="EMERGENCY">Emergency / Trauma Bed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-300">
-                  Clinical Priority
-                </label>
-                <select
-                  value={referralPriority}
-                  onChange={(e) => setReferralPriority(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={intakeLoading}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
                 >
-                  <option value="Critical">Critical (Immediate Transfer)</option>
-                  <option value="Urgent">Urgent (&lt; 2 Hours)</option>
-                  <option value="Stable">Stable Elective Transfer</option>
-                </select>
+                  {intakeLoading && (
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  )}
+                  <span>{intakeLoading ? "Saving Patient..." : "Complete Admission"}</span>
+                </button>
               </div>
-            </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300">
-                Clinical Referral Indication & Reason
-              </label>
-              <textarea
-                rows={2}
-                value={referralReason}
-                onChange={(e) => setReferralReason(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
-              />
-            </div>
-
-            {createReferralError && (
-              <p className="text-xs text-rose-400 font-semibold">{createReferralError}</p>
-            )}
-
-            {createReferralSuccess && (
-              <p className="text-xs text-emerald-400 font-semibold">{createReferralSuccess}</p>
-            )}
-
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+      {/* ============================================================ */}
+      {/* 2-STEP CLINICAL REFERRAL MODAL (CDS + AI RECOMMENDATIONS) */}
+      {/* ============================================================ */}
+      {referralModalPatient && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-5">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/30">
+                    Network Referral Command
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono">
+                    Patient ID: {referralModalPatient.patient_id}
+                  </span>
+                </div>
+                <h3 className="text-lg font-bold text-white mt-1">
+                  Inter-Hospital Clinical Referral Workflow
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Patient: <span className="text-white font-semibold">{referralModalPatient.name}</span> • {referralModalPatient.age}y {referralModalPatient.gender}
+                </p>
+              </div>
               <button
-                type="button"
                 onClick={() => setReferralModalPatient(null)}
-                disabled={createReferralLoading}
-                className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700"
+                className="rounded-lg p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 transition"
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={submitCreateReferral}
-                disabled={createReferralLoading || !referralTargetHospitalId.trim()}
-                className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-semibold text-white hover:bg-blue-500 transition disabled:opacity-50 flex items-center gap-2"
-              >
-                {createReferralLoading && (
-                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                )}
-                <span>{createReferralLoading ? "Submitting..." : "Submit Referral"}</span>
+                ✕
               </button>
             </div>
+
+            {/* Stepper Header */}
+            <div className="grid grid-cols-2 gap-2 text-center text-xs font-semibold">
+              <div
+                className={`rounded-xl py-2 px-3 border transition ${
+                  referralModalStep === 1
+                    ? "border-blue-500 bg-blue-500/10 text-blue-300 font-bold shadow-inner"
+                    : "border-slate-800 bg-slate-950/60 text-slate-400"
+                }`}
+              >
+                <span>Step 1: Current Condition Assessment</span>
+              </div>
+              <div
+                className={`rounded-xl py-2 px-3 border transition ${
+                  referralModalStep === 2
+                    ? "border-blue-500 bg-blue-500/10 text-blue-300 font-bold shadow-inner"
+                    : "border-slate-800 bg-slate-950/60 text-slate-400"
+                }`}
+              >
+                <span>Step 2: AI-Ranked Suitable Facilities</span>
+              </div>
+            </div>
+
+            {/* STEP 1: CURRENT CLINICAL CONDITION ASSESSMENT */}
+            {referralModalStep === 1 && (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-blue-200 flex items-start gap-2.5">
+                  <span className="text-base">ℹ️</span>
+                  <div>
+                    <span className="font-bold">Clinical Condition Evaluation: </span>
+                    Provide the patient's updated real-time physiological condition, required specialized destination capability, and transport urgency. The AI recommendation engine scores facilities against these parameters.
+                  </div>
+                </div>
+
+                {recError && (
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                    ⚠️ {recError}
+                  </div>
+                )}
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Current Clinical Condition / Reason for Referral *
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={evalConditionSummary}
+                      onChange={(e) => setEvalConditionSummary(e.target.value)}
+                      placeholder="e.g. Deteriorating SpO2 to 86%, acute respiratory distress, primary PCI / Cath Lab required immediately..."
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Urgency / Triage Level *
+                      </label>
+                      <select
+                        value={evalUrgency}
+                        onChange={(e) => setEvalUrgency(e.target.value as any)}
+                        className={`mt-1 w-full rounded-xl border px-3 py-2 text-xs font-bold outline-none ${
+                          evalUrgency === "CRITICAL"
+                            ? "border-rose-500/50 bg-rose-950/30 text-rose-400"
+                            : evalUrgency === "URGENT" || evalUrgency === "EMERGENCY"
+                            ? "border-amber-500/50 bg-amber-950/30 text-amber-400"
+                            : "border-slate-700 bg-slate-950 text-emerald-400"
+                        }`}
+                      >
+                        <option value="CRITICAL">CRITICAL (Immediate Transfer)</option>
+                        <option value="EMERGENCY">EMERGENCY (&lt; 1 Hour)</option>
+                        <option value="URGENT">URGENT (&lt; 3 Hours)</option>
+                        <option value="ROUTINE">ROUTINE (Elective Transfer)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Required Specialty *
+                      </label>
+                      <select
+                        value={evalSpecialty}
+                        onChange={(e) => setEvalSpecialty(e.target.value)}
+                        className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                      >
+                        <option value="Cardiology">Cardiology</option>
+                        <option value="Neurology">Neurology</option>
+                        <option value="Trauma/Emergency">Trauma / Emergency Care</option>
+                        <option value="Pulmonology">Pulmonology</option>
+                        <option value="Critical Care">Critical Care / ICU</option>
+                        <option value="Nephrology">Nephrology</option>
+                        <option value="Orthopedics">Orthopedics</option>
+                        <option value="General Surgery">General Surgery</option>
+                        <option value="General Medicine">General Medicine</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-300">
+                        Required Destination Bed *
+                      </label>
+                      <select
+                        value={evalBedType}
+                        onChange={(e) => setEvalBedType(e.target.value as any)}
+                        className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500 font-semibold"
+                      >
+                        <option value="ICU">Intensive Care Unit (ICU)</option>
+                        <option value="VENTILATOR">ICU Ventilator Bed</option>
+                        <option value="GENERAL">General Inpatient Bed</option>
+                        <option value="EMERGENCY">Emergency / Bay</option>
+                        <option value="NICU">Neonatal ICU (NICU)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300">
+                      Transport / Transit Requirement *
+                    </label>
+                    <select
+                      value={evalTransport}
+                      onChange={(e) => setEvalTransport(e.target.value as any)}
+                      className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="ALS_AMBULANCE">Advanced Life Support (ALS) Ambulance (Ventilator / Paramedic)</option>
+                      <option value="BASIC_AMBULANCE">Basic Ambulance (BLS with Oxygen)</option>
+                      <option value="NONE">Standard / Patient Self-Transport</option>
+                    </select>
+                  </div>
+
+                  {/* Updated Vitals inputs */}
+                  <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 space-y-2">
+                    <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wide">
+                      Updated Live Physiological Vitals
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+                      <div>
+                        <label className="block text-[10px] text-slate-400">SpO2 (%)</label>
+                        <input
+                          type="number"
+                          value={evalSpO2}
+                          onChange={(e) => setEvalSpO2(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="e.g. 91"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400">Heart Rate</label>
+                        <input
+                          type="number"
+                          value={evalHeartRate}
+                          onChange={(e) => setEvalHeartRate(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="e.g. 110"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400">Systolic BP</label>
+                        <input
+                          type="number"
+                          value={evalSystolicBP}
+                          onChange={(e) => setEvalSystolicBP(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="150"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400">Diastolic BP</label>
+                        <input
+                          type="number"
+                          value={evalDiastolicBP}
+                          onChange={(e) => setEvalDiastolicBP(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="95"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400">Temp (°F)</label>
+                        <input
+                          type="number"
+                          step={0.1}
+                          value={evalTemp}
+                          onChange={(e) => setEvalTemp(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="99.2"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400">GCS Score</label>
+                        <input
+                          type="number"
+                          min={3}
+                          max={15}
+                          value={evalGCS}
+                          onChange={(e) => setEvalGCS(e.target.value === "" ? "" : Number(e.target.value))}
+                          placeholder="14"
+                          className="mt-0.5 w-full rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-white font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setReferralModalPatient(null)}
+                    className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRunConditionAssessment}
+                    disabled={recLoading || !evalConditionSummary.trim()}
+                    className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
+                  >
+                    {recLoading && (
+                      <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    )}
+                    <span>{recLoading ? "Scoring Facilities..." : "Find Suitable Hospitals →"}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: AI-RANKED SUITABLE DESTINATION HOSPITALS */}
+            {referralModalStep === 2 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setReferralModalStep(1)}
+                      className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+                    >
+                      <span>←</span>
+                      <span>Modify Assessment</span>
+                    </button>
+                    <span className="text-slate-600">•</span>
+                    <span className="text-xs text-slate-300">
+                      Criteria: <strong className="text-white">{evalSpecialty}</strong> ({evalBedType}) • <span className="font-bold text-amber-400">{evalUrgency}</span>
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-400 font-mono">
+                    {recommendations.length} Destination(s) Ranked
+                  </span>
+                </div>
+
+                {createReferralError && (
+                  <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                    ⚠️ {createReferralError}
+                  </div>
+                )}
+
+                {createReferralSuccess && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300">
+                    ✓ {createReferralSuccess}
+                  </div>
+                )}
+
+                {/* Recommendations list */}
+                <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
+                  {recommendations.length > 0 ? (
+                    recommendations.map((h, i) => {
+                      const isSelected = referralTargetHospitalId === h.hospital_id;
+                      return (
+                        <div
+                          key={h.hospital_id || i}
+                          onClick={() => setReferralTargetHospitalId(h.hospital_id)}
+                          className={`cursor-pointer rounded-xl border p-3.5 transition ${
+                            isSelected
+                              ? "border-blue-500 bg-blue-950/40 ring-2 ring-blue-500/80 shadow-lg"
+                              : "border-slate-800 bg-slate-950 hover:border-slate-700 hover:bg-slate-900/60"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[11px] font-bold text-blue-400">
+                                #{i + 1}
+                              </span>
+                              <div>
+                                <span className="text-xs font-bold text-white block">
+                                  {h.hospital_name || h.name || h.hospital_id}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  Facility ID: <span className="font-mono">{h.hospital_id}</span> • {h.district}, {h.state}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/20">
+                                {h.match_score ? `${h.match_score}% Match` : formatModelFitScore(h.success_probability)}
+                              </span>
+                              <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                                isSelected ? "border-blue-500 bg-blue-600" : "border-slate-700"
+                              }`}>
+                                {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick indicators */}
+                          <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-slate-300 border-t border-slate-800/80 pt-2">
+                            <span className="flex items-center gap-1 text-slate-400">
+                              <span>📍</span>
+                              <span>{formatDistance(h.distance_km)} (~{h.eta_minutes || 25} min transit)</span>
+                            </span>
+                            <span className="flex items-center gap-1 text-emerald-400 font-semibold">
+                              <span>🛏️</span>
+                              <span>{h.available_icu_beds} ICU Beds</span>
+                            </span>
+                            <span className="flex items-center gap-1 text-slate-300">
+                              <span>🏥</span>
+                              <span>{h.available_beds} General Beds</span>
+                            </span>
+                            {h.ventilators === "Yes" && (
+                              <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-cyan-300 font-medium">
+                                ⚡ Ventilator Ready
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Rationale */}
+                          {h.ai_rationale && h.ai_rationale.length > 0 && (
+                            <div className="mt-2 space-y-0.5 text-[11px] text-slate-400 bg-slate-900/60 rounded-lg p-2 border border-slate-800/60">
+                              {h.ai_rationale.map((r, ri) => (
+                                <p key={ri} className="flex items-start gap-1.5">
+                                  <span className="text-emerald-400 shrink-0">✓</span>
+                                  <span>{r}</span>
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-xs text-slate-500">
+                      No eligible destination facilities found. Please check condition assessment.
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected Hospital Confirmation & Trigger */}
+                <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] text-slate-400">Selected Destination Facility:</p>
+                    <p className="text-xs font-bold text-white">
+                      {referralTargetHospitalId ? (
+                        <>
+                          <span className="text-blue-400 font-mono">{referralTargetHospitalId}</span> (
+                          {recommendations.find((r) => r.hospital_id === referralTargetHospitalId)?.hospital_name || "Network Hospital"}
+                          )
+                        </>
+                      ) : (
+                        <span className="text-amber-400">Select a hospital above</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setReferralModalStep(1)}
+                      className="rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={submitCreateReferral}
+                      disabled={createReferralLoading || !referralTargetHospitalId.trim()}
+                      className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white hover:bg-blue-500 shadow-lg shadow-blue-600/25 transition disabled:opacity-50"
+                    >
+                      {createReferralLoading && (
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      )}
+                      <span>{createReferralLoading ? "Dispatching Referral..." : "Initiate Referral →"}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

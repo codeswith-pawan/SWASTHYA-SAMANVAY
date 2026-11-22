@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Milestone, ApplicationStatus, ApplicationStage } from "@/lib/types";
+import { Check, Clock, AlertTriangle, X, FileEdit } from "lucide-react";
 
 interface ApplicationTimelineProps {
   status: ApplicationStatus | string;
@@ -14,9 +15,9 @@ const STAGES_ORDER = [
   { key: "DRAFT", label: "Draft Form" },
   { key: "SUBMITTED", label: "Submission" },
   { key: "DISTRICT_REVIEW", label: "District Review" },
-  { key: "STATE_REVIEW", label: "State Directorate Review" },
-  { key: "CENTRAL_REVIEW", label: "Central Administration" },
-  { key: "APPROVED", label: "Approval & Provisioning" },
+  { key: "STATE_REVIEW", label: "State Review" },
+  { key: "CENTRAL_REVIEW", label: "Central Admin" },
+  { key: "APPROVED", label: "Approval" },
 ];
 
 export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
@@ -35,33 +36,33 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
       case "APPROVED":
       case "PROVISIONED":
         return {
-          bg: "bg-emerald-500/10 border-emerald-500/30 text-emerald-300",
+          bg: "bg-emerald-50 border-emerald-200 text-emerald-700",
           label: "Approved & Provisioned",
           icon: "✓",
         };
       case "REJECTED":
         return {
-          bg: "bg-rose-500/10 border-rose-500/30 text-rose-300",
+          bg: "bg-rose-50 border-rose-200 text-rose-700",
           label: "Application Rejected",
           icon: "✕",
         };
       case "CORRECTION_REQUIRED":
         return {
-          bg: "bg-amber-500/10 border-amber-500/30 text-amber-300",
+          bg: "bg-amber-50 border-amber-200 text-amber-700",
           label: `Correction Required (v${resubmissionVersion})`,
           icon: "⚠",
         };
       case "SUBMITTED":
       case "UNDER_REVIEW":
         return {
-          bg: "bg-blue-500/10 border-blue-500/30 text-blue-300",
+          bg: "bg-indigo-50 border-indigo-200 text-indigo-700",
           label: "Under Active Review",
           icon: "⟳",
         };
       case "DRAFT":
       default:
         return {
-          bg: "bg-slate-700/20 border-slate-600/30 text-slate-300",
+          bg: "bg-slate-100 border-slate-200 text-slate-600",
           label: "Draft - Pending Submission",
           icon: "✎",
         };
@@ -71,12 +72,12 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
   const badge = getStatusBadge();
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 sm:p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+    <div className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-5 sm:p-6 shadow-[0_4px_20px_rgb(15,23,42,0.04)]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div>
-          <h3 className="text-sm font-semibold text-white">Application Verification Progress</h3>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Current Stage: <span className="text-slate-200 font-medium">{currentStage.replace(/_/g, " ")}</span>
+          <h3 className="text-sm font-bold text-slate-900">Application Verification Progress</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Current Stage: <span className="text-slate-800 font-semibold">{currentStage.replace(/_/g, " ")}</span>
           </p>
         </div>
         <div
@@ -111,27 +112,33 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
           return (
             <div key={stage.key} className="flex flex-col items-center text-center relative">
               <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold border transition ${
+                className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold border transition ${
                   stepState === "completed"
-                    ? "bg-emerald-600/20 border-emerald-500 text-emerald-400"
+                    ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
                     : stepState === "current"
-                    ? "bg-blue-600 border-blue-400 text-white animate-pulse"
+                    ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-4 ring-indigo-500/15"
                     : stepState === "alert"
-                    ? "bg-amber-600/20 border-amber-500 text-amber-400"
-                    : "bg-slate-800 border-slate-700 text-slate-500"
+                    ? "bg-amber-500 border-amber-500 text-white shadow-sm"
+                    : "bg-slate-100 border-slate-200 text-slate-400"
                 }`}
               >
-                {stepState === "completed" ? "✓" : stepState === "alert" ? "!" : idx + 1}
+                {stepState === "completed" ? (
+                  <Check className="w-4 h-4 stroke-[2.5]" />
+                ) : stepState === "alert" ? (
+                  <AlertTriangle className="w-4 h-4" />
+                ) : (
+                  idx + 1
+                )}
               </div>
               <span
                 className={`mt-2 text-[11px] leading-tight font-medium ${
                   stepState === "current"
-                    ? "text-blue-300 font-semibold"
+                    ? "text-indigo-700 font-bold"
                     : stepState === "completed"
-                    ? "text-slate-200"
+                    ? "text-emerald-700 font-semibold"
                     : stepState === "alert"
-                    ? "text-amber-300 font-semibold"
-                    : "text-slate-500"
+                    ? "text-amber-700 font-semibold"
+                    : "text-slate-400"
                 }`}
               >
                 {stage.label}
@@ -143,34 +150,34 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
 
       {/* Milestones Log List */}
       {milestones && milestones.length > 0 && (
-        <div className="mt-6 border-t border-slate-800/80 pt-5">
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+        <div className="mt-6 border-t border-slate-100 pt-5">
+          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
             Milestone Audit History ({milestones.length})
           </h4>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {milestones.map((m, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 text-xs"
+                className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-xs"
               >
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px]">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold">
                   ●
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="font-semibold text-slate-200">
+                    <span className="font-bold text-slate-800">
                       {m.action ? m.action.replace(/_/g, " ") : m.stage}
                     </span>
                     {m.timestamp && (
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[11px] text-slate-500 font-mono">
                         {new Date(m.timestamp).toLocaleString()}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
-                    <span>Stage: <strong className="text-slate-300">{m.stage}</strong></span>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
+                    <span>Stage: <strong className="text-slate-700">{m.stage}</strong></span>
                     <span>•</span>
-                    <span>Status: <strong className="text-slate-300">{m.status}</strong></span>
+                    <span>Status: <strong className="text-slate-700">{m.status}</strong></span>
                   </div>
                 </div>
               </div>

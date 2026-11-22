@@ -6,6 +6,7 @@ import { apiGetReviewerApplications, apiGetReviewerApplicationDetail } from "@/l
 import { ReviewerDashboardStats } from "./ReviewerDashboardStats";
 import { ReviewerInboxTable } from "./ReviewerInboxTable";
 import { ReviewerDossierView } from "./ReviewerDossierView";
+import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface ReviewerPortalProps {
   user: User;
@@ -92,9 +93,9 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
     <div className="space-y-6">
       {/* Global Notice */}
       {error && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-start gap-3">
-          <span className="text-base">⚠️</span>
-          <div className="flex-1">{error}</div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-xs sm:text-sm text-rose-800 flex items-start gap-3 shadow-xs animate-fade-in-up">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="flex-1 font-medium">{error}</div>
         </div>
       )}
 
@@ -110,10 +111,10 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
           }}
         />
       ) : dossierLoading ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-12 text-center text-slate-400">
+        <div className="gov-card p-12 text-center text-[#60738C] bg-white border border-[#DCE5EF]">
           <div className="flex flex-col items-center justify-center gap-3">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
-            <span className="text-xs font-semibold text-slate-300">Loading complete application dossier...</span>
+            <span className="h-7 w-7 animate-spin rounded-full border-2 border-[#008F83] border-t-transparent" />
+            <span className="text-xs font-semibold text-[#0B2345]">Loading complete application dossier...</span>
           </div>
         </div>
       ) : (

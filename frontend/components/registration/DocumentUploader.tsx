@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { DocumentMetadata, DocumentType } from "@/lib/types";
 import { apiUploadDocument, apiDeleteDocument } from "@/lib/api";
+import { FileText, UploadCloud, Trash2, CheckCircle2, AlertCircle, RefreshCw } from "lucide-react";
 
 interface DocumentSlot {
   type: DocumentType;
@@ -46,7 +47,6 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
     setErrorMap((prev) => ({ ...prev, [slotType]: "" }));
 
-    // Client-side validations
     if (!ALLOWED_MIME_TYPES.includes(file.type)) {
       setErrorMap((prev) => ({
         ...prev,
@@ -110,46 +110,49 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
             className={`rounded-2xl border p-4 sm:p-5 transition ${
               uploadedDoc
                 ? uploadedDoc.verification_status === "REJECTED"
-                  ? "border-rose-500/40 bg-rose-950/10"
+                  ? "border-rose-200 bg-rose-50/50"
                   : uploadedDoc.verification_status === "VERIFIED"
-                  ? "border-emerald-500/40 bg-emerald-950/10"
-                  : "border-slate-800 bg-slate-900/60"
-                : "border-slate-800/80 bg-slate-900/30"
+                  ? "border-emerald-200 bg-emerald-50/40"
+                  : "border-slate-200 bg-slate-50/70"
+                : "border-slate-200/90 bg-white"
             }`}
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white">{slot.label}</span>
+                  <span className="text-sm font-bold text-slate-900">{slot.label}</span>
                   {slot.required ? (
-                    <span className="rounded bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-rose-400 border border-rose-500/20">
+                    <span className="rounded bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
                       Required
                     </span>
                   ) : (
-                    <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold text-slate-400">
+                    <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 border border-slate-200">
                       Optional
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-slate-400">{slot.description}</p>
+                <p className="mt-1 text-xs text-slate-500 leading-relaxed">{slot.description}</p>
               </div>
 
               {/* Status Badge */}
               {uploadedDoc && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   {uploadedDoc.verification_status === "VERIFIED" && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
-                      ✓ Verified
+                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Verified</span>
                     </span>
                   )}
                   {uploadedDoc.verification_status === "REJECTED" && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-300">
-                      ✕ Rejected
+                    <span className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-rose-50 px-2.5 py-0.5 text-xs font-bold text-rose-800">
+                      <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Rejected</span>
                     </span>
                   )}
                   {uploadedDoc.verification_status === "PENDING" && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-2.5 py-0.5 text-xs font-semibold text-blue-300">
-                      ⟳ Pending Review
+                    <span className="inline-flex items-center gap-1 rounded-full border border-teal-300 bg-teal-50 px-2.5 py-0.5 text-xs font-bold text-teal-800">
+                      <RefreshCw className="w-3.5 h-3.5 text-teal-600 animate-spin" />
+                      <span>Pending Review</span>
                     </span>
                   )}
                 </div>
@@ -158,12 +161,14 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
             {/* If uploaded */}
             {uploadedDoc ? (
-              <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/80 p-3.5">
+              <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <span className="text-xl">📄</span>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 border border-teal-200 text-teal-700">
+                      <FileText className="w-5 h-5" />
+                    </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-slate-200 truncate">
+                      <p className="text-xs font-bold text-slate-900 truncate">
                         {uploadedDoc.original_filename}
                       </p>
                       <p className="text-[11px] text-slate-500">
@@ -175,7 +180,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
                   {canEdit && (
                     <div className="flex items-center gap-2">
-                      <label className="cursor-pointer rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-[11px] font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition">
+                      <label className="cursor-pointer rounded-lg border border-slate-300 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-100 transition shadow-2xs">
                         Replace File
                         <input
                           type="file"
@@ -189,9 +194,10 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
                         type="button"
                         onClick={() => handleDelete(uploadedDoc.document_id, slot.type)}
                         disabled={deletingId === uploadedDoc.document_id}
-                        className="rounded-lg border border-rose-800/40 bg-rose-950/30 px-3 py-1.5 text-[11px] font-semibold text-rose-300 hover:bg-rose-900/50 transition disabled:opacity-50"
+                        className="rounded-lg border border-rose-300 bg-rose-50 px-3 py-1.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 transition disabled:opacity-50 inline-flex items-center gap-1 shadow-2xs"
                       >
-                        {deletingId === uploadedDoc.document_id ? "Removing..." : "Remove"}
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>{deletingId === uploadedDoc.document_id ? "Removing..." : "Remove"}</span>
                       </button>
                     </div>
                   )}
@@ -199,26 +205,26 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
                 {/* Reviewer remarks if rejected */}
                 {uploadedDoc.reviewer_remarks && (
-                  <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-300">
+                  <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800">
                     <strong className="font-semibold">Reviewer Reason:</strong> {uploadedDoc.reviewer_remarks}
                   </div>
                 )}
               </div>
             ) : (
-              /* Upload Area */
+              /* Upload Dropzone Area */
               canEdit && (
                 <div className="mt-3">
                   <label
-                    className={`flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-700 bg-slate-950/40 px-4 py-5 text-center cursor-pointer hover:border-blue-500 hover:bg-slate-900/50 transition ${
+                    className={`flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/70 hover:bg-teal-50/40 hover:border-teal-500 px-4 py-5 text-center cursor-pointer transition ${
                       isUploading ? "opacity-50 pointer-events-none" : ""
                     }`}
                   >
-                    <span className="text-2xl mb-1">📤</span>
-                    <span className="text-xs font-semibold text-slate-200">
-                      {isUploading ? "Uploading & scanning document..." : "Click to select or drag and drop"}
+                    <UploadCloud className="w-6 h-6 text-teal-600 mb-1" />
+                    <span className="text-xs font-bold text-slate-800">
+                      {isUploading ? "Uploading & scanning document..." : "Click to select or drag and drop file"}
                     </span>
                     <span className="mt-1 text-[11px] text-slate-500">
-                      PDF, JPEG, or PNG up to 25 MB
+                      Accepted: PDF, JPEG, or PNG (up to 25 MB)
                     </span>
                     <input
                       type="file"
@@ -234,7 +240,7 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({
 
             {/* Error banner */}
             {err && (
-              <div className="mt-2.5 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-rose-300">
+              <div className="mt-2.5 rounded-lg border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800">
                 {err}
               </div>
             )}

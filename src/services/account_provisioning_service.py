@@ -95,6 +95,26 @@ class AccountProvisioningService:
         self.session = session
         self.email_provider = email_provider or get_email_provider()
 
+    def _get_base_activation_url(self, explicit_url: Optional[str] = None) -> str:
+        """Derive base activation URL from explicit argument or global portal_base_url setting."""
+        if explicit_url:
+            return explicit_url.rstrip("/")
+        env_override = os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL")
+        if env_override and env_override.strip():
+            return f"{env_override.strip().rstrip('/')}/activate"
+        from src.config import get_settings
+        return f"{get_settings().portal_base_url}/activate"
+
+    def _get_base_reset_url(self, explicit_url: Optional[str] = None) -> str:
+        """Derive base password reset URL from explicit argument or global portal_base_url setting."""
+        if explicit_url:
+            return explicit_url.rstrip("/")
+        env_override = os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL")
+        if env_override and env_override.strip():
+            return f"{env_override.strip().rstrip('/')}/reset-password"
+        from src.config import get_settings
+        return f"{get_settings().portal_base_url}/reset-password"
+
     # ============================================================
     # 1. ACCOUNT PROVISIONING (POST FINAL APPROVAL)
     # ============================================================
@@ -104,6 +124,7 @@ class AccountProvisioningService:
         application_id: str,
         reviewer_user: Dict[str, Any],
         client_ip: Optional[str] = None,
+        base_activation_url: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Provision operational account for an approved application.
@@ -156,7 +177,7 @@ class AccountProvisioningService:
             .first()
         )
         if existing_user:
-            return self._build_existing_provisioning_result(app, existing_user)
+            return self._build_existing_provisioning_result(app, existing_user, base_activation_url=base_activation_url)
 
         # 4. Provision based on applicant_type with collision & concurrency safety
         try:
@@ -177,7 +198,7 @@ class AccountProvisioningService:
             self.session.rollback()
             existing_user = self.session.query(User).filter_by(application_id=app.application_id).first()
             if existing_user:
-                return self._build_existing_provisioning_result(app, existing_user)
+                return self._build_existing_provisioning_result(app, existing_user, base_activation_url=base_activation_url)
             raise
 
         # 5. Issue cryptographic one-time activation token
@@ -202,13 +223,14 @@ class AccountProvisioningService:
         }
         role_title = role_titles.get(user.role_id, "Operational Administrator")
         outbox_svc = EmailOutboxService(self.session, self.email_provider)
+        base_act = self._get_base_activation_url(base_activation_url)
         outbox_record = outbox_svc.enqueue_email(
             event_type="ACCOUNT_ACTIVATION",
             recipient_email=app.applicant_email,
             recipient_name=app.applicant_name,
             subject=f"Official Portal Account Activation: {role_title} ({app.application_number})",
             payload={
-                "activation_link": f"https://hospital.sih.gov.in/activate?token={raw_token}",
+                "activation_link": f"{base_act}?token={raw_token}",
                 "role_title": role_title,
                 "application_number": app.application_number,
                 "raw_token": raw_token,
@@ -240,6 +262,7 @@ class AccountProvisioningService:
         self,
         app: RegistrationApplication,
         existing_user: User,
+        base_activation_url: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Construct return dictionary for already provisioned user, generating token & outbox event if needed."""
         logger.info("Application '%s' already has provisioned user '%s'. Returning existing record.", app.application_number, existing_user.user_id)
@@ -278,13 +301,14 @@ class AccountProvisioningService:
             }
             role_title = role_titles.get(existing_user.role_id, "Operational Administrator")
             outbox_svc = EmailOutboxService(self.session, self.email_provider)
+            base_act = self._get_base_activation_url(base_activation_url)
             outbox_rec = outbox_svc.enqueue_email(
                 event_type="ACCOUNT_ACTIVATION",
                 recipient_email=app.applicant_email,
                 recipient_name=app.applicant_name,
                 subject=f"Official Portal Account Activation: {role_title} ({app.application_number})",
                 payload={
-                    "activation_link": f"https://hospital.sih.gov.in/activate?token={raw_token}",
+                    "activation_link": f"{base_act}?token={raw_token}",
                     "role_title": role_title,
                     "application_number": app.application_number,
                     "raw_token": raw_token,
@@ -489,7 +513,7 @@ class AccountProvisioningService:
     def dispatch_activation_email(
         self,
         provisioning_result: Dict[str, Any],
-        base_activation_url: str = "https://hospital.sih.gov.in/activate",
+        base_activation_url: Optional[str] = None,
     ) -> bool:
         """
         Dispatches activation email AFTER the database transaction has committed,
@@ -601,6 +625,7 @@ class AccountProvisioningService:
         self,
         applicant_email: str,
         application_number: str,
+        base_activation_url: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Generate and return a replacement activation token for an approved unactivated application:
@@ -664,13 +689,14 @@ class AccountProvisioningService:
         }
         role_title = role_titles.get(user.role_id, "Operational Administrator")
         outbox_svc = EmailOutboxService(self.session, self.email_provider)
+        base_act = self._get_base_activation_url(base_activation_url)
         outbox_rec = outbox_svc.enqueue_email(
             event_type="ACCOUNT_ACTIVATION",
             recipient_email=app.applicant_email,
             recipient_name=app.applicant_name,
             subject=f"Replacement Activation Link: {role_title} ({app.application_number})",
             payload={
-                "activation_link": f"https://hospital.sih.gov.in/activate?token={raw_token}",
+                "activation_link": f"{base_act}?token={raw_token}",
                 "role_title": role_title,
                 "application_number": app.application_number,
                 "raw_token": raw_token,
@@ -696,7 +722,7 @@ class AccountProvisioningService:
     def request_password_reset(
         self,
         email: str,
-        base_reset_url: str = "https://hospital.sih.gov.in/reset-password",
+        base_reset_url: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Request password reset link:
@@ -757,7 +783,8 @@ class AccountProvisioningService:
 
         # Enqueue in transactional email outbox
         outbox_svc = EmailOutboxService(self.session, self.email_provider)
-        reset_link = f"{base_reset_url}?token={raw_token}"
+        reset_base = self._get_base_reset_url(base_reset_url)
+        reset_link = f"{reset_base}?token={raw_token}"
         outbox_svc.enqueue_email(
             event_type="PASSWORD_RESET",
             recipient_email=user.email,

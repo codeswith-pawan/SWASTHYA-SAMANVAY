@@ -114,7 +114,7 @@ class ConfigurableOTPProvider(BaseOTPProvider):
                 "PORTAL_ACCESS_OTP": "Portal Access",
             }
             purpose_label = purpose_labels.get(purpose, purpose)
-            subject = f"Your Verification Code ({purpose_label}) - SIH Hospital Referral Portal"
+            subject = f"Your Verification Code ({purpose_label}) - ArogyaSetu Grid"
             body_text = f"""Dear User,
 
 Your single-use 6-digit verification code is: {otp}
@@ -125,8 +125,8 @@ It is valid for 10 minutes and can only be used once.
 For security reasons, do not share this verification code with anyone.
 
 Regards,
-National Smart Hospital Referral System
-Government of India
+ArogyaSetu Grid — Unified Critical Care & Hospital Command Network
+Support: pawanbussiness108@gmail.com
 """
             try:
                 success = email_provider.send_email(

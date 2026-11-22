@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --gov-navy-primary: #0B2345;
+  --gov-navy-dark: #07182F;
+  --gov-teal-primary: #008F83;
+  --gov-teal-secondary: #00A99D;
+  --gov-bg: #F4F8FC;
+  --gov-card-bg: #FFFFFF;
+  --gov-border: #DCE5EF;
+  --gov-text-primary: #14243B;
+  --gov-text-secondary: #60738C;
+  --gov-success: #0A9878;
+  --gov-warning: #D99A27;
+  --gov-error: #D94B4B;
+
+  --background: #F4F8FC;
+  --foreground: #14243B;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-gov-navy-primary: var(--gov-navy-primary);
+  --color-gov-navy-dark: var(--gov-navy-dark);
+  --color-gov-teal-primary: var(--gov-teal-primary);
+  --color-gov-teal-secondary: var(--gov-teal-secondary);
+  --color-gov-bg: var(--gov-bg);
+  --color-gov-card-bg: var(--gov-card-bg);
+  --color-gov-border: var(--gov-border);
+  --color-gov-text-primary: var(--gov-text-primary);
+  --color-gov-text-secondary: var(--gov-text-secondary);
+  --color-gov-success: var(--gov-success);
+  --color-gov-warning: var(--gov-warning);
+  --color-gov-error: var(--gov-error);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #F4F8FC;
+  color: #14243B;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle Medical-Inspired Grid & Cross Pattern */
+.bg-gov-pattern {
+  background-color: #F4F8FC;
+  background-image: radial-gradient(#DCE5EF 1px, transparent 1px), radial-gradient(#DCE5EF 1px, #F4F8FC 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 20px 20px;
+}
+
+/* Premium Government Animations & Micro-Interactions */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Government Card Styling with Subtle Hover Elevation */
+.gov-card {
+  background-color: #FFFFFF;
+  border: 1px solid #DCE5EF;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px -2px rgba(11, 35, 69, 0.05);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.gov-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -4px rgba(11, 35, 69, 0.09);
+  border-color: #00A99D;
+}
+
+/* Standard Clinical Hover Lift for existing components */
+.card-hover-lift {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -4px rgba(11, 35, 69, 0.08);
+}
+
+.btn-hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.btn-hover-lift:hover {
+  transform: translateY(-1px);
+}
+
+/* Accessible Focus States */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #008F83;
+  outline-offset: 2px;
+}
+
+/* Accessibility: Respect Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-pulse-glow,
+  .gov-card,
+  .card-hover-lift,
+  .btn-hover-lift {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }

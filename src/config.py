@@ -73,9 +73,12 @@ class SystemSettings(BaseModel):
     smtp_port: int = Field(default=587)
     smtp_username: str = Field(default="")
     smtp_password: str = Field(default="")
-    smtp_from_email: str = Field(default="no-reply@hospital.sih.gov.in")
+    smtp_from_email: str = Field(default="pawanbussiness108@gmail.com")
     smtp_use_tls: bool = Field(default=True)
     smtp_timeout: int = Field(default=10)
+
+    # Portal Frontend URL
+    portal_base_url: str = Field(default="http://localhost:3000")
 
     # Outbox Worker
     outbox_poll_interval: float = Field(default=5.0)
@@ -98,12 +101,30 @@ def load_settings() -> SystemSettings:
     is_prod = env in ("production", "prod")
     is_test = env in ("testing", "test")
 
-    # CORS origins
+    portal_base_url = (
+        _clean_str(os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL"))
+        or "http://localhost:3000"
+    ).rstrip("/")
+
+    # CORS origins (combines explicit CORS_ORIGINS with PORTAL_BASE_URL and standard Vercel/local origins)
+    default_origins = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8050",
+        "http://127.0.0.1:8050",
+        "https://arogyasetu-grid.vercel.app",
+    ]
+    if portal_base_url and portal_base_url not in default_origins:
+        default_origins.append(portal_base_url)
+
     cors_raw = os.getenv("CORS_ORIGINS", "")
     if cors_raw:
         cors_origins = [o.strip() for o in cors_raw.split(",") if o.strip()]
+        for origin in default_origins:
+            if origin not in cors_origins:
+                cors_origins.append(origin)
     else:
-        cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+        cors_origins = default_origins
 
     # Database
     db_url = _clean_str(os.getenv("DATABASE_URL") or os.getenv("SIH_DATABASE_URL"))
@@ -124,9 +145,14 @@ def load_settings() -> SystemSettings:
     smtp_port = int(os.getenv("SMTP_PORT") or os.getenv("SIH_SMTP_PORT") or "587")
     smtp_user = _clean_str(os.getenv("SMTP_USERNAME") or os.getenv("SMTP_USER") or os.getenv("SIH_SMTP_USER"))
     smtp_pass = os.getenv("SMTP_PASSWORD") or os.getenv("SIH_SMTP_PASSWORD") or ""
-    smtp_from = _clean_str(os.getenv("SMTP_FROM_EMAIL") or os.getenv("SMTP_FROM") or os.getenv("SIH_SMTP_FROM") or "no-reply@hospital.sih.gov.in")
+    smtp_from = _clean_str(os.getenv("SMTP_FROM_EMAIL") or os.getenv("SMTP_FROM") or os.getenv("SIH_SMTP_FROM") or "pawanbussiness108@gmail.com")
     smtp_tls = _to_bool(os.getenv("SMTP_USE_TLS") or os.getenv("SIH_SMTP_USE_TLS"), default=True)
     smtp_timeout = int(os.getenv("SMTP_TIMEOUT") or os.getenv("SIH_SMTP_TIMEOUT") or "10")
+
+    portal_base_url = (
+        _clean_str(os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL"))
+        or "http://localhost:3000"
+    ).rstrip("/")
 
     return SystemSettings(
         environment=env,
@@ -135,6 +161,7 @@ def load_settings() -> SystemSettings:
         host=_clean_str(os.getenv("HOST"), "0.0.0.0"),
         port=int(os.getenv("PORT") or "8000"),
         cors_origins=cors_origins,
+        portal_base_url=portal_base_url,
         database_url=db_url,
         is_postgres=is_pg,
         db_pool_size=int(os.getenv("DB_POOL_SIZE") or os.getenv("SIH_DB_POOL_SIZE") or "10"),
@@ -210,6 +237,7 @@ def get_sanitized_config() -> Dict[str, Any]:
         "host": s.host,
         "port": s.port,
         "cors_origins": s.cors_origins,
+        "portal_base_url": s.portal_base_url,
         "database": {
             "sanitized_url": sanitized_db,
             "is_postgres": s.is_postgres,

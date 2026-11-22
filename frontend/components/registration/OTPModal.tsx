@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { apiSendRegistrationOTP, apiVerifyRegistrationOTP } from "@/lib/api";
 import { OTPVerifyResponse } from "@/lib/types";
+import { Mail, X, Lock, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface OTPModalProps {
   isOpen: boolean;
@@ -53,7 +54,6 @@ export const OTPModal: React.FC<OTPModalProps> = ({
     }
   };
 
-  // Request OTP when opened or contact target changes
   useEffect(() => {
     if (isOpen && contactTarget) {
       handleRequestOTP();
@@ -64,7 +64,6 @@ export const OTPModal: React.FC<OTPModalProps> = ({
     }
   }, [isOpen, contactTarget]);
 
-  // Countdown timer for resend cooldown
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (countdown > 0) {
@@ -112,37 +111,37 @@ export const OTPModal: React.FC<OTPModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 sm:p-7 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+      <div className="w-full max-w-md rounded-2xl border border-slate-200/90 bg-white p-6 sm:p-7 shadow-[0_20px_50px_rgba(15,23,42,0.15)] animate-fade-in-up">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400">
-              ✉
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 border border-teal-200 text-teal-700 shadow-2xs">
+              <Mail className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white">Email Verification</h3>
-              <p className="text-[11px] text-slate-400">Two-Factor Security Authentication</p>
+              <h3 className="text-base font-bold text-slate-900">Official Email Verification</h3>
+              <p className="text-[11px] text-slate-500">Nodal Officer Two-Factor Authentication</p>
             </div>
           </div>
           <button
             onClick={onClose}
             type="button"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
           >
-            ✕
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleVerify} className="mt-5 space-y-4">
-          <p className="text-xs text-slate-300">
-            A 6-digit verification code has been dispatched to:
+          <p className="text-xs text-slate-600 leading-relaxed">
+            A 6-digit security verification code has been dispatched to:
             <br />
-            <strong className="text-blue-400 font-semibold">{contactTarget}</strong>
+            <strong className="text-teal-900 font-semibold">{contactTarget}</strong>
           </p>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300">
-              Enter 6-Digit Code
+            <label className="block text-xs font-semibold text-slate-700">
+              Enter 6-Digit Security Code
             </label>
             <input
               type="text"
@@ -151,22 +150,24 @@ export const OTPModal: React.FC<OTPModalProps> = ({
               maxLength={6}
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              placeholder="123456"
-              className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-center text-xl font-mono tracking-widest text-white placeholder-slate-600 outline-none focus:border-blue-500 transition"
+              placeholder="••••••"
+              className="mt-1.5 w-full rounded-xl border border-slate-300 bg-slate-50/50 px-4 py-3 text-center text-2xl font-mono tracking-widest text-slate-900 placeholder-slate-300 outline-none focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 transition shadow-2xs"
               autoFocus
               required
             />
           </div>
 
           {error && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
-              {error}
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
             </div>
           )}
 
           {infoMessage && (
-            <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-2.5 text-xs text-blue-300">
-              {infoMessage}
+            <div className="rounded-xl border border-teal-200 bg-teal-50 p-2.5 text-xs text-teal-800 flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 text-teal-600 shrink-0 mt-0.5" />
+              <span>{infoMessage}</span>
             </div>
           )}
 
@@ -175,34 +176,24 @@ export const OTPModal: React.FC<OTPModalProps> = ({
               type="button"
               disabled={countdown > 0 || sending}
               onClick={handleRequestOTP}
-              className={`font-medium transition ${
+              className={`font-semibold transition ${
                 countdown > 0 || sending
-                  ? "text-slate-500 cursor-not-allowed"
-                  : "text-blue-400 hover:underline"
+                  ? "text-slate-400 cursor-not-allowed"
+                  : "text-teal-700 hover:text-teal-900 underline"
               }`}
             >
-              {sending
-                ? "Sending code..."
-                : countdown > 0
-                ? `Resend code in ${countdown}s`
-                : "Resend Code"}
+              {sending ? "Sending Code..." : countdown > 0 ? `Resend Code in ${countdown}s` : "Resend Verification Code"}
             </button>
+            <span className="text-[11px] text-slate-400">Expires in 10m</span>
           </div>
 
-          <div className="mt-6 flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
-            >
-              Cancel
-            </button>
+          <div className="pt-2">
             <button
               type="submit"
-              disabled={verifying || otp.trim().length !== 6}
-              className="flex-1 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-blue-500 disabled:opacity-50 transition"
+              disabled={verifying || otp.length !== 6}
+              className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white py-3 text-xs font-bold transition shadow-md shadow-teal-600/20 disabled:opacity-50 btn-hover-lift"
             >
-              {verifying ? "Verifying..." : "Confirm & Proceed"}
+              {verifying ? "Validating Security Code..." : "Confirm & Verify Email ✓"}
             </button>
           </div>
         </form>

@@ -505,3 +505,69 @@ def test_get_otp_provider_dynamic_resolution_and_default_routing(test_db_session
     # Reset provider
     set_otp_provider(None)
 
+
+def test_portal_base_url_settings_and_environment_overrides(monkeypatch):
+    """Verify portal_base_url is configurable via environment variables and strips trailing slashes."""
+    from src.config import load_settings, get_settings, reset_settings, get_sanitized_config
+
+    # 1. Default fallback when no env var set
+    monkeypatch.delenv("PORTAL_BASE_URL", raising=False)
+    monkeypatch.delenv("SIH_PORTAL_BASE_URL", raising=False)
+    reset_settings()
+    settings = load_settings()
+    assert settings.portal_base_url == "http://localhost:3000"
+    sanitized = get_sanitized_config()
+    assert sanitized["portal_base_url"] == "http://localhost:3000"
+
+    # 2. Configured via PORTAL_BASE_URL with trailing slash
+    monkeypatch.setenv("PORTAL_BASE_URL", "https://hospital.example.org///")
+    reset_settings()
+    settings = get_settings()
+    assert settings.portal_base_url == "https://hospital.example.org"
+
+    # 3. Fallback to SIH_PORTAL_BASE_URL
+    monkeypatch.delenv("PORTAL_BASE_URL", raising=False)
+    monkeypatch.setenv("SIH_PORTAL_BASE_URL", "https://staging-referral.mohfw.gov.in/")
+    reset_settings()
+    settings = get_settings()
+    assert settings.portal_base_url == "https://staging-referral.mohfw.gov.in"
+
+    # 4. Default SMTP from email fallback
+    monkeypatch.delenv("SMTP_FROM_EMAIL", raising=False)
+    monkeypatch.delenv("SMTP_FROM", raising=False)
+    monkeypatch.delenv("SIH_SMTP_FROM", raising=False)
+    reset_settings()
+    settings = get_settings()
+    assert settings.smtp_from_email == "pawanbussiness108@gmail.com"
+
+
+def test_portal_base_url_workflow_notification_and_provisioning(monkeypatch, test_db_session):
+    """Verify get_portal_base_url and AccountProvisioningService dynamically honor PORTAL_BASE_URL."""
+    from src.config import reset_settings
+    from src.services.workflow_notification_service import get_portal_base_url, DEFAULT_PORTAL_BASE_URL
+    from src.services.account_provisioning_service import AccountProvisioningService
+
+    assert DEFAULT_PORTAL_BASE_URL == "http://localhost:3000"
+
+    # Test default resolution
+    monkeypatch.delenv("PORTAL_BASE_URL", raising=False)
+    monkeypatch.delenv("SIH_PORTAL_BASE_URL", raising=False)
+    reset_settings()
+    assert get_portal_base_url() == "http://localhost:3000"
+
+    prov_svc = AccountProvisioningService(test_db_session)
+    assert prov_svc._get_base_activation_url() == "http://localhost:3000/activate"
+    assert prov_svc._get_base_reset_url() == "http://localhost:3000/reset-password"
+
+    # Explicit override takes precedence
+    assert prov_svc._get_base_activation_url("https://custom.portal/activate/") == "https://custom.portal/activate"
+    assert prov_svc._get_base_reset_url("https://custom.portal/reset-password/") == "https://custom.portal/reset-password"
+
+    # Custom environment configuration
+    monkeypatch.setenv("PORTAL_BASE_URL", "https://prod-referral.mohfw.gov.in")
+    reset_settings()
+    assert get_portal_base_url() == "https://prod-referral.mohfw.gov.in"
+    assert prov_svc._get_base_activation_url() == "https://prod-referral.mohfw.gov.in/activate"
+    assert prov_svc._get_base_reset_url() == "https://prod-referral.mohfw.gov.in/reset-password"
+
+

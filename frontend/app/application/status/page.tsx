@@ -2,6 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import {
+  ShieldCheck,
+  Lock,
+  FileText,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowRight,
+  LogOut,
+  Building,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  RefreshCw,
+  Clock,
+} from "lucide-react";
 import { RegistrationNavbar } from "@/components/registration/RegistrationNavbar";
 import { ApplicationTimeline } from "@/components/registration/ApplicationTimeline";
 import { DocumentUploader } from "@/components/registration/DocumentUploader";
@@ -71,7 +87,7 @@ export default function ApplicationStatusPage() {
   const [submittingDraft, setSubmittingDraft] = useState(false);
   const [actionSuccess, setActionSuccess] = useState("");
 
-  // Applicant Notifications State (Phase 4D-2)
+  // Applicant Notifications State
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
@@ -191,8 +207,11 @@ export default function ApplicationStatusPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <div className="text-xs text-slate-400">Loading applicant session...</div>
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
+        <div className="text-xs text-slate-500 flex items-center gap-2">
+          <RefreshCw className="w-4 h-4 animate-spin text-teal-600" />
+          Loading applicant session...
+        </div>
       </div>
     );
   }
@@ -213,22 +232,24 @@ export default function ApplicationStatusPage() {
   const canEditDocuments = isDraft || isCorrectionRequired;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F4F8FC] text-[#14243B] flex flex-col font-sans">
       <RegistrationNavbar />
 
       <main className="flex-1 mx-auto w-full max-w-5xl px-4 sm:px-6 py-8 sm:py-10 space-y-8">
         {/* Top Header */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs text-slate-400">
-              <Link href="/register" className="hover:text-blue-400">Registration Hub</Link>
+            <nav className="flex items-center gap-2 text-xs font-medium text-slate-500 mb-1">
+              <Link href="/" className="hover:text-teal-700 transition">Portal Home</Link>
               <span>/</span>
-              <span className="text-slate-200">Applicant Portal</span>
-            </div>
-            <h1 className="mt-1 text-2xl font-extrabold text-white">
+              <Link href="/register" className="hover:text-teal-700 transition">Registration Hub</Link>
+              <span>/</span>
+              <span className="text-slate-800 font-semibold">Applicant Portal</span>
+            </nav>
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Applicant Dashboard & Document Management
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
               Securely view official verification remarks, replace requested documents, and resubmit applications.
             </p>
           </div>
@@ -249,8 +270,9 @@ export default function ApplicationStatusPage() {
               />
               <button
                 onClick={handleSignOut}
-                className="rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition shadow-sm"
               >
+                <LogOut className="w-3.5 h-3.5" />
                 Sign Out
               </button>
             </div>
@@ -259,72 +281,72 @@ export default function ApplicationStatusPage() {
 
         {/* Global Notices */}
         {error && (
-          <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-start gap-3">
-            <span className="text-base">⚠</span>
-            <div className="flex-1">{error}</div>
+          <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-xs sm:text-sm text-rose-800 flex items-start gap-3 shadow-sm animate-fade-in-up">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1 font-medium leading-relaxed">{error}</div>
           </div>
         )}
 
         {actionSuccess && (
-          <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-xs text-emerald-300 flex items-start gap-3">
-            <span className="text-base">✓</span>
-            <div className="flex-1">{actionSuccess}</div>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4 text-xs sm:text-sm text-emerald-800 flex items-start gap-3 shadow-sm animate-fade-in-up">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="flex-1 font-medium leading-relaxed">{actionSuccess}</div>
           </div>
         )}
 
         {/* VIEW 1: UN-AUTHENTICATED APPLICANT LOGIN */}
         {!application && !loading && (
-          <div className="max-w-md mx-auto rounded-3xl border border-slate-800 bg-slate-900/90 p-6 sm:p-8 shadow-2xl space-y-6">
+          <div className="max-w-md mx-auto rounded-3xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-6 sm:p-8 shadow-[0_8px_30px_rgb(15,23,42,0.08)] space-y-6">
             <div className="text-center space-y-2">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600/20 border border-blue-500/30 text-2xl text-blue-400">
-                🔐
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 border border-teal-200 text-teal-700 shadow-sm">
+                <Lock className="w-6 h-6" />
               </div>
-              <h2 className="text-lg font-bold text-white">Applicant Two-Factor Sign In</h2>
-              <p className="text-xs text-slate-400">
+              <h2 className="text-xl font-bold text-slate-900">Applicant Two-Factor Sign In</h2>
+              <p className="text-xs text-slate-500">
                 Access your registered application record by entering your application number and registered email/phone.
               </p>
             </div>
 
             <form onSubmit={handleStartOtpLogin} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300">
-                  Application Number
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Application Number <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={loginAppNumber}
                   onChange={(e) => setLoginAppNumber(e.target.value)}
                   placeholder="e.g. APP-HOSP-202611-ABC123"
-                  className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500 font-mono"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 font-mono outline-none transition-all"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300">
-                  Registered Official Email / Phone
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Registered Official Email / Phone <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={loginContact}
                   onChange={(e) => setLoginContact(e.target.value)}
                   placeholder="e.g. nodal.officer@punjab.gov.in"
-                  className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white hover:bg-blue-500 transition shadow"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 py-3 text-xs sm:text-sm font-bold text-white hover:from-teal-700 hover:to-emerald-700 transition shadow-md shadow-teal-600/20"
               >
-                Send 2FA Security Code →
+                Send 2FA Security Code <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            <div className="border-t border-slate-800 pt-4 text-center">
-              <Link href="/register" className="text-xs text-blue-400 hover:underline">
-                Need to create a new application? Register here
+            <div className="border-t border-slate-100 pt-4 text-center">
+              <Link href="/register" className="text-xs font-semibold text-teal-700 hover:text-teal-800 transition">
+                Need to create a new application? Register here →
               </Link>
             </div>
           </div>
@@ -335,18 +357,18 @@ export default function ApplicationStatusPage() {
           <div className="space-y-8">
             {/* CORRECTION REQUIRED NOTICE BANNER */}
             {isCorrectionRequired && (
-              <div className="rounded-2xl border border-amber-500/50 bg-amber-950/20 p-5 sm:p-6 space-y-3">
-                <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
-                  <span className="text-lg">⚠</span>
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 sm:p-6 space-y-3 shadow-sm animate-fade-in-up">
+                <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                  <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0" />
                   <span>Action Required: Reviewer Requested Corrections (v{application.resubmission_version})</span>
                 </div>
-                <p className="text-xs text-amber-200/90 leading-relaxed">
-                  The reviewing authority reviewed your application and requested adjustments before clearance.
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  The reviewing authority examined your application and requested adjustments before clearance.
                   Please review the specific correction instructions below, update the affected documents, and submit your corrections.
                 </p>
                 {application.correction_notes && (
-                  <div className="rounded-xl border border-amber-500/30 bg-amber-950/40 p-4 text-xs font-mono text-amber-200">
-                    <strong className="font-sans font-bold block mb-1 text-amber-300">
+                  <div className="rounded-xl border border-amber-200 bg-white/90 p-4 text-xs font-mono text-amber-950 shadow-inner">
+                    <strong className="font-sans font-bold block mb-1 text-amber-900">
                       Official Reviewer Note:
                     </strong>
                     {application.correction_notes}
@@ -356,21 +378,21 @@ export default function ApplicationStatusPage() {
             )}
 
             {/* Application Overview Card */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 sm:p-7 space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+            <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-teal-600 bg-white/95 backdrop-blur-sm p-6 sm:p-7 space-y-5 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
                 <div>
-                  <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                  <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase tracking-wider">
                     {application.applicant_type} Facility Record
                   </span>
-                  <h2 className="mt-2 text-xl font-bold text-white">{application.applicant_name}</h2>
-                  <p className="text-xs text-slate-400">
+                  <h2 className="mt-2 text-xl font-bold text-slate-900">{application.applicant_name}</h2>
+                  <p className="text-xs text-slate-500">
                     Jurisdiction: {application.district ? `${application.district}, ` : ""}{application.state}
                   </p>
                 </div>
 
                 <div className="text-right">
                   <span className="text-[11px] text-slate-500 font-mono block">Application Number</span>
-                  <span className="text-sm font-mono font-bold text-blue-400">
+                  <span className="text-sm font-mono font-bold text-teal-700">
                     {application.application_number}
                   </span>
                 </div>
@@ -378,28 +400,28 @@ export default function ApplicationStatusPage() {
 
               {/* Facility & Contact Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2">
-                  <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                    Designated Nodal Officer
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-teal-700" /> Designated Nodal Officer
                   </h4>
-                  <p className="text-slate-400">Name: <strong className="text-white">{application.nodal_officer_name || "N/A"}</strong></p>
-                  <p className="text-slate-400">Designation: <strong className="text-white">{application.official_designation || "N/A"}</strong></p>
+                  <p className="text-slate-600">Name: <strong className="text-slate-900">{application.nodal_officer_name || "N/A"}</strong></p>
+                  <p className="text-slate-600">Designation: <strong className="text-slate-900">{application.official_designation || "N/A"}</strong></p>
                 </div>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2">
-                  <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                    Contact Information
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-teal-700" /> Contact Information
                   </h4>
-                  <p className="text-slate-400">Email: <strong className="text-white">{application.applicant_email}</strong></p>
-                  <p className="text-slate-400">Phone: <strong className="text-white">{application.applicant_phone}</strong></p>
+                  <p className="text-slate-600">Email: <strong className="text-slate-900">{application.applicant_email}</strong></p>
+                  <p className="text-slate-600">Phone: <strong className="text-slate-900">{application.applicant_phone}</strong></p>
                 </div>
 
-                <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 space-y-2">
-                  <h4 className="font-bold text-slate-300 uppercase tracking-wider text-[11px]">
-                    Address & Location
+                <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+                  <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-teal-700" /> Address & Location
                   </h4>
-                  <p className="text-slate-400 truncate">Street: <strong className="text-white">{application.address || "N/A"}</strong></p>
-                  <p className="text-slate-400">PIN Code: <strong className="text-white">{application.pincode || "N/A"}</strong></p>
+                  <p className="text-slate-600 truncate">Street: <strong className="text-slate-900">{application.address || "N/A"}</strong></p>
+                  <p className="text-slate-600">PIN Code: <strong className="text-slate-900">{application.pincode || "N/A"}</strong></p>
                 </div>
               </div>
             </div>
@@ -413,11 +435,11 @@ export default function ApplicationStatusPage() {
             />
 
             {/* Document Management Section */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 sm:p-7 space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-6 sm:p-7 space-y-5 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <div>
-                  <h3 className="text-base font-bold text-white">Regulatory Documentation</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <h3 className="text-base font-bold text-slate-900">Regulatory Documentation</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {canEditDocuments
                       ? "You may upload new or replacement certificates below."
                       : "Document repository is locked while under active government review."}
@@ -429,9 +451,10 @@ export default function ApplicationStatusPage() {
                     type="button"
                     onClick={handleSubmitDraft}
                     disabled={submittingDraft}
-                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-50 transition shadow"
+                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 transition shadow-md shadow-teal-600/20"
                   >
-                    {submittingDraft ? "Submitting..." : "Submit Draft Application →"}
+                    {submittingDraft ? "Submitting..." : "Submit Draft Application"}
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -447,30 +470,30 @@ export default function ApplicationStatusPage() {
 
             {/* CORRECTION RESUBMISSION FORM */}
             {isCorrectionRequired && (
-              <div className="rounded-2xl border border-amber-500/40 bg-slate-900/90 p-6 sm:p-8 space-y-5">
+              <div className="rounded-2xl border border-amber-300 bg-amber-50/50 p-6 sm:p-8 space-y-5 shadow-sm">
                 <div>
-                  <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+                  <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 border border-amber-200 uppercase tracking-wider">
                     Resubmission Form
                   </span>
-                  <h3 className="mt-2 text-base font-bold text-white">
+                  <h3 className="mt-2 text-base font-bold text-slate-900">
                     Submit Rectified Application for Review
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-600 mt-0.5">
                     Ensure all rejected documents have been replaced above. Provide a detailed note of corrections made for the reviewing officer.
                   </p>
                 </div>
 
                 <form onSubmit={handleResubmitCorrection} className="space-y-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300">
-                      Applicant Correction Notes *
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Applicant Correction Notes <span className="text-rose-500">*</span>
                     </label>
                     <textarea
                       rows={4}
                       value={resubmissionNotes}
                       onChange={(e) => setResubmissionNotes(e.target.value)}
                       placeholder="e.g. Uploaded renewed Fire Safety NOC dated 2026 and updated total bed breakdown as requested."
-                      className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 p-3.5 text-xs text-white placeholder-slate-600 outline-none focus:border-amber-500 transition"
+                      className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 outline-none focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 transition"
                       required
                     />
                   </div>
@@ -479,9 +502,10 @@ export default function ApplicationStatusPage() {
                     <button
                       type="submit"
                       disabled={resubmitting || resubmissionNotes.trim().length < 5}
-                      className="rounded-xl bg-amber-600 px-6 py-3 text-xs font-bold text-white hover:bg-amber-500 disabled:opacity-50 transition shadow"
+                      className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-6 py-3 text-xs sm:text-sm font-bold text-white hover:bg-amber-700 disabled:opacity-50 transition shadow-md shadow-amber-600/20"
                     >
-                      {resubmitting ? "Resubmitting..." : "Resubmit Application for Clearance →"}
+                      {resubmitting ? "Resubmitting..." : "Resubmit Application for Clearance"}
+                      <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
                 </form>

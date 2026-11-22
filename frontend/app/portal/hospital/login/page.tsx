@@ -14,11 +14,11 @@ export default function HospitalLoginPage() {
       expectedRole="HOSPITAL"
       icon={Building2}
       accentColor={{
-        bg: "bg-blue-600",
-        text: "text-blue-700",
-        border: "border-blue-200",
-        button: "bg-blue-900 hover:bg-blue-800",
-        lightBg: "bg-blue-50",
+        bg: "bg-[#008F83]",
+        text: "text-[#008F83]",
+        border: "border-[#008F83]/30",
+        button: "bg-[#0B2345] hover:bg-[#07182F]",
+        lightBg: "bg-[#008F83]/10",
       }}
     />
   );

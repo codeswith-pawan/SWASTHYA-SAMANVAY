@@ -14,11 +14,11 @@ export default function StateLoginPage() {
       expectedRole="STATE_ADMIN"
       icon={ShieldCheck}
       accentColor={{
-        bg: "bg-teal-600",
-        text: "text-teal-700",
-        border: "border-teal-200",
-        button: "bg-teal-900 hover:bg-teal-800",
-        lightBg: "bg-teal-50",
+        bg: "bg-[#008F83]",
+        text: "text-[#008F83]",
+        border: "border-[#008F83]/30",
+        button: "bg-[#008F83] hover:bg-[#007A70]",
+        lightBg: "bg-[#008F83]/10",
       }}
     />
   );

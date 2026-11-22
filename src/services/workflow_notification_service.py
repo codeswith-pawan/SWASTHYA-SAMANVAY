@@ -29,12 +29,22 @@ from src.services.email_outbox_service import EmailOutboxService
 
 logger = logging.getLogger("workflow_notifications")
 
-DEFAULT_PORTAL_BASE_URL = "https://hospital.sih.gov.in"
+DEFAULT_PORTAL_BASE_URL = "http://localhost:3000"
 
 
 def get_portal_base_url() -> str:
-    """Return configured frontend base URL."""
-    return os.getenv("SIH_PORTAL_BASE_URL", DEFAULT_PORTAL_BASE_URL).rstrip("/")
+    """Return configured frontend base URL from env or SystemSettings."""
+    from src.config import get_settings
+    env_override = os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL")
+    if env_override and env_override.strip():
+        return env_override.strip().rstrip("/")
+    try:
+        settings = get_settings()
+        if settings.portal_base_url:
+            return settings.portal_base_url.rstrip("/")
+    except Exception:
+        pass
+    return DEFAULT_PORTAL_BASE_URL
 
 
 class WorkflowNotificationService:
@@ -248,18 +258,31 @@ class WorkflowNotificationService:
     def notify_application_submitted(
         self,
         application: RegistrationApplication,
+        tracking_token: Optional[str] = None,
         client_ip: Optional[str] = None,
     ) -> None:
         """
         Triggered when an applicant submits their DRAFT application:
-        1. Emits confirmation notification and email to Applicant.
+        1. Emits confirmation notification and email to Applicant containing Official Application Number
+           and Secret Tracking Token with direct portal tracking instructions.
         2. Dispatches new application alert and email to initial Reviewers (District / State / Central).
         """
         base_url = get_portal_base_url()
-        tracking_url = f"{base_url}/application/track?number={application.application_number}"
+        if tracking_token:
+            tracking_url = f"{base_url}/application/track?app={application.application_number}&token={tracking_token}"
+        else:
+            tracking_url = f"{base_url}/application/track?app={application.application_number}"
+
         applicant_status_url = f"{base_url}/application/status?id={application.application_id}"
         reviewer_dossier_url = f"{base_url}/reviewer/applications/{application.application_id}"
         stage = application.current_stage or "DISTRICT_REVIEW"
+
+        stage_display_names = {
+            "DISTRICT_REVIEW": "District Verification",
+            "STATE_REVIEW": "State Verification",
+            "CENTRAL_REVIEW": "Central Verification",
+        }
+        stage_display = stage_display_names.get(stage, stage)
 
         # A. Applicant In-App & Email
         app_idem = f"APP_SUBMIT:{application.application_id}:{stage}:APPLICANT"
@@ -276,28 +299,125 @@ class WorkflowNotificationService:
             priority="NORMAL",
         )
 
+        tracking_token_display = tracking_token or "Issued upon submission (see portal session)"
+
+        body_text = (
+            f"Dear {application.applicant_name},\n\n"
+            f"Thank you for submitting your healthcare registration application on ArogyaSetu Grid — Unified Critical Care & Hospital Command Network.\n\n"
+            f"Your application has been received and assigned for administrative review.\n\n"
+            f"OFFICIAL REGISTRATION DETAILS:\n"
+            f"--------------------------------------------------\n"
+            f"Applicant / Organization: {application.applicant_name}\n"
+            f"Application Number:       {application.application_number}\n"
+            f"Applicant Type:           {application.applicant_type}\n"
+            f"State / District:         {application.state}" + (f" / {application.district}" if application.district else "") + "\n"
+            f"Current Review Stage:     {stage_display} ({stage})\n"
+            f"Application Status:       SUBMITTED\n"
+            f"--------------------------------------------------\n\n"
+            f"CONFIDENTIAL TRACKING CREDENTIALS:\n"
+            f"--------------------------------------------------\n"
+            f"Official Application Number: {application.application_number}\n"
+            f"Secret Tracking Token:       {tracking_token_display}\n"
+            f"--------------------------------------------------\n"
+            f"SECURITY NOTICE: Your Secret Tracking Token is required to track application\n"
+            f"progress, view reviewer remarks, and submit corrections if requested.\n"
+            f"Please keep this token secure and confidential.\n\n"
+            f"DIRECT PORTAL TRACKING INSTRUCTIONS:\n"
+            f"1. Direct Link: Open the following URL to verify your application milestones:\n"
+            f"   {tracking_url}\n\n"
+            f"2. Manual Access: Visit {base_url}/application/track (or /track) and enter:\n"
+            f"   - Application Number: {application.application_number}\n"
+            f"   - Secret Tracking Token: {tracking_token_display}\n\n"
+            f"WHAT TO EXPECT NEXT:\n"
+            f"Designated healthcare regulatory officers at the {stage_display} level will verify\n"
+            f"your uploaded compliance documents and facility credentials. You will receive an\n"
+            f"automated email notification when your application status changes or if additional\n"
+            f"documents are required.\n\n"
+            f"Regards,\n"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
+        )
+
+        body_html = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Application Submitted - {application.application_number}</title>
+</head>
+<body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #0b132b 100%); padding: 28px 24px; text-align: center; border-bottom: 1px solid #1e293b;">
+      <h1 style="margin: 0 0 6px 0; font-size: 20px; color: #14b8a6; font-weight: 700; letter-spacing: -0.025em;">ArogyaSetu Grid</h1>
+      <p style="margin: 0; font-size: 13px; color: #94a3b8;">Unified Critical Care & Hospital Command Network</p>
+    </div>
+    <div style="padding: 28px 24px;">
+      <p style="margin-top: 0; font-size: 15px; color: #f8fafc;">Dear <strong>{application.applicant_name}</strong>,</p>
+      <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+        Your healthcare registration dossier has been submitted successfully and forwarded to <strong>{stage_display}</strong> for document verification.
+      </p>
+
+      <div style="background-color: #0f172a; border-radius: 8px; border: 1px solid #334155; padding: 18px 20px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <tr>
+            <td style="padding: 6px 0; color: #94a3b8; font-weight: 500;">Application Number</td>
+            <td style="padding: 6px 0; color: #60a5fa; font-weight: 700; text-align: right; font-family: monospace;">{application.application_number}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #94a3b8; font-weight: 500;">Facility / Organization</td>
+            <td style="padding: 6px 0; color: #f8fafc; font-weight: 600; text-align: right;">{application.applicant_name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #94a3b8; font-weight: 500;">Applicant Type</td>
+            <td style="padding: 6px 0; color: #f8fafc; font-weight: 600; text-align: right;">{application.applicant_type}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #94a3b8; font-weight: 500;">Current Review Stage</td>
+            <td style="padding: 6px 0; color: #34d399; font-weight: 600; text-align: right;">{stage_display} ({stage})</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #94a3b8; font-weight: 500;">Status</td>
+            <td style="padding: 6px 0; color: #fbbf24; font-weight: 600; text-align: right;">SUBMITTED</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background-color: #020617; border: 1px solid #2563eb; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #93c5fd; font-weight: 600; margin-bottom: 4px;">Secret Tracking Token</div>
+        <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 15px; font-weight: 700; color: #38bdf8; word-break: break-all;">{tracking_token_display}</div>
+        <p style="margin: 8px 0 0 0; font-size: 11px; color: #94a3b8;">Keep this token secure. Required for status inquiries and resubmissions.</p>
+      </div>
+
+      <div style="text-align: center; margin: 24px 0;">
+        <a href="{tracking_url}" style="display: inline-block; background-color: #2563eb; color: #ffffff !important; font-weight: 600; font-size: 13px; text-decoration: none; padding: 12px 28px; border-radius: 6px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">Track Application Status &rarr;</a>
+      </div>
+
+      <div style="font-size: 12px; color: #94a3b8; line-height: 1.6; border-top: 1px solid #334155; padding-top: 16px;">
+        <strong style="color: #cbd5e1;">Portal Tracking Instructions (/track):</strong><br>
+        You can track the progress of your application at any time by visiting <a href="{base_url}/application/track" style="color: #60a5fa; text-decoration: underline;">{base_url}/application/track</a> (or <code>/track</code>) and entering your Official Application Number (<strong>{application.application_number}</strong>) and Secret Tracking Token.
+      </div>
+    </div>
+    <div style="padding: 16px 24px; background-color: #0b132b; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b;">
+      ArogyaSetu Grid &bull; National Critical Care & Hospital Command Network &bull; Support: pawanbussiness108@gmail.com<br>
+      Automated confirmation &bull; Please do not reply directly to this email.
+    </div>
+  </div>
+</body>
+</html>"""
+
         email_payload = {
             "application_number": application.application_number,
             "applicant_name": application.applicant_name,
             "applicant_type": application.applicant_type,
             "status": "SUBMITTED",
             "current_stage": stage,
+            "current_stage_display": stage_display,
             "tracking_url": tracking_url,
-            "body_text": (
-                f"Dear {application.applicant_name},\n\n"
-                f"Your healthcare registration application has been successfully submitted.\n\n"
-                f"Application Number: {application.application_number}\n"
-                f"Facility / Organization: {application.applicant_name}\n"
-                f"Application Type: {application.applicant_type}\n"
-                f"Current Status: SUBMITTED (Assigned to {stage})\n\n"
-                f"You can track the progress of your application in real-time at:\n"
-                f"{tracking_url}\n\n"
-                f"Our administrative officers are reviewing your submitted documents. "
-                f"You will receive an update once the initial verification is completed.\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
-            ),
+            "tracking_token": tracking_token,
+            "body_text": body_text,
+            "body_html": body_html,
         }
+
         self._enqueue_email(
             event_type="APPLICATION_SUBMITTED",
             recipient_email=application.applicant_email,
@@ -352,8 +472,8 @@ class WorkflowNotificationService:
                         f"Current Stage: {stage}\n\n"
                         f"Please access the Reviewer Portal to inspect credentials and verify mandatory documents:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"National Smart Hospital Referral System\n"
-                        f"Government of India"
+                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
                 self._enqueue_email(
@@ -414,8 +534,8 @@ class WorkflowNotificationService:
                 f"and resubmit your dossier.\n\n"
                 f"Tracking & Resubmission Link:\n"
                 f"{tracking_url}\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
+                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"Support: pawanbussiness108@gmail.com"
             ),
         }
         self._enqueue_email(
@@ -472,8 +592,8 @@ class WorkflowNotificationService:
                 f"Current Status: SUBMITTED (Assigned to {stage})\n\n"
                 f"You can monitor review status at:\n"
                 f"{tracking_url}\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
+                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"Support: pawanbussiness108@gmail.com"
             ),
         }
         self._enqueue_email(
@@ -528,8 +648,8 @@ class WorkflowNotificationService:
                         f"Applicant Notes: {applicant_notes or 'Updated per reviewer instructions.'}\n\n"
                         f"Please re-inspect the updated documents in the Reviewer Portal:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"National Smart Hospital Referral System\n"
-                        f"Government of India"
+                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
                 self._enqueue_email(
@@ -590,8 +710,8 @@ class WorkflowNotificationService:
                 f"The application has now advanced to {next_tier_name} Review ({new_stage}).\n\n"
                 f"You can track the ongoing verification status at:\n"
                 f"{tracking_url}\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
+                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"Support: pawanbussiness108@gmail.com"
             ),
         }
         self._enqueue_email(
@@ -642,8 +762,8 @@ class WorkflowNotificationService:
                         f"Jurisdiction: {application.district or 'Statewide'}, {application.state}\n\n"
                         f"Please access the Reviewer Portal to perform your review:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"National Smart Hospital Referral System\n"
-                        f"Government of India"
+                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
                 self._enqueue_email(
@@ -701,8 +821,8 @@ class WorkflowNotificationService:
                 f"Please note that facility operations will commence once your account is fully activated.\n\n"
                 f"You can verify your final approval record at:\n"
                 f"{tracking_url}\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
+                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"Support: pawanbussiness108@gmail.com"
             ),
         }
         self._enqueue_email(
@@ -758,8 +878,8 @@ class WorkflowNotificationService:
                 f"{tracking_url}\n\n"
                 f"If you believe this decision was reached in error, you may submit a fresh registration "
                 f"dossier addressing the deficiencies noted above.\n\n"
-                f"National Smart Hospital Referral System\n"
-                f"Government of India"
+                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"Support: pawanbussiness108@gmail.com"
             ),
         }
         self._enqueue_email(
@@ -960,7 +1080,8 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"Please review and accept or redirect this referral in your clinical dashboard:\n"
             f"{get_portal_base_url()}/hospitals/{to_hid}?tab=referrals\n\n"
-            f"SIH Smart Hospital Referral Platform"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
             hospital_id=to_hid,
@@ -1021,7 +1142,8 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"Please coordinate ambulance transport. You can track progress at:\n"
             f"{get_portal_base_url()}/hospitals/{from_hid}?tab=referrals\n\n"
-            f"SIH Smart Hospital Referral Platform"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
             hospital_id=from_hid,
@@ -1065,7 +1187,8 @@ class WorkflowNotificationService:
             f"Reason/Notes: {safe_reason}\n\n"
             f"Please request recommendations for alternative facilities in your portal:\n"
             f"{get_portal_base_url()}/hospitals/{from_hid}?tab=referrals\n\n"
-            f"SIH Smart Hospital Referral Platform"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
             hospital_id=from_hid,
@@ -1248,7 +1371,8 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"The reservation window exceeded its time-to-live without patient confirmation. "
             f"The bed capacity has been automatically returned to the active pool.\n\n"
-            f"SIH Smart Hospital Referral Platform"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
             hospital_id=hid,
@@ -1407,7 +1531,8 @@ class WorkflowNotificationService:
             f"Jurisdiction: {hospital.district}, {hospital.state}\n\n"
             f"Please manage admissions or request diversion support via your dashboard:\n"
             f"{get_portal_base_url()}/hospitals/{hid}?tab=inventory\n\n"
-            f"SIH Smart Hospital Operational Center"
+            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
             hospital_id=hid,

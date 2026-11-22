@@ -3,6 +3,17 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import {
+  Search,
+  KeyRound,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight,
+  Clock,
+  Building2,
+  Lock,
+} from "lucide-react";
 import { RegistrationNavbar } from "@/components/registration/RegistrationNavbar";
 import { ApplicationTimeline } from "@/components/registration/ApplicationTimeline";
 import { apiPublicTrackApplication } from "@/lib/api";
@@ -54,107 +65,113 @@ function TrackForm() {
   return (
     <div className="space-y-8">
       {/* Search Input Box */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 sm:p-8 shadow-xl">
+      <div className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-6 sm:p-8 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
         <form onSubmit={handleTrack} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
-                Official Application Number
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Official Application Number <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={appNumber}
-                onChange={(e) => setAppNumber(e.target.value)}
-                placeholder="e.g. APP-HOSP-202611-ABC123"
-                className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500 font-mono"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={appNumber}
+                  onChange={(e) => setAppNumber(e.target.value)}
+                  placeholder="e.g. APP-HOSP-202611-ABC123"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 font-mono outline-none transition-all"
+                  required
+                />
+              </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300">
-                Secret Tracking Token
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Secret Tracking Token <span className="text-rose-500">*</span>
               </label>
-              <input
-                type="text"
-                value={trackingToken}
-                onChange={(e) => setTrackingToken(e.target.value)}
-                placeholder="16+ character secret token"
-                className="mt-1.5 w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-600 outline-none focus:border-blue-500 font-mono"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={trackingToken}
+                  onChange={(e) => setTrackingToken(e.target.value)}
+                  placeholder="16+ character secret token"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/50 px-3.5 py-2.5 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-500/10 font-mono outline-none transition-all"
+                  required
+                />
+              </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <span className="text-[11px] text-slate-500">
-              🔒 Confidential tracking token was provided upon registration submission.
+            <span className="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-slate-400" />
+              Confidential tracking token was generated upon registration submission.
             </span>
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-blue-500 disabled:opacity-50 transition shadow"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-2.5 text-xs sm:text-sm font-bold text-white hover:from-teal-700 hover:to-emerald-700 disabled:opacity-50 transition shadow-md shadow-teal-600/20"
             >
-              {loading ? "Verifying..." : "Track Status →"}
+              <Search className="w-4 h-4" />
+              {loading ? "Verifying..." : "Track Status"}
             </button>
           </div>
         </form>
       </div>
 
       {error && (
-        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 text-xs text-rose-300 flex items-start gap-3">
-          <span className="text-base">⚠</span>
-          <div className="flex-1">{error}</div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-xs sm:text-sm text-rose-800 flex items-start gap-3 shadow-sm animate-fade-in-up">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="flex-1 font-medium leading-relaxed">{error}</div>
         </div>
       )}
 
       {/* Tracking Result View */}
       {trackingData && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 sm:p-7 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div className="space-y-6 animate-fade-in-up">
+          <div className="rounded-2xl border border-slate-200/80 border-t-4 border-t-teal-600 bg-white/95 backdrop-blur-sm p-6 sm:p-7 space-y-4 shadow-[0_8px_30px_rgb(15,23,42,0.06)]">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
-                <span className="rounded-full bg-blue-500/10 px-2.5 py-0.5 text-[10px] font-bold text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+                <span className="rounded-full bg-teal-50 px-2.5 py-0.5 text-[10px] font-bold text-teal-700 border border-teal-200 uppercase tracking-wider">
                   {trackingData.applicant_type} Facility
                 </span>
-                <h3 className="mt-1.5 text-lg font-bold text-white">{trackingData.applicant_name}</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="mt-1.5 text-lg font-bold text-slate-900">{trackingData.applicant_name}</h3>
+                <p className="text-xs text-slate-500">
                   Jurisdiction: {trackingData.district ? `${trackingData.district}, ` : ""}{trackingData.state}
                 </p>
               </div>
 
               <div className="text-right">
                 <span className="text-[11px] text-slate-500 font-mono block">Reference</span>
-                <span className="text-sm font-mono font-bold text-blue-400">
+                <span className="text-sm font-mono font-bold text-teal-700">
                   {trackingData.application_number}
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-[10px] text-slate-500 uppercase font-semibold">Registered On</span>
-                <p className="mt-1 text-slate-200 font-medium">
+                <p className="mt-1 text-slate-800 font-semibold font-mono">
                   {trackingData.created_at ? new Date(trackingData.created_at).toLocaleDateString() : "N/A"}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-[10px] text-slate-500 uppercase font-semibold">Submitted On</span>
-                <p className="mt-1 text-slate-200 font-medium">
+                <p className="mt-1 text-slate-800 font-semibold font-mono">
                   {trackingData.submitted_at ? new Date(trackingData.submitted_at).toLocaleDateString() : "Draft"}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-[10px] text-slate-500 uppercase font-semibold">Review Level</span>
-                <p className="mt-1 text-blue-400 font-medium">
+                <p className="mt-1 text-teal-700 font-bold">
                   {trackingData.current_stage.replace(/_/g, " ")}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
                 <span className="text-[10px] text-slate-500 uppercase font-semibold">Version</span>
-                <p className="mt-1 text-slate-200 font-medium">
+                <p className="mt-1 text-slate-800 font-semibold font-mono">
                   v{trackingData.resubmission_version}
                 </p>
               </div>
@@ -170,18 +187,18 @@ function TrackForm() {
           />
 
           {/* Callout to Authenticated Applicant View */}
-          <div className="rounded-2xl border border-blue-500/20 bg-blue-950/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs shadow-sm">
             <div>
-              <p className="font-semibold text-white">Need to update documents or address reviewer feedback?</p>
-              <p className="text-slate-400 mt-0.5">
+              <p className="font-bold text-slate-900">Need to update documents or address reviewer feedback?</p>
+              <p className="text-slate-600 mt-0.5">
                 Sign in with an email verification code to view private documents and submit corrections.
               </p>
             </div>
             <Link
               href="/application/status"
-              className="shrink-0 rounded-xl bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-500 transition"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-teal-700 px-4 py-2 font-bold text-white hover:bg-teal-800 transition shadow-sm"
             >
-              Sign In to Applicant Portal →
+              Sign In to Applicant Portal <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -192,18 +209,26 @@ function TrackForm() {
 
 export default function ApplicationTrackPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F4F8FC] text-[#14243B] flex flex-col font-sans">
       <RegistrationNavbar />
 
       <main className="flex-1 mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 sm:py-14 space-y-8">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+          <nav className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 mb-2">
+            <Link href="/" className="hover:text-teal-700 transition">Portal Home</Link>
+            <span>/</span>
+            <Link href="/register" className="hover:text-teal-700 transition">Registration Hub</Link>
+            <span>/</span>
+            <span className="text-slate-800 font-semibold">Track Application</span>
+          </nav>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-800 border border-teal-200 uppercase tracking-wider">
+            <ShieldCheck className="w-3.5 h-3.5 text-teal-700" />
             Public Milestone Tracking
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Track Application Verification Status
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
+          <p className="text-xs sm:text-sm text-slate-600">
             Enter your official registration reference number and confidential tracking token to check real-time approval milestones.
           </p>
         </div>

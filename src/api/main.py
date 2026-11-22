@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.database.database import SessionLocal
 from src.database.models import Hospital
 from typing import Optional
+from pydantic import BaseModel
 from fastapi import (
     FastAPI,
     HTTPException,
@@ -115,6 +116,7 @@ from src.prediction.referral_store import (
     attach_reservation,
 )
 from src.api.patient_routes import router as patient_router
+from src.api.hospital_patient_routes import router as hospital_patient_router
 from src.api.admin_routes import router as admin_router
 from src.api.registration_routes import router as registration_router
 from src.api.observability import (
@@ -137,9 +139,9 @@ async def lifespan(app_instance: FastAPI):
 
 
 app = FastAPI(
-    title="AI Powered Smart Hospital Referral System",
+    title="ArogyaSetu Grid — Unified Critical Care & Hospital Command Network",
     description=(
-        "Production-grade Backend API for AI-based hospital referral, "
+        "Production-grade Backend API for ArogyaSetu Grid AI-based hospital referral, "
         "hierarchical government registration, multi-tier review, and bed reservation."
     ),
     version="1.0.0",
@@ -154,6 +156,7 @@ _app_settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_app_settings.cors_origins,
+    allow_origin_regex=r"^https://arogyasetu-grid.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -161,6 +164,8 @@ app.add_middleware(
 
 
 app.include_router(patient_router)
+app.include_router(hospital_patient_router, prefix="/api/hospital")
+app.include_router(hospital_patient_router, prefix="/hospital")
 app.include_router(admin_router)
 app.include_router(registration_router)
 
@@ -412,9 +417,9 @@ def root():
     return {
         "success": True,
         "message": (
-            "Smart Hospital Referral API is running."
+            "ArogyaSetu Grid — Unified Critical Care & Hospital Command Network API is running."
         ),
-        "service": "SIH Hospital AI",
+        "service": "ArogyaSetu Grid",
         "version": "1.0.0",
     }
 
@@ -1288,7 +1293,79 @@ def get_cached_patient(patient_id: str) -> dict | None:
         except Exception:
             _PATIENTS_CACHE = {}
 
-    return _PATIENTS_CACHE.get(patient_id)
+    pat = _PATIENTS_CACHE.get(patient_id)
+    if pat is not None:
+        return pat
+
+    # Database fallback for dynamically admitted inpatients
+    try:
+        from src.database.database import SessionLocal
+        db = SessionLocal()
+        try:
+            from src.database.models import Patient as SqlitePatient
+            db_pat = db.query(SqlitePatient).filter(SqlitePatient.patient_id == patient_id).first()
+            if db_pat:
+                return {
+                    "patient_id": db_pat.patient_id,
+                    "name": db_pat.name,
+                    "age": db_pat.age,
+                    "gender": db_pat.gender,
+                    "disease": db_pat.disease,
+                    "priority": db_pat.priority,
+                    "icu_required": getattr(db_pat, "icu_required", "No"),
+                    "ambulance_required": getattr(db_pat, "ambulance_required", "No"),
+                    "referral_required": getattr(db_pat, "referral_required", "Yes"),
+                    "spo2": getattr(db_pat, "spo2", 98),
+                    "systolic_bp": getattr(db_pat, "systolic_bp", 120),
+                    "diastolic_bp": getattr(db_pat, "diastolic_bp", 80),
+                    "heart_rate": getattr(db_pat, "heart_rate", 75),
+                    "respiratory_rate": getattr(db_pat, "respiratory_rate", 18),
+                    "temperature": getattr(db_pat, "temperature", 98.6),
+                    "state": getattr(db_pat, "state", "Punjab"),
+                    "district": getattr(db_pat, "district", "Amritsar"),
+                    "latitude": getattr(db_pat, "latitude", 31.634),
+                    "longitude": getattr(db_pat, "longitude", 74.872),
+                }
+        finally:
+            db.close()
+    except Exception:
+        pass
+
+    try:
+        from src.database.db_manager import is_postgres, get_session_factory
+        if is_postgres():
+            from src.database.pg_models import Patient as PgPatient
+            session = get_session_factory()()
+            try:
+                db_pat = session.query(PgPatient).filter(PgPatient.patient_id == patient_id).first()
+                if db_pat:
+                    return {
+                        "patient_id": db_pat.patient_id,
+                        "name": db_pat.name,
+                        "age": db_pat.age,
+                        "gender": db_pat.gender,
+                        "disease": db_pat.disease,
+                        "priority": db_pat.priority,
+                        "icu_required": db_pat.icu_required,
+                        "ambulance_required": db_pat.ambulance_required,
+                        "referral_required": db_pat.referral_required,
+                        "spo2": db_pat.spo2 or 98,
+                        "systolic_bp": db_pat.systolic_bp or 120,
+                        "diastolic_bp": db_pat.diastolic_bp or 80,
+                        "heart_rate": db_pat.heart_rate or 75,
+                        "respiratory_rate": db_pat.respiratory_rate or 18,
+                        "temperature": db_pat.temperature or 98.6,
+                        "state": db_pat.state or "Punjab",
+                        "district": db_pat.district or "Amritsar",
+                        "latitude": db_pat.latitude or 31.634,
+                        "longitude": db_pat.longitude or 74.872,
+                    }
+            finally:
+                session.close()
+    except Exception:
+        pass
+
+    return None
 
 
 def get_cached_hospitals() -> list[dict]:
@@ -1701,25 +1778,29 @@ def get_hospital_referrals(
 
     stored_referrals = _load_referrals()
 
+    hid = hospital_id.strip().lower()
     if scope == "outgoing":
         hospital_referrals = [
             referral
             for referral in stored_referrals
-            if referral.get("from_hospital_id") == hospital_id
+            if str(referral.get("from_hospital_id") or "").strip().lower() == hid
             and can_view_referral(current_user, referral)
         ]
     elif scope == "all":
         hospital_referrals = [
             referral
             for referral in stored_referrals
-            if (referral.get("to_hospital_id") == hospital_id or referral.get("from_hospital_id") == hospital_id)
+            if (
+                str(referral.get("to_hospital_id") or "").strip().lower() == hid
+                or str(referral.get("from_hospital_id") or "").strip().lower() == hid
+            )
             and can_view_referral(current_user, referral)
         ]
     else:
         hospital_referrals = [
             referral
             for referral in stored_referrals
-            if referral.get("to_hospital_id") == hospital_id
+            if str(referral.get("to_hospital_id") or "").strip().lower() == hid
             and can_view_referral(current_user, referral)
         ]
 
@@ -1746,7 +1827,9 @@ def update_live_referral_status(
     ),
 ):
 
-    new_status = new_status.upper()
+    new_status = new_status.upper().strip()
+    if new_status == "IN_TREATMENT":
+        new_status = "TREATMENT_ACTIVE"
 
     allowed_statuses = [
         "ACCEPTED",
@@ -1754,7 +1837,9 @@ def update_live_referral_status(
         "IN_TRANSIT",
         "ARRIVED",
         "TREATMENT_ACTIVE",
+        "IN_TREATMENT",
         "COMPLETED",
+        "DISCHARGED",
         "TRANSFERRED",
         "DIED",
     ]
@@ -1863,6 +1948,34 @@ def update_live_referral_status(
     }
 
     return response
+
+
+class ReferralPatchStatusRequest(BaseModel):
+    status: str
+    notes: Optional[str] = None
+    ambulance_id: Optional[str] = None
+    eta_minutes: Optional[int] = None
+    reason: Optional[str] = None
+
+
+@app.patch("/referrals/{referral_id}/status")
+def patch_referral_status(
+    referral_id: str,
+    payload: ReferralPatchStatusRequest,
+    current_user: dict = Depends(require_current_user),
+):
+    body = ReferralStatusUpdateRequest(
+        notes=payload.notes,
+        ambulance_id=payload.ambulance_id,
+        eta_minutes=payload.eta_minutes,
+        reason=payload.reason,
+    )
+    return update_live_referral_status(
+        referral_id=referral_id,
+        new_status=payload.status,
+        body=body,
+        current_user=current_user,
+    )
 
 
 # ============================================================

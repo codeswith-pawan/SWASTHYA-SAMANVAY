@@ -11,39 +11,38 @@ test.describe("Government Portal Redesign - Navigation & Department Journey", ()
 
   test("1. Landing Page renders government branding and hero sections", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/SIH Hospital AI/);
+    await expect(page).toHaveTitle(/ArogyaSetu Grid/);
 
     // Official Header Banner
-    await expect(page.locator("text=SMART INDIA HACKATHON INITIATIVE").first()).toBeVisible();
-    await expect(page.locator("text=SIH Hospital AI").first()).toBeVisible();
+    await expect(page.locator("text=Grid Online").first()).toBeVisible();
+    await expect(page.locator("text=ArogyaSetu Grid").first()).toBeVisible();
     await expect(page.locator("text=1075").first()).toBeVisible();
 
     // Hero Section
     await expect(
-      page.locator("h1:has-text('National Hospital Management & Coordination Portal')")
+      page.locator("h1:has-text('Integrated Hospital Bed Coordination & Emergency Patient Referral Portal')")
     ).toBeVisible();
     await expect(
       page.locator(
-        "text=A unified digital platform for hospital administration, healthcare coordination, registration, verification and monitoring."
+        "text=A unified digital platform connecting frontline hospitals"
       )
     ).toBeVisible();
 
     // CTAs in Hero
-    await expect(page.locator("section a:has-text('Explore Portal')").first()).toBeVisible();
     await expect(page.locator("section a:has-text('Register Hospital')").first()).toBeVisible();
+    await expect(page.locator("section a:has-text('Track Application')").first()).toBeVisible();
+    await expect(page.locator("section a:has-text('Staff / Department Login')").first()).toBeVisible();
 
     // Meaningful Sections
-    await expect(page.locator("text=About the National Healthcare Coordination Portal")).toBeVisible();
-    await expect(page.locator("text=Comprehensive Health System Services")).toBeVisible();
-    await expect(page.locator("text=Accredited Hospital Network & Capacity Surveillance")).toBeVisible();
-    await expect(page.locator("text=Hospital Registration & Verification Pipeline")).toBeVisible();
-    await expect(page.locator("text=Sign In to Health Operations")).toBeVisible();
+    await expect(page.locator("text=Departmental Sign-In Gateways")).toBeVisible();
+    await expect(page.locator("text=Access Your Healthcare Jurisdiction")).toBeVisible();
+    await expect(page.locator("text=How ArogyaSetu Grid Operates")).toBeVisible();
   });
 
   test("2. Explore Portal navigation opens Department Selection Page", async ({ page }) => {
     await page.goto("/");
-    // Click the hero Explore Portal CTA
-    await page.locator("section a:has-text('Explore Portal')").first().click();
+    // Click the hero Staff / Department Login CTA
+    await page.locator("section a:has-text('Staff / Department Login')").first().click();
 
     await expect(page).toHaveURL(/\/portal$/);
     await expect(page.locator("h1:has-text('Select Your Department')")).toBeVisible();
@@ -140,13 +139,73 @@ test.describe("Government Portal Redesign - Navigation & Department Journey", ()
 
     // Register Hospital from Hero Section
     await page.locator("section a:has-text('Register Hospital')").first().click();
-    await expect(page).toHaveURL(/\/register$/);
-    await expect(page.locator("text=Healthcare Entity Registration")).toBeVisible();
+    await expect(page).toHaveURL(/\/register\/hospital$/);
 
     // Back to home & Track Application from Hero Section
     await page.goto("/");
     await page.locator("section a:has-text('Track Application')").first().click();
-    await expect(page).toHaveURL(/\/application\/track$/);
-    await expect(page.locator("text=Track Application Verification Status")).toBeVisible();
+    await expect(page).toHaveURL(/\/application\/status$/);
+  });
+
+  test("7. Bilingual English ↔ हिन्दी switcher updates public portal and persists across routes", async ({ page }) => {
+    await page.goto("/");
+
+    // Default English state
+    await expect(
+      page.locator("h1:has-text('Integrated Hospital Bed Coordination & Emergency Patient Referral Portal')")
+    ).toBeVisible();
+    await expect(page.locator("text=Emergency Ambulance: 108").first()).toBeVisible();
+
+    // Toggle to हिन्दी
+    await page.locator("button:has-text('हिन्दी')").first().click();
+
+    // Verify instant Hindi translation on Home page
+    await expect(
+      page.locator("h1:has-text('एकीकृत अस्पताल बेड समन्वय एवं आपातकालीन मरीज रेफरल पोर्टल')")
+    ).toBeVisible();
+    await expect(page.locator("text=आपातकालीन एम्बुलेंस: 108").first()).toBeVisible();
+    await expect(page.locator("header a:has-text('हमारे बारे में')")).toBeVisible();
+    await expect(page.locator("header a:has-text('सेवाएं')")).toBeVisible();
+    await expect(page.locator("header a:has-text('अस्पताल नेटवर्क')")).toBeVisible();
+
+    // Navigate to /about and verify persistence
+    await page.locator("header a:has-text('हमारे बारे में')").click();
+    await expect(page).toHaveURL(/\/about$/);
+    await expect(page.locator("h1:has-text('आरोग्यसेतु ग्रिड के बारे में')")).toBeVisible();
+    await expect(page.locator("text=हमारा लक्ष्य (Core Mission)")).toBeVisible();
+
+    // Navigate to /portal and verify persistence
+    await page.goto("/portal");
+    await expect(page.locator("h1:has-text('अपने विभाग का चयन करें')")).toBeVisible();
+    await expect(page.locator("h2:has-text('अस्पताल पोर्टल')")).toBeVisible();
+
+    // Switch back to English
+    await page.locator("button:has-text('English')").first().click();
+    await expect(page.locator("h1:has-text('Select Your Department')")).toBeVisible();
+    await expect(page.locator("h2:has-text('HOSPITAL PORTAL')")).toBeVisible();
+  });
+
+  test("8. Footer policy links navigate to dedicated bilingual policy pages", async ({ page }) => {
+    await page.goto("/");
+
+    // Click Security Policy
+    await page.locator("footer a:has-text('Security Policy')").first().click();
+    await expect(page).toHaveURL(/\/policies\/security$/);
+    await expect(page.locator("h1:has-text('Security & Patient Privacy Policy')")).toBeVisible();
+
+    // Click Terms of Service
+    await page.locator("footer a:has-text('Terms of Service')").first().click();
+    await expect(page).toHaveURL(/\/policies\/terms$/);
+    await expect(page.locator("h1:has-text('Terms of Service & Operational Rules')")).toBeVisible();
+
+    // Click Jurisdictional Governance
+    await page.locator("footer a:has-text('Jurisdictional Governance')").first().click();
+    await expect(page).toHaveURL(/\/policies\/governance$/);
+    await expect(page.locator("h1:has-text('Jurisdictional Governance & Administrative Framework')")).toBeVisible();
+
+    // Click Inter-Hospital SLAs
+    await page.locator("footer a:has-text('Inter-Hospital SLAs')").first().click();
+    await expect(page).toHaveURL(/\/policies\/sla$/);
+    await expect(page.locator("h1:has-text('Inter-Hospital Service Level Agreements (SLA)')")).toBeVisible();
   });
 });

@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: arogyasetu-grid-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn src.api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: ENVIRONMENT
+        value: production
+      - key: PORTAL_BASE_URL
+        value: https://arogyasetu-grid.vercel.app
+      - key: CORS_ORIGINS
+        value: https://arogyasetu-grid.vercel.app,http://localhost:3000,http://127.0.0.1:3000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: arogyasetu-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: SMTP_FROM_EMAIL
+        value: pawanbussiness108@gmail.com
+      - key: SIH_EMAIL_BACKEND
+        value: simulated
+      - key: SIH_OTP_PROVIDER
+        value: SIMULATED
+      - key: REDIS_REQUIRED
+        value: "false"
+
+databases:
+  - name: arogyasetu-db
+    plan: free
+    region: oregon

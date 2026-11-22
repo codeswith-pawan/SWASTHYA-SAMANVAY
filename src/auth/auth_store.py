@@ -184,6 +184,17 @@ def seed_default_users():
             "district": None,
             "created_at": datetime.now().isoformat(),
         },
+        {
+            "user_id": "USR_GH99927",
+            "username": "gh99927",
+            "password": hash_password("Hospital@123"),
+            "name": "Purnea Hospital Admin",
+            "role": "HOSPITAL",
+            "hospital_id": "GH99927",
+            "state": "Bihar",
+            "district": "Purnia",
+            "created_at": datetime.now().isoformat(),
+        },
     ]
 
     # If users file is empty, initialize all
@@ -234,8 +245,11 @@ def authenticate_user(username, password):
         from src.database.db_manager import get_session_factory
         SessionFactory = get_session_factory()
         with SessionFactory() as db_session:
+            from sqlalchemy import func
             from src.database.pg_models import User
-            db_user = db_session.query(User).filter_by(username=username).first()
+            db_user = db_session.query(User).filter(
+                (User.username == username) | (func.lower(User.username) == username.strip().lower())
+            ).first()
             if db_user and db_user.is_active and verify_password(password, db_user.password_hash):
                 return {
                     "user_id": db_user.user_id,

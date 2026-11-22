@@ -129,6 +129,14 @@ export const REFERRAL_STATUS_MAP: Record<ReferralStatus, StatusInfo> = {
     description: "Patient admitted to reserved ward; treatment in progress",
     stageIndex: 4,
   },
+  IN_TREATMENT: {
+    label: "In Treatment",
+    badge: "bg-purple-500/10 text-purple-300 border-purple-500/30",
+    border: "border-purple-500/30",
+    icon: "🩺",
+    description: "Patient admitted to reserved ward; treatment in progress",
+    stageIndex: 4,
+  },
   COMPLETED: {
     label: "Completed",
     badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/30",

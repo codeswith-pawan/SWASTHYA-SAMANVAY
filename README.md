@@ -1,558 +1,697 @@
-# 🏥 SIH Hospital AI: Smart Hospital Referral & Capacity Management System
+# 🏥 SIH Hospital AI — Intelligent Hospital Referral and Bed Management System
 
-> **An Intelligent, Distributed Clinical Decision Support and Multi-Tier Healthcare Referral Coordination Platform**  
-> *Developed as an Engineering Prototype for the Smart India Hackathon (SIH) / Final-Year B.Tech CSE Capstone Project.*
+> **A Multi-Tier Healthcare Logistics, Bed Inventory Allocation, and Inter-Hospital Referral Coordination Platform**  
+> *Developed as an Engineering Prototype & Technical Reference Architecture under the Smart India Hackathon (SIH) framework.*
 
 [![Python](https://img.shields.io/badge/Python-3.14.3-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141.1-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2.8-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17.11-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-8.10.3-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9.0-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-336791?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0.52-D71F00?style=flat-square&logo=sqlalchemy&logoColor=white)](https://www.sqlalchemy.org/)
+[![Redis](https://img.shields.io/badge/Redis-8.1.0-DC382D?style=flat-square&logo=redis&logoColor=white)](https://redis.io/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.9.0-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
+[![Playwright](https://img.shields.io/badge/Playwright-1.65.0-2EAD33?style=flat-square&logo=playwright&logoColor=white)](https://playwright.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 
 ---
 
 ## 📖 Table of Contents
 
-- [1. Project Overview](#1-project-overview)
-- [2. Problem Statement](#2-problem-statement)
-- [3. Project Objectives](#3-project-objectives)
-- [4. Key Features](#4-key-features)
-- [5. System Architecture](#5-system-architecture)
-- [6. Technology Stack](#6-technology-stack)
-- [7. Four-Tier Dashboard Architecture](#7-four-tier-dashboard-architecture)
-  - [Hospital Operational Dashboard](#hospital-operational-dashboard)
-  - [District Administration Dashboard](#district-administration-dashboard)
-  - [State Health Administration Dashboard](#state-health-administration-dashboard)
-  - [Central Government Administration Dashboard](#central-government-administration-dashboard)
-- [8. AI-Powered Hospital Recommendation System](#8-ai-powered-hospital-recommendation-system)
-  - [Stage A: Deterministic Eligibility Gating](#stage-a-deterministic-eligibility-gating)
-  - [Stage B: Heuristic & Machine Learning Hybrid Ranking](#stage-b-heuristic--machine-learning-hybrid-ranking)
-  - [Tiered Geographic Fallback Mechanism](#tiered-geographic-fallback-mechanism)
-- [9. Patient Referral Lifecycle](#9-patient-referral-lifecycle)
-  - [Lifecycle States & Transitions](#lifecycle-states--transitions)
-  - [Referral Authorization Matrix](#referral-authorization-matrix)
-  - [Bed & ICU Inventory Management](#bed--icu-inventory-management)
-- [10. Database Architecture](#10-database-architecture)
-- [11. Authentication and Security](#11-authentication-and-security)
-  - [PBKDF2 Password Hashing & Timing Defense](#pbkdf2-password-hashing--timing-defense)
-  - [JWT Authentication & Redis Token Blocklisting](#jwt-authentication--redis-token-blocklisting)
-  - [Redis Distributed Rate Limiting](#redis-distributed-rate-limiting)
-  - [Geographic Role-Based Access Control (RBAC)](#geographic-role-based-access-control-rbac)
-  - [ACID Transactions & Row-Level Bed Locking](#acid-transactions--row-level-bed-locking)
-- [12. Project Directory Structure](#12-project-directory-structure)
-- [13. System Requirements](#13-system-requirements)
-- [14. Installation and Local Setup](#14-installation-and-local-setup)
-- [15. Environment Variables](#15-environment-variables)
-- [16. Database Setup](#16-database-setup)
-- [17. Redis Setup](#17-redis-setup)
-- [18. Backend Execution](#18-backend-execution)
-- [19. Frontend Execution](#19-frontend-execution)
-- [20. Running Tests](#20-running-tests)
-- [21. API Documentation](#21-api-documentation)
-- [22. Development Demo Accounts](#22-development-demo-accounts)
-- [23. Current Project Status](#23-current-project-status)
-- [24. Limitations and Future Scope](#24-limitations-and-future-scope)
-  - [Current Limitations](#current-limitations)
-  - [Planned Features & Roadmap](#planned-features--roadmap)
-- [25. Datasets & Documentation References](#25-datasets--documentation-references)
-- [26. Medical and Clinical Disclaimer](#26-medical-and-clinical-disclaimer)
-- [27. Author and Project Information](#27-author-and-project-information)
+1. [Project Overview](#1-project-overview)
+2. [Interface Screenshots](#2-interface-screenshots)
+3. [Key Features](#3-key-features)
+4. [System Architecture](#4-system-architecture)
+5. [Core Workflows](#5-core-workflows)
+   - [5.1 Patient Referral Lifecycle & Bed Reservation](#51-patient-referral-lifecycle--bed-reservation)
+   - [5.2 Multi-Tier Registration & Regulatory Approval](#52-multi-tier-registration--regulatory-approval)
+6. [Technology Stack](#6-technology-stack)
+7. [Database Architecture & Entity Relationships](#7-database-architecture--entity-relationships)
+8. [Project Directory Structure](#8-project-directory-structure)
+9. [Installation & Local Setup](#9-installation--local-setup)
+10. [Environment Configuration](#10-environment-configuration)
+11. [API Documentation](#11-api-documentation)
+12. [Testing & Quality Verification](#12-testing--quality-verification)
+13. [Production Deployment](#13-production-deployment)
+14. [Security & Data Governance](#14-security--data-governance)
+15. [Current Limitations & Future Scope](#15-current-limitations--future-scope)
+16. [Contributors & License](#16-contributors--license)
 
 ---
 
 ## 1. Project Overview
 
-**SIH Hospital AI** is an intelligent, distributed healthcare platform designed to streamline hospital-to-hospital patient referrals, eliminate emergency transfer delays, and prevent critical bed contention across public and private healthcare facilities.
+### The Challenge in Emergency Healthcare Coordination
+In multi-tier public health ecosystems, acute medical emergencies and ICU bed allocation face severe friction:
+- **Critical Care Bottlenecks:** Patients experiencing acute conditions (severe trauma, cardiac arrest, respiratory failure) are often routed to facilities without confirmed bed, ventilator, or specialized clinical capacity.
+- **Ambulance Diversions:** Uncoordinated transfers result in ambulances traveling between overloaded hospitals, losing precious minutes during the "Golden Hour."
+- **Informal Communication Channels:** Referrals are frequently coordinated over unlogged phone calls or informal messaging without real-time reservation guarantees, leading to bed hoarding and phantom availability.
+- **Accreditation Delays:** Frontline facilities face weeks of manual paperwork when seeking administrative onboarding, license verification, and inclusion into regional referral grids.
 
-When a primary or secondary healthcare facility cannot provide specialized clinical care or lacks life-support equipment for an unstable patient, transferring that patient to an appropriate tertiary facility is time-critical. Historically, this coordination has relied on manual, ad-hoc telephone calls, word-of-mouth bed availability checks, and uncoordinated transfers that often route emergency patients to facilities lacking critical specialties or ICU beds.
+### How SIH Hospital AI Solves This
+**SIH Hospital AI** is a distributed, full-stack clinical coordination and capacity surveillance platform designed to bridge community health centers, district hospitals, medical colleges, and state health directorates into an integrated digital network:
+1. **Dynamic Eligibility Gating & Hybrid Ranking:** Analyzes patient acuity, required clinical specialties, ICU/ventilator capacity, and Haversine geo-distance to recommend the most optimal receiving hospitals.
+2. **Atomic Bed Reservation with Expiry Windows:** Secures an ICU or general bed immediately upon referral acceptance, preventing race conditions via PostgreSQL row-level locks (`SELECT FOR UPDATE`), with automated background expiry to prevent artificial capacity locking.
+3. **Four-Tier Jurisdictional Governance:** Implements distinct operational portals and dashboards for **Facility Staff**, **District Health Officers**, **State Health Directorates**, and **Central Health Command**.
+4. **Hierarchical Onboarding & Auditability:** Structured multi-tier regulatory onboarding pipeline with nodal officer two-factor OTP verification, document upload validation, sequential jurisdictional sign-offs, and automated credential provisioning.
+5. **Operational Telemetry & Worker Reliability:** Prometheus-compatible application metrics, PostgreSQL connection pool telemetry, worker heartbeat tracking, and transactional outbox email delivery.
 
-This platform replaces fragmented, paper-based referral processes with a centralized, auditable system. It combines:
-- A **Two-Stage Clinical Decision Support (CDS)** engine integrating deterministic medical safety rules and a trained **Random Forest** classification model (34 clinical and infrastructure features).
-- A **Two-Phase Bed Reservation** mechanism with transactional row-level locks preventing double-booking during transit.
-- A **Distributed Security Layer** powered by Redis 8 (sliding-window rate limiting and instant JWT token revocation).
-- A **Four-Tier Dashboard Suite** (Hospital, District, State, Central Government) built with Next.js 16 and React 19.
-
----
-
-## 2. Problem Statement
-
-Across regional and national healthcare infrastructures, emergency patient transfers encounter severe structural obstacles:
-
-1. **Information Asymmetry:** Referring doctors lack verified, real-time visibility into specialty availability, diagnostic equipment (CT, MRI), and operational ICU beds at neighboring hospitals.
-2. **Secondary Transfer Delays:** Patients suffering from acute emergencies (e.g., Acute Myocardial Infarction, Severe Polytrauma, Acute Ischemic Stroke) are frequently sent to unequipped facilities, necessitating hazardous secondary transfers during the critical "golden hour."
-3. **Bed Contention & Verbal Holds:** Informal telephone bed holds frequently break down under emergency room pressures, leading to situations where patients arrive via ambulance only to find no available ICU beds.
-4. **Lack of Administrative Oversight:** District Health Offices and State Health Departments lack consolidated real-time analytics to monitor regional bed deficits, inter-district transfer loads, and facility overload.
-5. **Unauthorized Access & Audit Gaps:** Sensitive medical transfer histories often lack granular, role-based access control and tamper-evident audit logging.
+> [!NOTE]
+> **Academic & Technical Prototype Notice:**  
+> SIH Hospital AI is an independent engineering prototype and technical reference architecture developed under Smart India Hackathon guidelines. It is not an officially operated Government of India service, does not process live Protected Health Information (PHI), and does not provide public telecom emergency dispatch services. Emergency contact numbers (`108` and `1075`) referenced in the interface are standard Indian public telephone helplines provided for contextual realism.
 
 ---
 
-## 3. Project Objectives
+## 2. Interface Screenshots
 
-- **Enforce Medical Safety Gating:** Ensure that patient referrals strictly adhere to non-negotiable clinical prerequisites (specialty alignment, diagnostic equipment availability, and verified ICU capacity).
-- **Prevent Bed Double-Booking:** Guarantee bed holds via atomic PostgreSQL transactions and row-level locking (`SELECT ... FOR UPDATE`) during the patient transit window.
-- **Provide Explainable AI Guidance:** Provide clinicians with transparent, human-readable medical justifications explaining why specific hospitals were prioritized or disqualified.
-- **Enable Hierarchical Healthcare Oversight:** Empower District, State, and Central health authorities with partitioned dashboards reflecting their exact geographic jurisdictions.
-- **Harden Distributed System Security:** Implement distributed sliding-window rate limiting, cryptographically secure password hashing (PBKDF2-HMAC-SHA256), and real-time session revocation via Redis.
+The frontend has been built with Next.js 16, React 19, and Tailwind CSS v4, adhering to an official, accessible government portal aesthetic. All screenshots below are genuine captures archived in [`frontend/public/screenshots/`](frontend/public/screenshots/).
 
----
+### 2.1 Public Landing Page
+The public landing page provides citizens and healthcare providers with platform information, administrative access tiers, accreditation pipeline overviews, and capacity surveillance indicators without exposing clinical data.
 
-## 4. Key Features
-
-| Category | Highlights | Implementation State |
-|---|---|---|
-| **AI Recommendation** | Two-stage hybrid engine: Stage A deterministic medical rules + Stage B Random Forest ML model with priority weights. | **Implemented** |
-| **Geographic Fallbacks** | Proximity tiers: `LOCAL` ($\le 50$ km), `REGIONAL` ($50-200$ km), and `EXTENDED` ($> 200$ km). | **Implemented** |
-| **Bed & ICU Management** | Tracks general, ICU, and emergency beds; two-phase reservation hold (`HELD` $\rightarrow$ `CONFIRMED` $\rightarrow$ `OCCUPIED`). | **Implemented** |
-| **Referral Lifecycle** | Structured 7-state progression with role-specific state transition validation and audit timestamps. | **Implemented** |
-| **Concurrency Control** | PostgreSQL ACID transactions with row-level locks (`SELECT ... FOR UPDATE`) preventing race conditions. | **Implemented** |
-| **Security & RBAC** | PBKDF2-HMAC-SHA256 (100,000 iterations), timing-attack defenses, JWT auth, and Redis token revocation blocklist. | **Implemented** |
-| **Distributed Rate Limiting** | Redis-backed sliding-window counter via atomic Lua script (5 attempts / 60 seconds). | **Implemented** |
-| **Real-Time Alerts** | In-app emergency notifications for receiving hospitals upon referral creation or bed hold. | **Implemented** |
-| **Multi-Tier Dashboards** | Partitioned operational and analytical dashboards for Hospital, District, State, and Central tiers. | **Implemented** |
-| **Government Onboarding** | 4-tier hierarchical registration & approval system (Central $\rightarrow$ State $\rightarrow$ District $\rightarrow$ Hospital). | **Planned** |
-| **Free Email OTP** | Integration with Brevo (Sendinblue) for registration verification and password reset workflows. | **Planned** |
-| **Live GPS Telemetry** | Real-time GPS ambulance telemetry and IoT vehicle tracking (currently uses manual ambulance ID and ETA). | **Planned** |
+| Desktop View (1280px) | Mobile View (Pixel 7) |
+| :---: | :---: |
+| ![Landing Page Desktop](frontend/public/screenshots/01_landing_page_desktop.png) | ![Landing Page Mobile](frontend/public/screenshots/08_landing_page_mobile.png) |
+| *National Hospital Management & Coordination Portal — Desktop Overview* | *Responsive Navigation Drawer & Clean Mobile Hero* |
 
 ---
 
-## 5. System Architecture
+### 2.2 Department Selection Gateway
+The `/portal` gateway presents the 4 administrative healthcare access tiers, enabling users to enter their authorized operational portal.
 
-The following diagram illustrates the interaction between the Next.js presentation layer, the FastAPI backend services, the decision support pipeline, and the distributed data stores:
+| Desktop View (1280px) | Mobile View (Pixel 7) |
+| :---: | :---: |
+| ![Department Selection Desktop](frontend/public/screenshots/02_department_selection_desktop.png) | ![Department Selection Mobile](frontend/public/screenshots/09_department_selection_mobile.png) |
+| *Four-Tier Department Gateway (Facility, District, State, Central)* | *Responsive Tier Selection on Mobile* |
+
+---
+
+### 2.3 Dedicated Department Login Portals
+Each administrative tier features an isolated login experience with strict **Role-Mismatch Protection** to prevent cross-tier credential abuse.
+
+| Facility Tier (`/portal/hospital/login`) | District Tier (`/portal/district/login`) |
+| :---: | :---: |
+| ![Hospital Login](frontend/public/screenshots/03_hospital_login.png) | ![District Login](frontend/public/screenshots/04_district_login.png) |
+| *Hospital Operations Login (Beds, ICU, Referral Intake)* | *District Health Authority Login (Accreditation Stage 1)* |
+
+| State Tier (`/portal/state/login`) | National Tier (`/portal/central/login`) |
+| :---: | :---: |
+| ![State Login](frontend/public/screenshots/05_state_login.png) | ![Central Login](frontend/public/screenshots/06_central_login.png) |
+| *State Health Directorate Login (Accreditation Stage 2)* | *Central Health Command Login (National Oversight & Final Stage 3)* |
+
+---
+
+### 2.4 Active Role-Mismatch Interceptor
+When a user attempts to authenticate to an incorrect department portal (e.g., entering `DISTRICT_ADMIN` credentials on the Hospital Portal), the client-side authentication interceptor immediately invalidates the session token, blocks unauthorized dashboard access, and displays a contextual redirection alert.
+
+<p align="center">
+  <img src="frontend/public/screenshots/07_role_mismatch_state.png" alt="Role Mismatch Interceptor" width="650" />
+  <br>
+  <em>Active Role-Mismatch Guard — Intercepts Cross-Tier Login & Directs to Authorized Portal</em>
+</p>
+
+---
+
+### 2.5 Healthcare Entity Registration Hub
+The `/register` portal allows hospitals, district health administrations, and state directorates to initiate the official accreditation workflow.
+
+<p align="center">
+  <img src="frontend/public/screenshots/10_registration_hub_desktop.png" alt="Registration Hub" width="850" />
+  <br>
+  <em>Multi-Tier Healthcare Entity Registration Hub (Facility, District, and State Directorates)</em>
+</p>
+
+---
+
+### 2.6 Multi-Step Facility Onboarding Form (Desktop & Mobile)
+Accreditation onboarding features a 4-step stepper with real-time pre-submission verification checklists and full mobile responsiveness.
+
+| Desktop Stepper View (1440px) | Mobile Responsive View (390px) |
+| :---: | :---: |
+| ![Hospital Onboarding Desktop](frontend/public/screenshots/11_hospital_registration_desktop.png) | ![Hospital Onboarding Mobile](frontend/public/screenshots/12_hospital_registration_mobile.png) |
+| *Hospital Facility Profile & Nodal Verification Stepper* | *Mobile Responsive Form Layout & Navigation Drawer* |
+
+---
+
+### 2.7 Application Milestone Tracking & Reviewer Command Center
+Applicants track real-time verification milestones using secret tokens, while authorized health reviewers manage the accreditation queue.
+
+| Public Milestone Tracker (`/application/track`) | Reviewer Command Queue (`/reviewer`) |
+| :---: | :---: |
+| ![Application Tracking](frontend/public/screenshots/13_application_track_desktop.png) | ![Reviewer Portal](frontend/public/screenshots/15_reviewer_portal_desktop.png) |
+| *Public Milestone Verification Status Tracker* | *Reviewer Command Center & Role Gatekeeper* |
+
+---
+
+## 3. Key Features
+
+### 🏥 Hospital Bed & Resource Inventory Management
+- **Atomic Bed Accounting:** Manages General, Oxygen-Supported, ICU, and Ventilator bed allocations using explicit SQL counter synchronizations (`migrations/004_category_occupancy_counters.sql`).
+- **Inventory Updates:** Real-time endpoints (`PUT /hospitals/{id}/inventory` and `PATCH /hospitals/{id}/resources`) allowing hospital ward in-charges to update bed states with transactional consistency.
+- **Threshold Alerting:** Triggers automatic operational notifications whenever ICU beds fall $\le 1$ or General beds fall $\le 2$.
+
+### 🚑 Intelligent Patient Referral & Recommendation Engine
+- **Two-Stage Hybrid Recommendation Algorithm:**
+  - **Stage A (Deterministic Gating):** Filters out facilities lacking the required medical specialty, operating below minimum bed thresholds, or located outside feasible geographic bounds.
+  - **Stage B (Heuristic & ML Ranking):** Ranks candidate hospitals using Haversine distance, available bed ratios, specialized equipment availability, and historical acceptance weights (`src/prediction/ranking_engine.py`).
+  - **Tiered Fallback Mechanism:** Gracefully expands search radius: *Same District $\rightarrow$ Adjacent District $\rightarrow$ State Tertiary Centers $\rightarrow$ Apex National Institutes*.
+- **Full Referral Lifecycle:** Enforces state machine transitions: `PENDING` $\rightarrow$ `ACCEPTED` / `REJECTED` $\rightarrow$ `IN_TRANSIT` $\rightarrow$ `ARRIVED` $\rightarrow$ `TREATMENT_ACTIVE` $\rightarrow$ `COMPLETED` / `TRANSFERRED` / `DIED`.
+- **Ambulance Tracking Metadata:** Records ambulance identifiers, estimated transit times (ETA), and dispatch timestamps.
+
+### 🔒 Atomic Bed Reservation & Automatic Expiry
+- **Race Condition Prevention:** When a destination hospital accepts a referral, the bed reservation service executes a row-level lock (`SELECT ... FOR UPDATE`) on the target hospital inventory record.
+- **Timed Bed Holds:** Allocates a temporary reservation hold (default: 120 minutes) to keep the bed reserved while the ambulance is in transit.
+- **Asynchronous Auto-Expiry Worker:** Dedicated background worker (`src/workers/reservation_expiry_worker.py`) polls every 30 seconds to automatically release expired reservations, restore bed counts, and mark referrals as `EXPIRED` if the patient fails to arrive.
+
+### 🏛️ Multi-Tier Hospital Registration & Approval System
+- **Four-Stage Registration Pipeline:**
+  1. *Profile & Capacity:* Bed counts, ICU beds, oxygen inventory, geo-coordinates, and operational licenses.
+  2. *Nodal Officer 2FA:* Rate-limited OTP verification via email/SMS.
+  3. *Document Audit:* Upload and storage of clinical establishment licenses, fire safety NOCs, and pollution certificates with SHA-256 hash checks and MIME-type validation.
+  4. *Hierarchical Review:* Sequential multi-tier review pipeline: *District $\rightarrow$ State $\rightarrow$ Central*.
+- **Reviewer Dossier View:** Government administrators can inspect hospital applications, preview uploaded documents, verify compliance checklists, and execute `APPROVE`, `REJECT`, or `REQUEST_CORRECTION` actions.
+- **Account Provisioning:** Upon Central approval, automated provisioning generates cryptographically secure activation tokens, delivers onboarding emails via the outbox worker, and provisions facility logins.
+
+### 📡 Observability, Telemetry & Operations
+- **Prometheus-Style Metrics:** Custom `/metrics` endpoint surfacing HTTP request latencies, error counts, active database pool connections, and queue depths.
+- **Health Probes:** Kubernetes-ready `/health`, `/health/live`, and `/health/ready` endpoints verifying database connectivity, Redis responsiveness, and worker heartbeat freshness.
+- **Worker Heartbeat Tracking:** Background workers register heartbeats in PostgreSQL (`WorkerHeartbeat` table) with configurable stale-state detection (`src/services/alerting_service.py`).
+- **Transactional Outbox Engine:** Relies on the Transactional Outbox pattern (`RegistrationEmailOutbox`) to decouple database transactions from external SMTP delivery, ensuring zero email loss during network timeouts.
+
+---
+
+## 4. System Architecture
+
+The following diagram illustrates the component architecture, data flows, and external integrations implemented in SIH Hospital AI:
+
+```mermaid
+graph TD
+    subgraph ClientTier["Client Tier (Frontend - Next.js 16 / React 19)"]
+        UI_Public["Public Landing Page (/)"]
+        UI_Portal["Department Gateway (/portal)"]
+        UI_Login["Department Login Portals (/portal/*/login)"]
+        UI_Dashboards["Role Dashboards (Hospital, District, State, Central)"]
+        UI_Reviewer["Accreditation Reviewer Portal (/reviewer)"]
+        UI_Monitor["Admin Telemetry Dashboard (/admin/monitoring)"]
+    end
+
+    subgraph GatewayTier["API Gateway & Middleware Layer"]
+        CORS["CORS Middleware (Allowed FQDNs)"]
+        RateLimiter["Distributed Rate Limiter (Redis / Sliding Window)"]
+        JWTAuth["JWT Authentication & RBAC Enforcer"]
+    end
+
+    subgraph BackendCore["FastAPI Backend Application Core (Uvicorn)"]
+        API_Obs["Observability API (/health, /metrics)"]
+        API_Reg["Registration API (/api/registration)"]
+        API_Ref["Referral & Bed API (/referrals, /hospitals)"]
+        API_Admin["Administrative Hierarchy API (/admin/*)"]
+        
+        Service_Reg["Registration Service & Document Storage"]
+        Service_Alert["Alert Engine & Threshold Evaluator"]
+        Service_Outbox["Email Outbox Service"]
+        Service_Ranking["Hybrid Recommendation & Ranking Engine"]
+        Service_BedLock["Atomic Bed Reservation (Row-Locking)"]
+    end
+
+    subgraph DataStorageTier["Persistence & Caching Tier"]
+        PG[(PostgreSQL 15+ Primary DB)]
+        subgraph Tables["Relational Tables"]
+            T_Hosp["Hospitals & Bed Inventory"]
+            T_Ref["Referrals & Bed Reservations"]
+            T_App["Registration Applications & Documents"]
+            T_Outbox["Registration Email Outbox"]
+            T_Heartbeat["Worker Heartbeats"]
+            T_Audit["Audit Logs & Notifications"]
+        end
+        RedisCache[(Redis 8 Cache / Token Revocation)]
+        DocStorage[("Secure Document Storage (Filesystem / Volume)")]
+    end
+
+    subgraph BackgroundWorkers["Autonomous Background Workers"]
+        Worker_Outbox["Transactional Outbox Worker (src.workers.outbox_worker)"]
+        Worker_Expiry["Reservation Auto-Expiry Worker (src.workers.reservation_expiry_worker)"]
+    end
+
+    subgraph ExternalIntegrations["External Services & Transport"]
+        BrevoSMTP["Brevo SMTP Relay (smtp-relay.brevo.com)"]
+        EmailRecipients["Nodal Officers & Healthcare Staff (Email Delivery)"]
+    end
+
+    %% Client to Gateway
+    UI_Public --> CORS
+    UI_Portal --> CORS
+    UI_Login --> CORS
+    UI_Dashboards --> CORS
+    UI_Reviewer --> CORS
+    UI_Monitor --> CORS
+
+    CORS --> RateLimiter
+    RateLimiter --> JWTAuth
+
+    %% Gateway to API Endpoints
+    JWTAuth --> API_Obs
+    JWTAuth --> API_Reg
+    JWTAuth --> API_Ref
+    JWTAuth --> API_Admin
+
+    %% APIs to Core Services
+    API_Obs --> Service_Alert
+    API_Reg --> Service_Reg
+    API_Reg --> Service_Outbox
+    API_Ref --> Service_Ranking
+    API_Ref --> Service_BedLock
+    API_Admin --> Service_Reg
+
+    %% Services to Data Storage
+    Service_Reg --> PG
+    Service_Reg --> DocStorage
+    Service_Alert --> PG
+    Service_Outbox --> PG
+    Service_Ranking --> PG
+    Service_BedLock --> PG
+    RateLimiter --> RedisCache
+
+    %% Background Workers to Storage & External
+    Worker_Outbox --> PG
+    Worker_Outbox --> BrevoSMTP
+    BrevoSMTP --> EmailRecipients
+    Worker_Expiry --> PG
+    Worker_Outbox -.->|Heartbeat| T_Heartbeat
+    Worker_Expiry -.->|Heartbeat| T_Heartbeat
+```
+
+---
+
+## 5. Core Workflows
+
+### 5.1 Patient Referral Lifecycle & Bed Reservation
+When an inpatient requires critical care transfer, the initiating hospital uses the referral triage system. The diagram below details the end-to-end clinical workflow:
 
 ```mermaid
 flowchart TD
-    subgraph ClientLayer ["Client Layer (Next.js 16.3.0 / React 19)"]
-        UI_HOSP["Hospital Dashboard\n(Triage, Referral, Bed Hold)"]
-        UI_DIST["District Dashboard\n(District Hospitals & Capacity)"]
-        UI_STATE["State Dashboard\n(Cross-District Regional Flow)"]
-        UI_CENTRAL["Central Dashboard\n(Pan-India Health Overview)"]
+    A["Patient Identified for Transfer (Severity & Specialty Defined)"] --> B["Initiate Referral Request (POST /referral)"]
+    B --> C["Recommendation Engine Computes Ranked Hospitals (Haversine + Capacity)"]
+    C --> D["Referral Created (Status: PENDING)"]
+    
+    D --> E{"Destination Hospital Triage Review"}
+    E -- Reject --> F["Status: REJECTED (Reason Logged)"]
+    F --> G["Initiating Facility Selects Next Recommended Hospital"]
+    
+    E -- Accept --> H["Status: ACCEPTED"]
+    H --> I["Atomic Row Lock on Destination Bed (SELECT FOR UPDATE)"]
+    I --> J["Bed Decremented; BedReservation Record Created (Status: HELD, Expiry: 120m)"]
+    
+    J --> K["Initiating Facility Dispatches Ambulance (Status: IN_TRANSIT, ETA Logged)"]
+    K --> L{"Patient Transit Outcome"}
+    
+    L -- Patient Arrives at ER --> M["Status: ARRIVED (Destination Confirms Intake)"]
+    M --> N["Bed Marked OCCUPIED (Status: TREATMENT_ACTIVE)"]
+    N --> O{"Treatment Course"}
+    O -- Discharge --> P["Status: COMPLETED (Bed Restored to Available)"]
+    O -- Deterioration / Secondary Transfer --> Q["Status: TRANSFERRED (New Referral Initiated)"]
+    
+    L -- Transit Timeout (>120m Without Arrival) --> R["Reservation Auto-Expiry Worker Triggers"]
+    R --> S["Reservation Status: EXPIRED; Bed Counter Restored to Inventory"]
+```
+
+---
+
+### 5.2 Multi-Tier Registration & Regulatory Approval
+Healthcare facilities and administrative bodies must complete a verified hierarchical onboarding process before receiving production platform credentials:
+
+```mermaid
+flowchart TD
+    subgraph Stage1["1. Application Filing & Verification"]
+        A["Hospital / District / State Submits Profile Form"] --> B["Nodal Officer Enters Contact Information"]
+        B --> C["System Issues Rate-Limited OTP (POST /auth/otp/request)"]
+        C --> D["Nodal Officer Validates OTP Token"]
+        D --> E["Upload Compliance Documents (License, Fire NOC, Pollution Clearance)"]
+        E --> F["MIME Validation & SHA-256 Checksum Computed"]
+        F --> G["Application Status: SUBMITTED (Assigned Reference Number)"]
     end
 
-    subgraph APILayer ["API Gateway & Security Layer (FastAPI)"]
-        RATE_MW["Redis Distributed Rate Limiter\n(Sliding-Window Atomic Lua Script)"]
-        AUTH_MW["JWT Authentication & RBAC\n(HS256 + Redis Token Blocklist)"]
-        ROUTER_CORE["Core Referral Router\n(/hospitals, /referrals, /reservation)"]
-        ROUTER_PATIENT["Patient Router\n(/patients/*)"]
-        ROUTER_ADMIN["Admin Analytics Router\n(/district/*, /state/*, /central/*)"]
+    subgraph Stage2["2. Hierarchical Review Hierarchy"]
+        G --> H{"Target Entity Type"}
+        
+        H -- Hospital Facility --> I["Stage 1: District Health Authority Review"]
+        I -- Correction Required --> J["Status: CORRECTION_REQUIRED (Applicant Resubmits)"]
+        J --> I
+        I -- Approved --> K["Stage 2: State Health Directorate Review"]
+        K -- Approved --> L["Stage 3: Central Health Command Final Review"]
+        
+        H -- District Authority --> K
+        H -- State Directorate --> L
     end
 
-    subgraph BusinessLogic ["Clinical Intelligence & Business Logic Layer"]
-        STAGE_A["Stage A: Deterministic Rule Gate\n(Specialty, Beds, Equipment Safety Checks)"]
-        STAGE_B["Stage B: Priority-Aware Hybrid Ranker\n(Clinical Heuristics + ML Prediction)"]
-        ML_MODEL["Random Forest Classifier\n(34 Clinical & Resource Features)"]
-        BED_MGR["Bed Reservation Service\n(Two-Phase Locking & Expiration)"]
-        NOTIF_SVC["Emergency Notification Engine\n(In-App Alerts)"]
+    subgraph Stage3["3. Approval & Automated Provisioning"]
+        L -- Approved --> M["Application Status: APPROVED (Audit History Logged)"]
+        M --> N["Account Provisioning Service Generates Cryptographic Activation Token"]
+        N --> O["Enqueues Welcome Email in RegistrationEmailOutbox"]
+        O --> P["Outbox Worker Dispatches Email via SMTP"]
+        P --> Q["Nodal Officer Opens /activate and Sets Password"]
+        Q --> R["Facility Profile Seeded in PostgreSQL; Operational Credentials Active"]
     end
-
-    subgraph DataInfrastructure ["Data & Caching Infrastructure"]
-        PG_DB[("PostgreSQL 17.11 Database\n(10 Normalized Relational Tables\nACID Row-Level Locking)")]
-        REDIS_CACHE[("Redis 8.10.3 In-Memory Cache\n(Sliding Window Counters & JWT Blocklist)")]
-    end
-
-    UI_HOSP -->|HTTP Bearer JWT| RATE_MW
-    UI_DIST -->|HTTP Bearer JWT| RATE_MW
-    UI_STATE -->|HTTP Bearer JWT| RATE_MW
-    UI_CENTRAL -->|HTTP Bearer JWT| RATE_MW
-
-    RATE_MW --> REDIS_CACHE
-    RATE_MW --> AUTH_MW
-    AUTH_MW -->|Token Blocklist Check| REDIS_CACHE
-
-    AUTH_MW --> ROUTER_CORE
-    AUTH_MW --> ROUTER_PATIENT
-    AUTH_MW --> ROUTER_ADMIN
-
-    ROUTER_CORE --> STAGE_A
-    STAGE_A -->|Eligible Facilities| STAGE_B
-    STAGE_B --> ML_MODEL
-    ROUTER_CORE --> BED_MGR
-    ROUTER_CORE --> NOTIF_SVC
-
-    ROUTER_PATIENT --> PG_DB
-    ROUTER_ADMIN --> PG_DB
-    BED_MGR -->|SELECT ... FOR UPDATE| PG_DB
-    NOTIF_SVC --> PG_DB
 ```
 
 ---
 
 ## 6. Technology Stack
 
-### Backend & Machine Learning
-- **Programming Language:** Python `3.14.3`
-- **Web Framework:** FastAPI `0.141.1` (Async ASGI, Pydantic v2 validation)
-- **ASGI Server:** Uvicorn `0.52.3`
-- **Relational Database:** PostgreSQL `17.11` (`sih_hospital_dev`)
-- **ORM & Query Engine:** SQLAlchemy `2.0.52` with raw transactional queries
-- **Distributed Cache:** Redis `8.10.3` (via `redis-py` `8.1.0`)
-- **Machine Learning Library:** Scikit-Learn `1.9.0` (`RandomForestClassifier`)
-- **Model Serialization:** Joblib `1.5.3` (Singleton model cache loader)
-- **Data Manipulation:** Pandas `3.0.5` & NumPy `2.5.2`
-- **Session Tokens:** PyJWT `2.13.0` (HS256 signature enforcement)
-- **Test Harness:** Pytest `9.1.1`
+All technologies and version numbers listed below have been verified directly against project dependency files (`requirements.txt`, `frontend/package.json`, and Docker configurations):
 
-### Frontend & User Interface
-- **Framework:** Next.js `16.3.0` (App Router, Turbopack)
-- **UI Library:** React `19.2.8`
-- **Styling Engine:** Tailwind CSS `v4`
-- **Programming Language:** TypeScript `5.x`
-
----
-
-## 7. Four-Tier Dashboard Architecture
-
-SIH Hospital AI provides dedicated user interfaces tailored to each level of healthcare administration:
-
-```
-+----------------------------------------------------------------------------------------------------+
-|                                    4-TIER DASHBOARD CAPABILITIES                                   |
-+--------------------------+-----------------------+------------------------+------------------------+
-| Hospital Dashboard       | District Dashboard    | State Dashboard        | Central Dashboard      |
-+--------------------------+-----------------------+------------------------+------------------------+
-| * Patient Triage & Roster| * District Bed Counts | * Statewide Bed Stats  | * Pan-India Capacity   |
-| * AI Hospital Matcher    | * Facility Comparison | * Inter-District Flow  | * 36 States/UTs Status |
-| * 2-Phase Bed Hold Lock  | * Local Active Referrals| * Critical ICU Deficits| * National Emergencies |
-| * Ambulance ETA Input    | * Facility Capacity % | * Cross-Boundary Alerts| * National Metrics     |
-| * Emergency Notification | * Bed Deficit Triggers| * Regional Heatmap     | * System Health Status |
-+--------------------------+-----------------------+------------------------+------------------------+
-```
-
-### Hospital Operational Dashboard
-- **Intended Audience:** Attending Physicians, Triage Nurses, and Emergency Department Staff.
-- **Capabilities:**
-  - Clinical patient triage input (Condition, Triage Level, Diagnostic Needs).
-  - One-click trigger for AI hospital recommendation with medical justifications.
-  - Interactive two-phase bed reservation hold with a 30-minute lock window.
-  - Manual ambulance identifier assignment and estimated time of arrival (ETA in minutes).
-  - Incoming/outgoing referral progression and audible emergency in-app notifications.
-
-### District Administration Dashboard
-- **Intended Audience:** Chief Medical Officers (CMO) and District Health Officers.
-- **Scope:** Single district jurisdiction (e.g., Amritsar, Ludhiana).
-- **Capabilities:**
-  - Hospital-by-hospital capacity breakdown across the district.
-  - Real-time metrics: general bed occupancy rate, ICU bed reserves, emergency readiness flags.
-  - Local intra-district and outbound referral monitoring.
-
-### State Health Administration Dashboard
-- **Intended Audience:** State Health Directors and Health Secretaries.
-- **Scope:** Single state jurisdiction (e.g., Punjab, Maharashtra).
-- **Capabilities:**
-  - District-by-district capacity comparison and ranking.
-  - Early-warning indicators for districts experiencing severe ICU or ventilator shortages.
-  - Cross-district patient movement analytics.
-
-### Central Government Administration Dashboard
-- **Intended Audience:** Ministry of Health & Family Welfare (MoHFW) National Health Authorities.
-- **Scope:** Pan-India national jurisdiction.
-- **Capabilities:**
-  - Aggregated metrics: total hospitals, nationwide bed availability, cumulative ICU reserves.
-  - State-by-state hospital distribution and real-time active emergency referral traffic.
-  - National infrastructure health and service availability monitoring.
+| Layer / Subsystem | Technology | Verified Version | Purpose & Application |
+| :--- | :--- | :--- | :--- |
+| **Backend Framework** | **FastAPI** | `0.141.1` | Asynchronous REST API, dependency injection, OpenAPI documentation. |
+| **ASGI Server** | **Uvicorn** / **uvloop** | `0.52.3` / `0.22.1` | High-throughput asynchronous HTTP application server. |
+| **Database ORM** | **SQLAlchemy** | `2.0.52` | Declarative models, connection pooling, and atomic transactional operations. |
+| **Data Validation** | **Pydantic** | `2.13.4` | Request schema parsing, environment configuration, type validation. |
+| **Relational Database** | **PostgreSQL** | `15+` (Driver: `psycopg2-binary 2.9.13`) | Primary transactional persistence, row-level locks, foreign-key constraints. |
+| **Caching & Rate Limiting** | **Redis** | `8.1.0` (Testing: `fakeredis 2.40.0`) | Distributed token revocation, sliding-window rate limiting. |
+| **AI / Machine Learning** | **scikit-learn** / **NumPy** / **Pandas** | `1.9.0` / `2.5.2` / `3.0.5` | Hospital ranking, feature extraction, capability score calculation. |
+| **Security & Auth** | **PyJWT** / **Passlib** | `2.13.0` / `1.7.4` | JWT bearer token issuance, timing-safe PBKDF2 password hashing. |
+| **Frontend Framework** | **Next.js** (App Router) | `16.3.0` | React server/client components, route handling, standalone compilation. |
+| **UI Library** | **React** / **React DOM** | `19.2.8` | Component rendering, hooks, interactive dashboard interfaces. |
+| **Styling & Design** | **Tailwind CSS** | `v4` | Modern utility-first responsive styling and government UI design. |
+| **Icons & Typography** | **Lucide React** | `^1.73.0` | Accessible official healthcare and administrative iconography. |
+| **End-to-End Testing** | **Playwright** | `1.65.0` | Cross-browser integration testing (Chromium Desktop & Mobile Pixel 7). |
+| **Backend Testing** | **pytest** / **pytest-asyncio** | `9.1.1` | Unit testing, database fixture isolation, regression test suites. |
+| **Static Analysis** | **ESLint** / **TypeScript** | `v9` / `v5` | Code quality enforcement, type safety across frontend codebase. |
+| **Containerization** | **Docker** / **Docker Compose** | Multi-stage builds | Production containerization (`Dockerfile.backend`, `Dockerfile.frontend`). |
 
 ---
 
-## 8. AI-Powered Hospital Recommendation System
+## 7. Database Architecture & Entity Relationships
 
-The recommendation engine functions as an explainable, **Two-Stage Hybrid Clinical Decision Support (CDS)** architecture:
-
-```
-Incoming Referral Request (Patient Disease, Triage Priority, Required Tests/Equipment)
-                               │
-                               ▼
-+───────────────────────────────────────────────────────────────────────────────+
-| STAGE A: Deterministic Rule-Based Medical Gating (src/utils/referral_rules.py)|
-| 1. Specialty Availability Check  -> Must have Cardiology for Heart Attack, etc|
-| 2. Mandatory Bed Check           -> Critical priority requires ICU Beds > 0   |
-| 3. Mandatory Diagnostics Check   -> Must have CT, MRI, Ventilator if required |
-+───────────────────────────────────────────────────────────────────────────────+
-                               │
-                               ├─► Disqualified Facilities (Logged with medical rationale)
-                               │
-                               ▼ Eligible Hospital Pool
-+───────────────────────────────────────────────────────────────────────────────+
-| STAGE B: Priority-Aware Hybrid Scoring (ranking_engine.py & predict.py)       |
-| 1. Clinical Heuristic Suitability (0 - 100 points based on capacity & gear)   |
-| 2. ML Probability Inference (Random Forest Classifier, 34 Features)           |
-| 3. Dynamic Priority Blending:                                                 |
-|    - Critical Urgency : 85% Heuristic Score + 15% ML Probability              |
-|    - Urgent Priority  : 75% Heuristic Score + 25% ML Probability              |
-|    - Stable Priority  : 65% Heuristic Score + 35% ML Probability              |
-| 4. Geographic Fallback Partitioning:                                          |
-|    - LOCAL (<= 50 km)   -> Primary Recommendation Pool                        |
-|    - REGIONAL (50-200 km)-> Regional Fallback Pool                            |
-|    - EXTENDED (> 200 km)-> Extended Fallback Pool                             |
-+───────────────────────────────────────────────────────────────────────────────+
-                               │
-                               ▼
-Ranked Recommendations with Clinical Explanations & Geographic Rationale
-```
-
-### Stage A: Deterministic Eligibility Gating
-Before statistical ranking begins, candidate facilities must satisfy strict medical rules:
-1. **Medical Specialty Rule:** The hospital must have the specialty department matching the patient's condition (e.g., *Heart Attack* $\rightarrow$ Cardiology; *Kidney Failure* $\rightarrow$ Nephrology/Dialysis; *Trauma* $\rightarrow$ Trauma Unit & Orthopedics).
-2. **Critical Care Rule:** If patient priority is `Critical`, candidate facilities with zero available ICU beds are disqualified.
-3. **Diagnostic Capability Rule:** Facilities lacking the specific diagnostic imaging or life-support apparatus required by the clinical presentation (CT Scan, MRI, Ventilator, Oxygen Support, Blood Bank) are eliminated.
-
-### Stage B: Heuristic & Machine Learning Hybrid Ranking
-For facilities clearing Stage A:
-- **Clinical Heuristic Score (0 to 100):** Evaluates resource adequacy, spare bed capacity ratios, emergency readiness, and travel distance.
-- **Machine Learning Inference:** The trained `RandomForestClassifier` processes a **34-feature vector** (including distance, available beds, occupancy rate, life support capabilities, one-hot encoded disease categories, and triage urgency) to output an estimated historical success probability ($0.0$ to $1.0$).
-- **Priority-Weighted Formula:**
-  - $\text{Score}_{\text{Critical}} = (0.85 \times \text{RuleScore}_{\text{norm}} + 0.15 \times \text{MLScore}) \times 100$
-  - $\text{Score}_{\text{Urgent}} = (0.75 \times \text{RuleScore}_{\text{norm}} + 0.25 \times \text{MLScore}) \times 100$
-  - $\text{Score}_{\text{Stable}} = (0.65 \times \text{RuleScore}_{\text{norm}} + 0.35 \times \text{MLScore}) \times 100$
-
-### Tiered Geographic Fallback Mechanism
-Hospitals are partitioned by road distance:
-- `LOCAL`: $0 - 50$ km (Default primary recommendation pool).
-- `REGIONAL`: $> 50 - 200$ km (Activated automatically if no local facility satisfies clinical criteria).
-- `EXTENDED`: $> 200$ km (Emergency statewide fallback for super-specialty interventions).
-
----
-
-## 9. Patient Referral Lifecycle
-
-The system models the patient transfer process as a finite state machine preventing lost referrals, uncoordinated transfers, and premature bed releases:
+The relational schema is managed through versioned SQL migrations in `migrations/` (`001_initial_postgresql_schema.sql` through `006_workflow_notifications.sql`). The core entity relationships are modeled below:
 
 ```mermaid
-stateDiagram-v2
-    [*] --> PENDING: Doctor Creates Referral (POST /referrals)
-    PENDING --> APPROVED: Target Hospital Accepts (30m Bed Hold Placed)
-    PENDING --> REJECTED: Target Hospital Declines (Clinical Reason Stated)
-    APPROVED --> IN_TRANSIT: Ambulance Dispatched (Manual ID & ETA Assigned)
-    APPROVED --> CANCELLED: Source Hospital Cancels (Bed Hold Freed)
-    IN_TRANSIT --> ADMITTED: Patient Arrives at ER (Bed Marked Occupied)
-    IN_TRANSIT --> CANCELLED: Patient Diverted / Aborted (Bed Hold Freed)
-    ADMITTED --> COMPLETED: Care Finalized & Discharged (Bed Freed)
-    REJECTED --> [*]
-    CANCELLED --> [*]
-    COMPLETED --> [*]
+erDiagram
+    HOSPITALS ||--o{ USERS : "employs"
+    HOSPITALS ||--o{ BEDS : "contains"
+    HOSPITALS ||--o{ REFERRALS : "originates / receives"
+    PATIENTS ||--o{ REFERRALS : "subject of"
+    REFERRALS ||--o| BED_RESERVATIONS : "reserves"
+    HOSPITALS ||--o{ NOTIFICATIONS : "notified via"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    REGISTRATION_APPLICATIONS ||--o{ REGISTRATION_DOCUMENTS : "contains"
+    REGISTRATION_APPLICATIONS ||--o{ APPROVAL_HISTORY : "audited by"
+    REGISTRATION_APPLICATIONS ||--o| ACCOUNT_ACTIVATION_TOKENS : "provisions"
+    USERS ||--o{ PASSWORD_RESET_TOKENS : "requests"
+
+    HOSPITALS {
+        string hospital_id PK
+        string name
+        float latitude
+        float longitude
+        string district
+        string state
+        string level
+        int total_beds
+        int available_beds
+        int icu_beds
+        int available_icu_beds
+        int ventilators
+        int oxygen_cylinders
+    }
+
+    USERS {
+        string user_id PK
+        string username UK
+        string password_hash
+        string email
+        string role
+        string hospital_id FK
+        string state
+        string district
+        boolean is_active
+    }
+
+    PATIENTS {
+        string patient_id PK
+        string name
+        int age
+        string gender
+        string current_condition
+        int severity_score
+        string required_specialty
+    }
+
+    REFERRALS {
+        string referral_id PK
+        string patient_id FK
+        string from_hospital_id FK
+        string to_hospital_id FK
+        string status
+        string transfer_priority
+        string ambulance_id
+        int estimated_transit_time
+        timestamp created_at
+    }
+
+    BED_RESERVATIONS {
+        string reservation_id PK
+        string referral_id FK
+        string hospital_id FK
+        string bed_type
+        string status
+        timestamp expires_at
+        timestamp created_at
+        int version
+    }
+
+    REGISTRATION_APPLICATIONS {
+        string application_id PK
+        string application_number UK
+        string entity_type
+        string name
+        string state
+        string district
+        string status
+        string current_tier
+        timestamp created_at
+    }
+
+    REGISTRATION_DOCUMENTS {
+        string document_id PK
+        string application_id FK
+        string document_type
+        string storage_path
+        string file_hash
+        string verification_status
+    }
+
+    APPROVAL_HISTORY {
+        string history_id PK
+        string application_id FK
+        string reviewer_id
+        string review_tier
+        string action
+        text comments
+        timestamp reviewed_at
+    }
+
+    REGISTRATION_EMAIL_OUTBOX {
+        int id PK
+        string recipient_email
+        string subject
+        string template_name
+        string status
+        int retry_count
+        timestamp next_retry_at
+    }
+
+    WORKER_HEARTBEATS {
+        string worker_name PK
+        string worker_type
+        string status
+        timestamp last_heartbeat_at
+        int processed_count
+        int error_count
+    }
 ```
-
-### Lifecycle States & Transitions
-- `PENDING`: Referral logged by source hospital doctor; awaiting triage review by receiving facility. No bed reserved.
-- `APPROVED`: Receiving hospital accepts the patient; an atomic **30-minute reservation hold** (`HELD`) is placed on the target bed type.
-- `REJECTED`: Receiving hospital declines transfer due to capacity constraints or clinical criteria; reason logged and notified to source doctor.
-- `IN_TRANSIT`: Patient is onboard the transfer ambulance; manual ambulance identifier and estimated minutes to arrival (ETA) are attached. Bed status transitions to `CONFIRMED`.
-- `ADMITTED`: Patient physically arrives at the receiving emergency room; the bed status transitions from reserved to `OCCUPIED`.
-- `CANCELLED`: Transfer aborted due to patient stabilization or alternate routing; bed lock is instantly released back to the general pool.
-- `COMPLETED`: Patient receives treatment and is officially discharged; bed record is marked `AVAILABLE` and sanitized.
-
-### Referral Authorization Matrix
-Access to a referral is strictly bounded by the participant institutions:
-
-| Participant Role | Permitted Status Transitions |
-|---|---|
-| **Destination (Receiving) Hospital** | `APPROVED`, `REJECTED`, `ADMITTED`, `COMPLETED` |
-| **Source (Referring) Hospital** | `IN_TRANSIT`, `CANCELLED` |
-| **Unauthorized Outside Hospital** | **Access Denied (`HTTP 403 Forbidden`)** |
-
-Every referral record maintains an auditable timestamp timeline:
-`created_at` $\rightarrow$ `accepted_at` $\rightarrow$ `in_transit_at` $\rightarrow$ `admitted_at` $\rightarrow$ `completed_at` (or `rejected_at` / `cancelled_at`).
-
-### Bed & ICU Inventory Management
-- Tracks physical beds across three categories: `GENERAL`, `ICU`, and `EMERGENCY`.
-- Validates hospital identity, patient identity, requested bed category, and active reservation state.
-- Automatically releases reservation holds if an attached referral is cancelled or rejected.
 
 ---
 
-## 10. Database Architecture
+## 8. Project Directory Structure
 
-The relational schema is implemented in **PostgreSQL 17.11** (`sih_hospital_dev`) with **10 normalized tables** managed via SQLAlchemy 2.0 ORM:
-
-```
-+----------------------------------------------------------------------------------------------------+
-|                                      POSTGRESQL 17 SCHEMA MAP                                      |
-+--------------------------+-----------------------+------------------------+------------------------+
-| Administrative & Users   | Clinical Operations   | Resource Management    | Audit & Notifications  |
-+--------------------------+-----------------------+------------------------+------------------------+
-| * roles                  | * patients            | * beds                 | * notifications        |
-| * users                  | * hospital_visits     | * bed_reservations     | * audit_logs           |
-| * hospitals              | * referrals           |                        |                        |
-+--------------------------+-----------------------+------------------------+------------------------+
-```
-
-### Key Relational Tables
-1. **`roles`:** Administrative authorization roles (`CENTRAL_ADMIN`, `STATE_ADMIN`, `DISTRICT_ADMIN`, `HOSPITAL`).
-2. **`hospitals`:** Institutional profiles, geographic coordinates, bed counters, clinical specialty flags (`cardiology`, `neurology`, `oncology`), and equipment flags (`ct_scan`, `mri`, `ventilator`, `oxygen_support`).
-3. **`users`:** Staff and administrative accounts, hashed passwords, role assignments, and geographic jurisdiction scoping (`state`, `district`, `hospital_id`).
-4. **`patients`:** Master patient index, demographic records, and recorded baseline medical conditions.
-5. **`hospital_visits`:** Inpatient admission records, triage category, admission/discharge timestamps, and physician notes.
-6. **`beds`:** Physical bed records (`GENERAL`, `ICU`, `EMERGENCY`), current occupancy status (`AVAILABLE`, `RESERVED`, `OCCUPIED`), and linked `patient_id`.
-7. **`referrals`:** Inter-hospital transfer records, source and destination foreign keys, clinical priority, specialty requested, ambulance ID, ETA minutes, and lifecycle status.
-8. **`bed_reservations`:** Active and historical bed reservation holds, expiration timestamps (default 30 minutes), and status (`HELD`, `CONFIRMED`, `OCCUPIED`, `RELEASED`, `EXPIRED`).
-9. **`notifications`:** Emergency hospital alert feed, priority rating (`NORMAL`, `URGENT`, `CRITICAL`), read/unread states, and creation timestamps.
-10. **`audit_logs`:** Append-only security audit trail recording user IDs, IP addresses, entity types, actions taken, and structured JSON payloads.
-
----
-
-## 11. Authentication and Security
-
-### PBKDF2 Password Hashing & Timing Defense
-- Passwords are encrypted using **PBKDF2-HMAC-SHA256** with **100,000 iterations** and a 16-byte cryptographically secure salt (`secrets.token_hex(16)`).
-- To eliminate **timing attacks** and username enumeration, login requests for invalid usernames execute a dummy hash comparison (`DUMMY_PBKDF2_HASH`), ensuring identical server latency regardless of whether a user exists.
-
-### JWT Authentication & Redis Token Blocklisting
-- Stateless authentication uses **HS256** signed JSON Web Tokens containing user ID, role, and geographic claims.
-- When a user logs out (`POST /logout`), the token identifier (`jti`) is written to **Redis** with a TTL matching the token's remaining lifespan. The `require_current_user` FastAPI dependency verifies this blocklist on every incoming request, ensuring instant revocation.
-
-### Redis Distributed Rate Limiting
-- Configured in `src/auth/rate_limiter.py` to prevent brute-force credential stuffing across multiple backend workers.
-- Uses an atomic Redis Lua script executing a sliding-window counter:
-  - Default policy: **5 failed attempts per 60 seconds** per client IP and username.
-  - Exceeding the threshold immediately triggers an `HTTP 429 Too Many Requests` response with a `Retry-After` header.
-
-### Geographic Role-Based Access Control (RBAC)
-- **Central Admin:** Unrestricted pan-India read access.
-- **State Admin:** Bound strictly to records matching `user.state`. Inquiries outside the state trigger `HTTP 403 Forbidden`.
-- **District Admin:** Bound strictly to `user.state` and `user.district`.
-- **Hospital Staff:** Restricted strictly to their own `user.hospital_id`. Staff cannot inspect patient charts or manipulate beds belonging to outside facilities.
-
-### ACID Transactions & Row-Level Bed Locking
-- All bed reservation requests execute inside PostgreSQL transactions using `SELECT ... FOR UPDATE` row locks.
-- If concurrent requests contest the last remaining bed, subsequent transactions block until the first commits. Subsequent queries read the updated availability of 0 and return an `HTTP 409 Conflict: Insufficient Beds Available`, eliminating race conditions and double bookings.
-
----
-
-## 12. Project Directory Structure
-
-```
+```text
 SIH_Hospital_AI/
-├── data/                               # Project datasets and runtime stores
-│   ├── bed_inventory.json              # Bed inventory runtime cache
-│   ├── hospitals.csv                   # Synthetic hospital database
-│   ├── patients.csv                    # Synthetic patient demographic dataset
-│   └── runtime/                        # Runtime JSON state files
-│       ├── referrals.json
-│       └── users.json                  # Pre-seeded development users
-├── datasets/final/                     # Baseline clinical referral training data
-│   ├── hospitals.csv
-│   ├── patients.csv
-│   └── referrals.csv
-├── docs/                               # System documentation and medical assumptions
-│   ├── data_dictionary.md              # Dataset schema definitions
-│   └── medical_assumptions.md          # Clinical assumptions & triage rules
-├── frontend/                           # Next.js 16.3.0 frontend application
-│   ├── app/
-│   │   ├── layout.tsx                  # Global HTML shell & CSS import
-│   │   ├── page.tsx                    # Dynamic dashboard router based on role
-│   │   └── globals.css                 # Tailwind CSS directives
-│   ├── components/
-│   │   ├── CentralDashboard.tsx        # National administrative overview
-│   │   ├── StateDashboard.tsx          # State healthcare administration
-│   │   ├── DistrictDashboard.tsx       # District health officer dashboard
-│   │   ├── HospitalDashboard.tsx       # Hospital operational & triage dashboard
-│   │   └── shared/                     # Reusable UI widgets (Header, StatCard, etc.)
-│   ├── lib/                            # API client, auth token store, TypeScript types
-│   ├── package.json                    # Frontend dependencies (Next 16, React 19, Tailwind)
-│   └── tsconfig.json                   # TypeScript configuration
-├── migrations/                         # PostgreSQL SQL migration scripts
+├── .github/                            # GitHub configuration and templates
+├── data/                               # Local SQLite development files & test data
+│   └── storage/documents/              # Uploaded verification documents (isolated)
+├── docker/                             # Docker startup & database initialization
+│   └── initdb/01_run_migrations.sh     # Auto-migration script for container startup
+├── docs/                               # Comprehensive Technical & Operations Documentation
+│   ├── architecture.md                 # System architecture, engines, state machines & diagrams
+│   ├── installation.md                 # Step-by-step developer onboarding & local setup
+│   ├── database.md                     # PostgreSQL schemas, migrations, pools & recovery
+│   ├── deployment.md                   # Cloud (Render + Vercel) and Docker Compose deployment
+│   ├── security.md                     # RBAC, cryptography, tokens & security checklist
+│   ├── worker_operations.md            # Background worker architecture & daemons
+│   ├── smtp_setup.md                   # Brevo & external SMTP email relay configuration
+│   ├── data_dictionary.md              # Field definitions for hospitals & referrals
+│   └── medical_assumptions.md          # Clinical assumptions & specialty groupings
+├── frontend/                           # Next.js 16 Web Application
+│   ├── app/                            # Next.js App Router routes
+│   │   ├── activate/                   # Account activation & credential creation
+│   │   ├── application/track/          # Public application status lookup
+│   │   ├── forgot-password/            # Password recovery request workflow
+│   │   ├── portal/                     # Department gateway & dedicated logins
+│   │   │   ├── central/login/          # National Tier login portal
+│   │   │   ├── district/login/         # District Tier login portal
+│   │   │   ├── hospital/login/         # Facility Tier login portal
+│   │   │   └── state/login/            # State Tier login portal
+│   │   ├── register/                   # Multi-tier registration filing pages
+│   │   ├── reset-password/             # Tokenized password reset page
+│   │   ├── reviewer/                   # Accreditation dossier review & decision view
+│   │   ├── layout.tsx                  # Root layout with government portal metadata
+│   │   └── page.tsx                    # Public Government Healthcare Landing Page
+│   ├── components/                     # Reusable React components
+│   │   ├── auth/DepartmentLoginPage.tsx# Department login template with Role-Mismatch guard
+│   │   ├── registration/               # Registration form steps & document uploader
+│   │   ├── reviewer/                   # Reviewer dashboard, inbox & dossier inspector
+│   │   ├── shared/                     # GovernmentHeader, GovernmentFooter, Modals
+│   │   ├── CentralDashboard.tsx        # National-level monitoring view
+│   │   ├── DistrictDashboard.tsx       # District-level hospital oversight view
+│   │   ├── HospitalDashboard.tsx       # Bed management & patient triage view
+│   │   └── StateDashboard.tsx          # State-level healthcare administration view
+│   ├── e2e/                            # Playwright end-to-end browser test suites
+│   │   ├── capture_screenshots.spec.ts # Automated screenshot capture suite
+│   │   ├── phase2d_browser_workflows.spec.ts # 20 complete browser E2E workflows
+│   │   └── portal_navigation_and_departments.spec.ts # 12 portal navigation tests
+│   ├── lib/                            # API client, types, and jurisdictional helpers
+│   ├── public/screenshots/             # Archived high-resolution visual captures
+│   ├── package.json                    # Frontend dependencies & build scripts
+│   └── playwright.config.ts            # Playwright browser testing configuration
+├── migrations/                         # Versioned PostgreSQL SQL migrations
 │   ├── 001_initial_postgresql_schema.sql
-│   ├── 001_rollback_postgresql_schema.sql
-│   └── 002_referral_workflow_and_notifications.sql
-├── models/                             # Trained machine learning model weights
-│   └── referral_success_model.joblib   # Scikit-learn Random Forest model artifact
-├── notebooks/                          # Jupyter analysis and model training notebooks
-├── scripts/                            # Administrative and migration scripts
-│   ├── evaluate_recommendation_engine.py
-│   ├── migrate_to_postgres.py
-│   ├── verify_live_postgres_concurrency.py
-│   └── verify_redis_concurrency.py
-├── src/                                # Backend source code (FastAPI)
-│   ├── api/
-│   │   ├── main.py                     # Root API application & core referral routes
-│   │   ├── patient_routes.py           # Patient admission and clinical visit routes
-│   │   ├── admin_routes.py             # District, State, and Central analytics routes
-│   │   └── schemas.py                  # Pydantic v2 validation transfer models
-│   ├── auth/
-│   │   ├── auth_store.py               # PBKDF2 hashing, user lookup, timing defense
-│   │   ├── authorization.py            # Geographic RBAC access checks
-│   │   ├── dependencies.py             # FastAPI security dependencies
-│   │   ├── jwt_utils.py                # JWT signing & Redis blocklist checking
-│   │   └── rate_limiter.py             # Redis sliding-window rate limiting
-│   ├── database/
-│   │   ├── db_manager.py               # SQLAlchemy engine & transaction management
-│   │   ├── pg_models.py                # Declarative relational schema (10 tables)
-│   │   └── pg_repository.py            # Data access repository with row-level locks
-│   ├── prediction/
-│   │   ├── bed_reservation.py          # Bed hold logic and reservation state machine
-│   │   ├── feature_builder.py          # 34-feature extraction pipeline
-│   │   ├── notification_store.py       # Hospital alert management
-│   │   ├── predict.py                  # Random Forest model singleton and scoring
-│   │   ├── ranking_engine.py           # Priority-aware hybrid ranking algorithm
-│   │   ├── recommendation.py           # Clinical explanation generator
-│   │   └── referral_engine.py          # Referral progression state machine
-│   └── utils/
-│       └── referral_rules.py           # Deterministic medical gating rules
-├── tests/                              # Automated Pytest test suite (132 tests)
-│   ├── test_admin_hierarchy.py
-│   ├── test_ai_recommendation_evaluation.py
-│   ├── test_auth_and_access.py
-│   ├── test_end_to_end_referral_workflow.py
-│   ├── test_live_postgresql_integration.py
-│   ├── test_patient_data_and_referral_history.py
-│   ├── test_postgresql_migration_and_transactions.py
-│   ├── test_redis_distributed_security.py
-│   ├── test_referral_and_bed_lifecycle.py
-│   ├── test_security_and_reliability.py
-│   └── test_ui_defects_and_serialization.py
-├── pytest.ini                          # Pytest configuration
-├── README.md                           # Project documentation
-└── SIH_HOSPITAL_AI_COMPLETE_SYSTEM_AUDIT.md # Master Technical Audit Report
+│   ├── 002_referral_workflow_and_notifications.sql
+│   ├── 003_registration_system.sql
+│   ├── 004_category_occupancy_counters.sql
+│   ├── 005_worker_heartbeats.sql
+│   └── 006_workflow_notifications.sql
+├── scripts/                            # Operational utility & diagnostic scripts
+│   ├── backup_database.sh              # Database custom-format backup script
+│   ├── restore_database.sh             # Validated database restoration script
+│   ├── send_test_email.py              # Operator test email dispatch tool
+│   └── smtp_health_check.py            # Brevo SMTP diagnostic health check
+├── src/                                # Backend Application Source Code (FastAPI)
+│   ├── api/                            # REST API endpoints & route declarations
+│   │   ├── admin_routes.py             # Administrative endpoints (District, State, Central)
+│   │   ├── main.py                     # Primary FastAPI application entry point
+│   │   ├── observability.py            # Health probes, metrics, and alerting engine
+│   │   ├── registration_routes.py      # Registration, review & verification routes
+│   │   └── schemas.py                  # Pydantic request and response schemas
+│   ├── auth/                           # Authentication & authorization services
+│   │   ├── auth_store.py               # Password hashing & user validation
+│   │   ├── authorization.py            # Role-Based Access Control (RBAC) checks
+│   │   ├── jwt_utils.py                # JWT creation, decoding, and signing
+│   │   └── rate_limiter.py             # Redis sliding-window distributed rate limiter
+│   ├── database/                       # Database models & repository layer
+│   │   ├── db_manager.py               # SQLAlchemy engine & session factory
+│   │   ├── pg_models.py                # PostgreSQL ORM entity declarations
+│   │   └── pg_repository.py            # Data access object (DAO) repository layer
+│   ├── prediction/                     # AI/ML & recommendation algorithms
+│   │   ├── bed_reservation.py          # Atomic row-lock bed reservation logic
+│   │   ├── ranking_engine.py           # Hybrid heuristic & machine learning ranking
+│   │   └── recommendation.py           # Eligibility gating & distance calculation
+│   ├── services/                       # Core domain business logic services
+│   │   ├── account_provisioning_service.py # Automated credential provisioning
+│   │   ├── alerting_service.py         # SLA & threshold alert engine
+│   │   ├── document_storage.py         # Document upload, hash verification, storage
+│   │   ├── email_outbox_service.py     # Transactional outbox pattern manager
+│   │   ├── email_service.py            # Brevo SMTP & simulated email transport
+│   │   ├── otp_service.py              # Two-factor verification token service
+│   │   ├── registration_service.py     # Multi-tier registration business logic
+│   │   └── workflow_notification_service.py # In-app operational notifications
+│   ├── workers/                        # Background processing daemons
+│   │   ├── outbox_worker.py            # Asynchronous email delivery worker
+│   │   └── reservation_expiry_worker.py# Automatic bed reservation expiry worker
+│   └── config.py                       # Application configuration & environment loader
+├── tests/                              # Comprehensive backend test suite (pytest)
+│   ├── test_document_storage_and_provisioning.py
+│   ├── test_email_delivery_and_smtp.py
+│   ├── test_operational_inventory.py
+│   ├── test_operational_notifications.py
+│   ├── test_outbox_worker_reliability.py
+│   ├── test_phase2d_reviewer_and_lifecycle.py
+│   ├── test_phase4d4_monitoring.py
+│   ├── test_registration_api.py
+│   ├── test_reservation_expiry_worker.py
+│   └── test_referral_and_bed_lifecycle.py
+├── .dockerignore                       # Docker build exclusion rules
+├── .env.example                        # Development environment template
+├── .env.production.example             # Production environment template
+├── Dockerfile.backend                  # Production multi-stage backend container
+├── Dockerfile.frontend                 # Production standalone Next.js container
+├── docker-compose.prod.yml             # Production multi-service orchestration
+├── e2e_db_helper.py                    # Isolated test database helper for E2E tests
+├── requirements.txt                    # Python backend dependencies
+└── verify_phase2d_backend_workflows.py # Phase 2D standalone workflow validator
 ```
 
 ---
 
-## 13. System Requirements
+## 9. Installation & Local Setup
 
-### Hardware Requirements
-- **CPU:** 64-bit multi-core processor (Intel Core i5/i7/Apple Silicon M-Series or AMD Ryzen equivalent).
-- **Memory (RAM):** Minimum 8 GB (16 GB recommended for running Backend, Frontend, PostgreSQL, and Redis simultaneously).
-- **Disk Space:** Minimum 5 GB free disk storage.
-
-### Software Dependencies
-- **Operating System:** macOS (Sonoma/Sequoia), Linux (Ubuntu 22.04+), or Windows 11 (via WSL2).
-- **Python:** Version `3.11` to `3.14` (Verified on Python `3.14.3`).
-- **Node.js:** Version `20.x` or `22.x` with `npm` `10+`.
-- **PostgreSQL:** Version `16.x` or `17.x` (Verified on PostgreSQL `17.11`).
-- **Redis Server:** Version `7.x` or `8.x` (Verified on Redis `8.10.3`).
+### 9.1 Prerequisites
+Ensure your local environment meets the following minimum requirements:
+- **Python:** `3.11+` (tested and verified on `3.14.3`)
+- **Node.js:** `18.18+` or `20.x` (tested on `v20.x`) and `npm`
+- **PostgreSQL:** `15+` installed and running locally
+- **Redis:** `7+` (optional for local development; system gracefully falls back to in-memory rate limiting when Redis is absent)
+- **Git:** Standard CLI
 
 ---
 
-## 14. Installation and Local Setup
+### 9.2 Step-by-Step Setup Instructions
 
-Follow these commands to configure the development environment locally:
-
-### 1. Clone the Repository
+#### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/codeswith-pawan/SIH_Hospital_AI.git
-cd SIH_Hospital_AI
+git clone https://github.com/codeswith-pawan/SIH-Hospital-AI.git
+cd SIH-Hospital-AI
 ```
 
-### 2. Set Up Python Virtual Environment
+#### Step 2: Configure Backend Virtual Environment & Dependencies
 ```bash
-# Create virtual environment
+# Create and activate Python virtual environment
 python3 -m venv .venv
+source .venv/bin/activate
 
-# Activate virtual environment
-source .venv/bin/activate       # On macOS / Linux
-# .venv\Scripts\activate        # On Windows
-
-# Upgrade pip and packaging tools
-pip install --upgrade pip setuptools wheel
-
-# Install required backend dependencies
-pip install fastapi uvicorn sqlalchemy psycopg2-binary redis scikit-learn pandas numpy joblib pyjwt pytest httpx
+# Upgrade pip and install pinned dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
 ```
 
-### 3. Set Up Next.js Frontend
+#### Step 3: Configure Environment Variables
+```bash
+# Create local development environment file from template
+cp .env.example .env
+
+# Create frontend environment file from template
+cp frontend/.env.example frontend/.env.local
+```
+
+#### Step 4: Configure PostgreSQL Database & Run Migrations
+Create a local PostgreSQL database for development:
+```bash
+# Create database in PostgreSQL
+createdb sih_hospital_dev
+
+# Execute versioned migrations in sequence
+psql -d sih_hospital_dev -f migrations/001_initial_postgresql_schema.sql
+psql -d sih_hospital_dev -f migrations/002_referral_workflow_and_notifications.sql
+psql -d sih_hospital_dev -f migrations/003_registration_system.sql
+psql -d sih_hospital_dev -f migrations/004_category_occupancy_counters.sql
+psql -d sih_hospital_dev -f migrations/005_worker_heartbeats.sql
+psql -d sih_hospital_dev -f migrations/006_workflow_notifications.sql
+```
+*(Ensure `DATABASE_URL` in your `.env` matches your local database credentials: `postgresql://localhost:5432/sih_hospital_dev`)*.
+
+#### Step 5: Install Frontend Dependencies
 ```bash
 cd frontend
 npm install
@@ -561,262 +700,201 @@ cd ..
 
 ---
 
-## 15. Environment Variables
+### 9.3 Launching the Platform
 
-Create a `.env` file in the project root. For development, configure the following placeholders:
+To run the complete platform locally, execute each process in a separate terminal:
 
-```env
-# ==============================================================================
-# SIH HOSPITAL AI: DEVELOPMENT ENVIRONMENT CONFIGURATION
-# ==============================================================================
-
-# Application Environment Mode (development / testing / production)
-SIH_ENV=development
-ENVIRONMENT=development
-
-# Database Connection (PostgreSQL)
-# Format: postgresql+psycopg2://<user>:<password>@<host>:<port>/<dbname>
-SIH_DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/sih_hospital_dev
-DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/sih_hospital_dev
-
-# Database Connection Pool Settings
-SIH_DB_POOL_SIZE=10
-SIH_DB_MAX_OVERFLOW=20
-SIH_DB_POOL_TIMEOUT=30
-SIH_DB_POOL_RECYCLE=1800
-
-# Redis Cache & Rate Limiting Connection
-SIH_REQUIRE_REDIS=true
-SIH_REDIS_URL=redis://localhost:6379/0
-REDIS_URL=redis://localhost:6379/0
-
-# Authentication & JWT Configuration
-# Minimum 32 characters in production environments
-SIH_JWT_SECRET=super_secret_development_key_minimum_32_characters_long_for_security
-SIH_LOGIN_MAX_ATTEMPTS=5
-SIH_LOGIN_WINDOW_SECONDS=60
-
-# Data Storage Paths (Optional Overrides)
-SIH_USERS_PATH=data/runtime/users.json
-SIH_BED_INVENTORY_PATH=data/bed_inventory.json
-SIH_RESERVATIONS_PATH=data/reservations.json
-SIH_REFERRALS_PATH=data/runtime/referrals.json
-SIH_NOTIFICATIONS_PATH=data/runtime/notifications.json
-```
-
----
-
-## 16. Database Setup
-
-Ensure PostgreSQL is running locally on port 5432:
-
+#### 1. Start the FastAPI Backend
 ```bash
-# Verify PostgreSQL status (macOS Homebrew)
-brew services list | grep postgresql
-
-# Start PostgreSQL service if inactive
-brew services start postgresql@17
-
-# Create the application development database
-createdb sih_hospital_dev
-```
-
-Apply the SQL migration scripts to construct the 10 relational tables:
-
-```bash
-# Apply initial schema migration
-psql -d sih_hospital_dev -f migrations/001_initial_postgresql_schema.sql
-
-# Apply referral workflow & notifications migration
-psql -d sih_hospital_dev -f migrations/002_referral_workflow_and_notifications.sql
-
-# (Optional) Seed database from existing datasets
-python scripts/migrate_to_postgres.py
-```
-
----
-
-## 17. Redis Setup
-
-Ensure Redis Server is running locally on port 6379:
-
-```bash
-# Verify Redis status (macOS Homebrew)
-brew services list | grep redis
-
-# Start Redis service if inactive
-brew services start redis
-
-# Test Redis connectivity
-redis-cli ping
-# Expected response: PONG
-```
-
----
-
-## 18. Backend Execution
-
-Start the FastAPI application using `uvicorn`:
-
-```bash
-# Activate virtual environment
 source .venv/bin/activate
-
-# Launch ASGI server on port 8000
-python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn src.api.main:app --host 127.0.0.1 --port 8000 --reload
 ```
+*Backend API will be accessible at: `http://127.0.0.1:8000`*
 
-- **API Base URL:** `http://localhost:8000`
-- **Interactive Swagger Documentation:** `http://localhost:8000/docs`
-- **ReDoc Documentation:** `http://localhost:8000/redoc`
-- **Health Check Endpoint:** `http://localhost:8000/health`
-
----
-
-## 19. Frontend Execution
-
-In a separate terminal, launch the Next.js development server:
-
+#### 2. Start the Next.js Frontend
 ```bash
 cd frontend
 npm run dev
 ```
+*Frontend application will be accessible at: `http://localhost:3000`*
 
-- **Web Application URL:** `http://localhost:3000`
-- **Build Production Bundle:** `npm run build`
-- **Run Production Server:** `npm run start`
-
----
-
-## 20. Running Tests
-
-The test suite validates database integration, multi-process concurrency, distributed rate limiting, referral workflows, and the AI recommendation pipeline.
-
-### Execute Test Suite
+#### 3. Start Background Workers (Optional for Full Feature Simulation)
 ```bash
-# Run pytest from the project root
+# Terminal 3: Start the Transactional Email Outbox Worker
 source .venv/bin/activate
-pytest -v
+python -m src.workers.outbox_worker
+
+# Terminal 4: Start the Bed Reservation Auto-Expiry Worker
+source .venv/bin/activate
+python -m src.workers.reservation_expiry_worker
 ```
 
-### Verified Test Suite Status (November 3, 2026)
+---
 
-| Test Module | Tests | Status | Focus Area |
-|---|---|---|---|
-| `tests/test_admin_hierarchy.py` | 8 | Passed | District, State, Central RBAC isolation |
-| `tests/test_ai_recommendation_evaluation.py`| 13 | Passed | Two-stage gating & ML candidate scoring |
-| `tests/test_auth_and_access.py` | 12 | Passed | PBKDF2 hashing & timing attack defense |
-| `tests/test_end_to_end_referral_workflow.py`| 21 | Passed | Complete referral lifecycle transitions |
-| `tests/test_live_postgresql_integration.py` | 12 | Passed | PostgreSQL connection pool & constraints |
-| `tests/test_patient_data_and_referral_history.py`| 9 | Passed | Patient lookup & referral timeline audit |
-| `tests/test_postgresql_migration_and_transactions.py`| 12 | Passed | Atomic transactions & rollback verification |
-| `tests/test_recommendation.py` | 3 | Passed | Recommendation explanation generator |
-| `tests/test_redis_distributed_security.py` | 12 | Passed | Distributed sliding-window rate limiting |
-| `tests/test_referral_and_bed_lifecycle.py` | 17 | Passed | Two-phase bed reservation locking |
-| `tests/test_referral_engine.py` | 1 | Passed | Referral engine state machine |
-| `tests/test_referral_rules.py` | 2 | Passed | Medical specialty and equipment rules |
-| `tests/test_security_and_reliability.py` | 9 | Passed | JWT secret validation & token blocklist |
-| `tests/test_ui_defects_and_serialization.py`| 2 Passed, 1 Failed | Disclosed Below | UI state serialization & inventory truth |
-| **Total** | **131 Passed, 1 Failed** | **99.2% Passing** | 132 Total Tests Collected |
+## 10. Environment Configuration
 
-> **Transparent Test Failure Disclosure:**  
-> The single failing test (`test_ui_defects_and_serialization.py::test_inventory_counters_truth_consistency`) asserts that hospital `GH00046` has 16 available ICU beds, but 15 are found. This occurs because an active bed reservation was created during an earlier end-to-end integration test against `data/bed_inventory.json`. This demonstrates file-based state drift and reinforces why PostgreSQL transactions are being established as the sole source of truth.
+All application configurations are managed using Pydantic Settings (`src/config.py`). Sanitize and populate variables using `.env.example`:
+
+| Environment Variable | Default (Dev) | Production Invariant | Purpose |
+| :--- | :--- | :--- | :--- |
+| `ENVIRONMENT` | `development` | `production` | Enforces production startup validation checks. |
+| `HOST` / `PORT` | `0.0.0.0` / `8000` | `0.0.0.0` / `8000` | Application server binding address. |
+| `DATABASE_URL` | `postgresql://...` | `postgresql://...` | PostgreSQL connection string (PostgreSQL required in prod). |
+| `DB_POOL_SIZE` | `10` | `20` | SQLAlchemy connection pool size. |
+| `DB_MAX_OVERFLOW` | `20` | `10` | Maximum connection overflow above pool size. |
+| `REDIS_URL` | `redis://127.0.0.1:6379/0` | `redis://...` | Redis server address for distributed rate limiting. |
+| `REDIS_REQUIRED` | `false` | `true` | When true, server halts if Redis is unreachable. |
+| `JWT_SECRET_KEY` | *(demo string)* | `[min 32 chars random]` | Cryptographic key for signing JWT tokens. |
+| `JWT_ALGORITHM` | `HS256` | `HS256` | Token signing algorithm. |
+| `SIH_EMAIL_BACKEND` | `simulated` | `smtp` | Email transport (`simulated` logs to console; `smtp` uses Brevo). |
+| `SIH_OTP_PROVIDER` | `SIMULATED` | `EMAIL` | OTP generation mode (`SIMULATED` returns `123456`). |
+| `SMTP_HOST` | `smtp-relay.brevo.com` | `smtp-relay.brevo.com` | External SMTP server host. |
+| `SMTP_PORT` | `587` | `587` | External SMTP submission port (STARTTLS). |
+| `SMTP_USERNAME` | *(placeholder)* | `[Brevo Login Email]` | SMTP authentication account. |
+| `SMTP_PASSWORD` | *(placeholder)* | `[Brevo SMTP Key]` | SMTP authentication password/key. |
+| `SMTP_FROM_EMAIL` | `no-reply@...` | `[Verified Sender]` | Envelope sender address for outbound emails. |
+| `STORAGE_BASE_DIR` | `/tmp/sih_documents` | `/var/lib/...` | Filesystem path for encrypted document storage. |
+| `CORS_ORIGINS` | `http://localhost:3000` | `https://hospital...` | Comma-separated list of allowed origins (no wildcards). |
 
 ---
 
-## 21. API Documentation
+## 11. API Documentation
 
-FastAPI automatically serves interactive API documentation at `/docs` and `/redoc`. The backend exposes **44 total endpoints** across major modules:
+FastAPI automatically generates interactive OpenAPI documentation from Pydantic schemas. With the backend running:
 
-| Endpoint | HTTP Method | Authorized Roles | Purpose |
-|---|---|---|---|
-| `/health` | `GET` | Public | System status check (verifies PostgreSQL and Redis) |
-| `/login` | `POST` | Public (Rate Limited)| Authenticate user credentials and return signed JWT |
-| `/logout` | `POST` | Authenticated | Revoke active JWT session via Redis blocklist |
-| `/hospitals` | `GET` | Public / Doctors | Execute Two-Stage Hybrid Recommendation for triage input |
-| `/referrals` | `POST` | Hospital Staff | Create active referral and place atomic bed reservation |
-| `/referrals/{id}` | `GET` | Hospital / Admin | Retrieve referral details and audit timeline |
-| `/referrals/{id}/status/{status}` | `POST` | Hospital Staff | Transition referral lifecycle state (`APPROVED`, `IN_TRANSIT`, etc.) |
-| `/reservation/{hid}/{pid}/reserve`| `POST` | Hospital Staff | Place atomic 30-minute reservation hold on hospital bed |
-| `/hospitals/{id}/inventory` | `GET` | Hospital Staff | Fetch real-time available beds, ICU counts, and equipment status |
-| `/hospitals/{id}/notifications`| `GET`| Hospital Staff | Fetch real-time emergency clinical alerts |
-| `/patients/hospital/{id}` | `GET` | Scoped Hospital Staff| List patient roster for authorized hospital |
-| `/district/overview` | `GET` | District / State / Central | District-wide hospital capacity and referral analytics |
-| `/state/overview` | `GET` | State / Central Admin | Statewide aggregated bed stats and inter-district flow |
-| `/central/overview` | `GET` | Central Admin | Pan-India healthcare capacity summary |
+- **Interactive Swagger UI:** [`http://127.0.0.1:8000/docs`](http://127.0.0.1:8000/docs)  
+  *Allows developers and evaluators to execute API requests, inspect schemas, and test JWT authentication.*
+- **ReDoc Documentation:** [`http://127.0.0.1:8000/redoc`](http://127.0.0.1:8000/redoc)  
+  *Clean, searchable reference layout for all endpoint specifications.*
+- **OpenAPI JSON Schema:** [`http://127.0.0.1:8000/openapi.json`](http://127.0.0.1:8000/openapi.json)  
+  *Raw OpenAPI 3.1.0 specification for automated SDK or client generation.*
 
 ---
 
-## 22. Development Demo Accounts
+## 12. Testing & Quality Verification
 
-> ⚠️ **DEVELOPMENT TESTING ONLY:**  
-> The following accounts are pre-seeded in `data/runtime/users.json` for local evaluation, testing, and UI demonstration. **Never use these default credentials in production environments.**
+The repository enforces strict test automation across backend services, database transactions, and frontend browser journeys.
 
-| Username | Password | Role | Assigned Jurisdiction | Description |
-|---|---|---|---|---|
-| `central_admin` | `central123` | `CENTRAL_ADMIN` | Pan-India (National) | Ministry of Health National Health Administrator |
-| `punjab_admin` | `admin123` | `STATE_ADMIN` | State: Punjab | Punjab State Health Department Director |
-| `maharashtra_admin`| `admin123`| `STATE_ADMIN` | State: Maharashtra | Maharashtra State Health Department Director |
-| `amritsar_district_admin`| `district123`| `DISTRICT_ADMIN` | Amritsar, Punjab | Amritsar District Chief Medical Officer |
-| `ludhiana_district_admin`| `district123`| `DISTRICT_ADMIN` | Ludhiana, Punjab | Ludhiana District Chief Medical Officer |
-| `gh00046` | `hospital123` | `HOSPITAL` | Amritsar, Punjab | Regional Amritsar Medical College Hospital Staff |
-| `gh00119` | `hospital123` | `HOSPITAL` | Amritsar, Punjab | District Amritsar Medical College Hospital Staff |
-| `gh_test_other` | `hospital123`| `HOSPITAL` | Ludhiana, Punjab | Test Other Hospital Staff |
-
----
-
-## 23. Current Project Status
-
-- **Status:** **Advanced Engineering Prototype / Research System**
-- **Academic Context:** Developed as a capstone engineering project for the **Smart India Hackathon (SIH)** / Final-Year B.Tech Computer Science and Engineering (CSE) curriculum.
-- **Maturity Level:**
-  - Prototype-ready for demonstration, simulation, and academic evaluation.
-  - Multi-process PostgreSQL transactional concurrency and Redis rate limiting independently verified.
-  - Not certified for real-world autonomous clinical decision-making.
+### 12.1 Backend Pytest Suite
+The backend test suite covers atomic bed locking, inventory consistency, registration workflows, email delivery, observability metrics, and worker reliability:
+```bash
+# Run complete backend suite against isolated test database
+source .venv/bin/activate
+pytest -q
+```
+**Verified Backend Execution Result (November 2026):**
+```text
+414 passed, 413 warnings in 35.05s (Exit Code: 0)
+```
 
 ---
 
-## 24. Limitations and Future Scope
+### 12.2 Frontend Quality Gates & Playwright E2E Suite
+Frontend code quality and user journeys are validated using TypeScript, ESLint, Next.js build compilation, and headless Playwright browser tests:
+
+```bash
+cd frontend
+
+# 1. TypeScript compilation check
+npx tsc --noEmit
+
+# 2. ESLint static analysis
+npm run lint
+
+# 3. Next.js standalone production build
+npm run build
+
+# 4. Portal navigation & Department journey E2E tests
+npx playwright test e2e/portal_navigation_and_departments.spec.ts
+
+# 5. Phase 2D complete browser workflow tests
+npx playwright test e2e/phase2d_browser_workflows.spec.ts
+
+# 6. Execute full Playwright test suite
+npx playwright test
+```
+
+**Verified Frontend Execution Results (November 2026):**
+| Test / Quality Gate | Target Scope | Verified Outcome | Exit Code |
+| :--- | :--- | :--- | :---: |
+| **TypeScript Check** | Frontend TypeScript codebase | **0 errors** | **0** |
+| **ESLint Analysis** | Next.js App Router & components | **0 errors** (53 non-blocking warnings) | **0** |
+| **Next.js Production Build** | Standalone static & dynamic routes | **20 / 20 routes compiled** | **0** |
+| **Portal Navigation Suite** | Landing, Department Gateway, Mismatch guard | **12 / 12 passed** (13.3s) | **0** |
+| **Phase 2D Workflow Suite** | Onboarding, Reviewer, Activation, Referrals | **20 / 20 passed** (55.8s) | **0** |
+| **Full Playwright Suite** | Full Desktop & Mobile Pixel 7 journeys | **34 / 34 passed** (1.3m) | **0** |
+
+---
+
+## 13. Production Deployment
+
+### Containerization with Docker Compose
+The repository includes production container definitions (`Dockerfile.backend`, `Dockerfile.frontend`) and orchestration (`docker-compose.prod.yml`):
+
+- **Backend Container (`Dockerfile.backend`):** Multi-stage build based on `python:3.14-slim`, executing under a non-root `appuser` with dumb-init process supervision.
+- **Frontend Container (`Dockerfile.frontend`):** Standalone Next.js multi-stage build running on Node Alpine.
+- **Service Orchestration (`docker-compose.prod.yml`):**
+  - `postgres`: PostgreSQL 15 container with persistent volume and healthcheck (`pg_isready`).
+  - `redis`: Redis 7 container with password authentication.
+  - `backend`: FastAPI API server running on isolated internal bridge network (`sih_internal`).
+  - `outbox_worker`: Autonomous email delivery worker.
+  - `reservation_expiry_worker`: Autonomous bed reservation expiry worker.
+  - `frontend`: Standalone Next.js production frontend.
+
+#### Validating Compose Configuration:
+```bash
+# Validates syntax, volume bindings, and network isolation
+docker compose --env-file .env.production.example -f docker-compose.prod.yml config --quiet
+```
+*(Exited with code 0 in verification audit).*
+
+> [!IMPORTANT]
+> **Deployment Note:**  
+> The Dockerfiles and `docker-compose.prod.yml` provide a verified deployment specification. The project is currently maintained as a verified codebase and repository; live production hosting on Kubernetes or cloud infrastructure requires provisioning production host secrets, PostgreSQL clusters, and managed Redis instances.
+
+---
+
+## 14. Security & Data Governance
+
+1. **Strict Role-Based Access Control (RBAC):**
+   - Four distinct administrative scopes: `HOSPITAL`, `DISTRICT_ADMIN`, `STATE_ADMIN`, and `CENTRAL_ADMIN`.
+   - Hierarchical geographic isolation ensures District Admins cannot view or modify data outside their assigned district, and State Admins are restricted to their state jurisdiction.
+2. **Password & Token Security:**
+   - User passwords hashed using PBKDF2 with SHA-256 and unique per-user cryptographic salts (`src/auth/auth_store.py`).
+   - Constant-time string comparison (`hmac.compare_digest`) used during authentication to mitigate side-channel timing attacks.
+   - JWT tokens signed using HS256 with short lifespans (default: 60 minutes) and immediate revocation capabilities via Redis blocklisting.
+3. **Defense Against Race Conditions:**
+   - Bed reservation operations utilize explicit PostgreSQL row locks (`SELECT ... FOR UPDATE`) inside atomic database transactions to eliminate double-booking during concurrent referral requests.
+4. **Document Upload Safeguards:**
+   - Mandatory document size limits (max 10MB per file).
+   - Strict MIME-type inspection (PDF, PNG, JPEG allowed; executable formats strictly rejected).
+   - SHA-256 content checksumming prevents file tampering or duplicate submission spoofing.
+5. **No Public Clinical Data:**
+   - All patient lookup, AI triage, and referral creation endpoints require authenticated JWT sessions with `HOSPITAL` role permissions. No clinical data or patient records are accessible from the public landing page.
+
+---
+
+## 15. Current Limitations & Future Scope
 
 ### Current Limitations
-1. **Synthetic Data Dependency:** Evaluated using synthetic hospital capabilities and patient triage datasets. Not connected to real hospital EHRs.
-2. **Static User Store:** User authentication currently resolves against `data/runtime/users.json`. The PostgreSQL `users` table exists but requires unification.
-3. **Manual Ambulance Telemetry:** Ambulance tracking currently relies on manual ambulance ID assignment and physician-estimated ETA minutes. **Live GPS telemetry is not implemented.**
-4. **No Automated User Registration:** Institutional accounts are pre-seeded; no self-registration or document upload portal is currently operational.
-5. **No Password Recovery:** Forgot-password and self-service password reset endpoints are not yet implemented.
+- **Synthetic Benchmark Datasets:** Triage recommendations and bed counts are tested using structured synthetic data (`datasets/final/`). The system is not connected to live hospital Electronic Health Record (EHR) systems.
+- **Simulated Ambulance Telemetry:** Ambulance transit tracking relies on estimated transit times (ETA minutes) and vehicle ID records; real-time GPS hardware integration is not yet connected.
+- **Document Antivirus Scanning:** Document storage includes malware validation hooks and checksum verifications, but integration with ClamAV daemons is currently configurable and runs in pass-through mode in local development.
 
-### Planned Features & Roadmap
-- **Hierarchical Government Registration (Planned):** A 4-tier onboarding workflow (Central $\rightarrow$ State $\rightarrow$ District $\rightarrow$ Individual Hospital) with document verification (medical licenses, fire safety NOCs) and privacy-scrubbed public tracking.
-- **Free Email OTP Verification (Planned):** Integration with Brevo (Sendinblue) for free-tier email verification and password recovery.
-- **FHIR / ABDM Interoperability (Planned):** Integration with Ayushman Bharat Digital Mission (ABDM) protocols for standardized Health ID (ABHA) and Electronic Health Record (EHR) data sharing.
-- **Real-Time GPS Telemetry (Planned):** IoT and GPS tracker integration for live ambulance position tracking on interactive maps.
-- **WebSocket Notifications (Planned):** Bidirectional WebSocket channels for instantaneous push alerts across clinical workstations.
+### Future Scope & Roadmap
+- **Ayushman Bharat Digital Mission (ABDM) Integration:** Implementing FHIR/HL7 standards and Ayushman Bharat Health Account (ABHA) protocols for national health record interoperability.
+- **Real-Time GPS IoT Telemetry:** Integrating GPS transponders on ambulances for live transit tracking on interactive GIS maps.
+- **Bidirectional WebSockets:** Upgrading notification polling to bidirectional WebSocket channels for immediate bedside alert chimes.
+- **Dynamic Bed Forecasting:** Expanding scikit-learn models to forecast seasonal surge capacity and ICU bed demand 48 hours in advance.
 
 ---
 
-## 25. Datasets & Documentation References
+## 16. Contributors & License
 
-The project includes structured data dictionaries, synthetic datasets, and technical audit documentation:
+### Author & Engineering Lead
+- **Pawan Kumar Sharma** ([@codeswith-pawan](https://github.com/codeswith-pawan))  
+  *Project Lead & Full-Stack Architect*  
+  *Smart India Hackathon (SIH) Initiative / Final-Year B.Tech Computer Science & Engineering Capstone*
 
-- [`docs/data_dictionary.md`](docs/data_dictionary.md) — Definitions for hospital, patient, and referral dataset fields.
-- [`docs/medical_assumptions.md`](docs/medical_assumptions.md) — Clinical assumptions, triage rules, and specialty mappings.
-- [`SIH_HOSPITAL_AI_COMPLETE_SYSTEM_AUDIT.md`](SIH_HOSPITAL_AI_COMPLETE_SYSTEM_AUDIT.md) — 20-section master architectural audit, gap analysis, and implementation roadmap.
-- `datasets/final/` — Synthetic benchmark datasets (`hospitals.csv`, `patients.csv`, `referrals.csv`).
-
----
-
-## 26. Medical and Clinical Disclaimer
-
-> ⚠️ **MEDICAL & CLINICAL DISCLAIMER:**  
-> **SIH Hospital AI is an academic research and engineering prototype.**  
-> It has **NOT** been certified as a medical device under ISO 13485, IEC 62304, or the Central Drugs Standard Control Organisation (CDSCO) guidelines.  
-> It is **NOT deployed in real-world hospitals**, does not process real protected health information (PHI), and must **NEVER** be used as the sole or autonomous basis for actual clinical diagnosis, patient management, or emergency healthcare dispatch. All transfer decisions must be validated by licensed medical professionals.
-
----
-
-## 27. Author and Project Information
-
-- **Author:** Pawan Kumar Sharma ([@codeswith-pawan](https://github.com/codeswith-pawan))
-- **Project Repository:** [codeswith-pawan/SIH_Hospital_AI](https://github.com/codeswith-pawan/SIH_Hospital_AI)
-- **Track:** Healthcare & Biomedical Technology / Smart India Hackathon (SIH)
-- **Domain:** Final-Year B.Tech Computer Science and Engineering (CSE) Capstone Project
+### License
+No formal open-source license has been specified for this repository yet. All rights are reserved by the author. For evaluation, demonstration, or research inquiries, please open an issue on the [GitHub Repository](https://github.com/codeswith-pawan/SIH-Hospital-AI).

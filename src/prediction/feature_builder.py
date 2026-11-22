@@ -124,8 +124,11 @@ def build_referral_features(patient, hospital):
     # Occupancy Rate
     # --------------------------------
 
-    total_beds = hospital["total_beds"]
-    occupied_beds = hospital["occupied_beds"]
+    total_beds = hospital.get("total_beds") or 0
+    occupied_beds = hospital.get("occupied_beds")
+    if occupied_beds is None:
+        avail = hospital.get("available_beds")
+        occupied_beds = max(0, total_beds - (avail or 0)) if avail is not None else 0
 
     occupancy_rate = (
         occupied_beds / total_beds

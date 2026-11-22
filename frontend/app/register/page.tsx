@@ -1,162 +1,212 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import {
+  Hospital,
+  Building2,
+  ShieldCheck,
+  CheckCircle2,
+  ArrowRight,
+  Shield,
+  FileCheck2,
+  Search,
+  Lock,
+  ChevronRight,
+  HelpCircle,
+} from "lucide-react";
 import { RegistrationNavbar } from "@/components/registration/RegistrationNavbar";
 
 export default function RegisterHubPage() {
+  const [trackNumber, setTrackNumber] = useState("");
+  const [trackToken, setTrackToken] = useState("");
+
   const tiers = [
     {
       type: "HOSPITAL",
       title: "Hospital & Healthcare Facility",
-      desc: "For government, municipal, charitable, and accredited private hospitals offering inpatient or emergency beds.",
-      badge: "Hospital Tier",
-      badgeColor: "border-blue-500/30 text-blue-300 bg-blue-500/10",
-      icon: "🏥",
+      tagline: "Facility Operations & Emergency Bed Capacity",
+      desc: "For government, municipal, charitable, and accredited private hospitals providing emergency, ICU, and inpatient critical care.",
+      badge: "Tier III • Clinical Facility",
+      topBorder: "border-t-[#008F83]",
+      icon: Hospital,
+      iconBg: "bg-teal-50 text-[#008F83] border-teal-200",
+      buttonBg: "bg-gradient-to-r from-[#008F83] to-[#00A99D] hover:from-[#007A70] hover:to-[#008F83]",
       href: "/register/hospital",
       requirements: [
         "Clinical Establishment Registration (Act / Reg. No.)",
         "Fire Safety NOC Clearance Certificate",
-        "Designated Nodal Officer & Emergency Contact",
-        "Bed & ICU Operational Capacities",
+        "Designated Medical Superintendent / Nodal Contact",
+        "ICU, Oxygen & Operational Bed Breakdown",
       ],
       cta: "Register Hospital Facility",
-      popular: true,
+      recommended: true,
     },
     {
       type: "DISTRICT",
       title: "District Health Administration",
-      desc: "For Chief Medical Officers (CMO) and District Health Offices overseeing territorial bed inventory and ambulances.",
-      badge: "District Tier",
-      badgeColor: "border-indigo-500/30 text-indigo-300 bg-indigo-500/10",
-      icon: "🏛️",
+      tagline: "Chief Medical Officer (CMO) Authority",
+      desc: "For territorial health offices supervising sub-district hospitals, community health centers, and localized triage quotas.",
+      badge: "Tier II • District Authority",
+      topBorder: "border-t-[#0B2345]",
+      icon: Building2,
+      iconBg: "bg-blue-50 text-[#0B2345] border-blue-200",
+      buttonBg: "bg-gradient-to-r from-[#0B2345] to-[#143A6D] hover:from-[#07182F] hover:to-[#0B2345]",
       href: "/register/district",
       requirements: [
-        "Official Government Authorization Order",
+        "Official Gazetted Order / Government Notification",
         "Chief Medical Officer / Civil Surgeon Designation",
-        "Government Email & Contact Credentials",
-        "Designated District Territorial Jurisdiction",
+        "Official Government Domain Email (@gov.in / @nic.in)",
+        "Assigned District Territorial Jurisdiction",
       ],
       cta: "Register District Authority",
-      popular: false,
+      recommended: false,
     },
     {
       type: "STATE",
       title: "State Health Directorate",
-      desc: "For State Health Departments, Medical Education Directorates, and State Health Missions governing state-wide healthcare.",
-      badge: "State Tier",
-      badgeColor: "border-teal-500/30 text-teal-300 bg-teal-500/10",
-      icon: "🏢",
+      tagline: "Directorate of Health Services (DHS)",
+      desc: "For State Health Departments governing regional referral networks, interstate patient transfers, and centralized quotas.",
+      badge: "Tier I • State Directorate",
+      topBorder: "border-t-[#00A99D]",
+      icon: ShieldCheck,
+      iconBg: "bg-emerald-50 text-[#00A99D] border-emerald-200",
+      buttonBg: "bg-gradient-to-r from-[#00A99D] to-[#008F83] hover:from-[#008F83] hover:to-[#007A70]",
       href: "/register/state",
       requirements: [
-        "State Health Mission / Directorate Order",
-        "Principal Secretary / Director of Health Authorization",
-        "Official State Health Department Domain Email",
-        "Territorial State Jurisdiction Assignment",
+        "State Health Mission Executive Resolution",
+        "Principal Secretary / Director Authorization",
+        "Official State Health Secretariat Domain Credentials",
+        "Statewide Regional Command Scope",
       ],
       cta: "Register State Directorate",
-      popular: false,
+      recommended: false,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#F4F8FC] text-[#14243B] flex flex-col font-sans">
       <RegistrationNavbar />
 
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-10 sm:py-14 space-y-12">
-        {/* Header Hero */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-400 border border-blue-500/20 uppercase tracking-wider">
-            Hierarchical Governance Onboarding
-          </span>
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-12">
+        {/* Header Hero Section */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 rounded-full bg-teal-50 border border-teal-200 px-3.5 py-1 text-xs font-bold text-[#008F83] tracking-wide shadow-xs">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Accredited Healthcare Onboarding Network</span>
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#0B2345]">
             Healthcare Entity Registration
           </h1>
-          <p className="text-sm sm:text-base text-slate-400">
-            Select your administrative jurisdiction or medical facility classification to begin the official multi-tier verification and provisioning workflow.
+          <p className="text-sm sm:text-base text-[#60738C] leading-relaxed">
+            Select your administrative jurisdiction or medical facility classification to initiate the official multi-tier verification and credential provisioning workflow on ArogyaSetu Grid.
           </p>
         </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {tiers.map((t) => (
-            <div
-              key={t.type}
-              className={`rounded-2xl border bg-slate-900/80 p-6 sm:p-8 flex flex-col justify-between relative transition hover:border-blue-500/50 hover:shadow-xl ${
-                t.popular ? "border-blue-500/40 shadow-blue-900/20 shadow-lg" : "border-slate-800"
-              }`}
-            >
-              {t.popular && (
-                <div className="absolute -top-3 right-6 rounded-full bg-blue-600 px-3 py-0.5 text-[10px] font-bold text-white shadow">
-                  MOST ACTIVE
-                </div>
-              )}
+        {/* 3 Registration Tier Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+          {tiers.map((t) => {
+            const Icon = t.icon;
+            return (
+              <div
+                key={t.type}
+                className={`gov-card relative flex flex-col justify-between p-6 sm:p-7 border-t-4 ${t.topBorder} ${
+                  t.recommended ? "ring-2 ring-[#008F83]/30" : ""
+                }`}
+              >
+                {t.recommended && (
+                  <div className="absolute -top-3.5 right-6 bg-[#008F83] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                    Most Common
+                  </div>
+                )}
 
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-3xl">{t.icon}</span>
-                  <span
-                    className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${t.badgeColor}`}
+                <div className="space-y-4">
+                  {/* Top Badge & Icon */}
+                  <div className="flex items-center justify-between">
+                    <div className={`p-3 rounded-xl border ${t.iconBg} shadow-xs`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold text-[#60738C] uppercase tracking-wider">
+                      {t.badge}
+                    </span>
+                  </div>
+
+                  {/* Title & Description */}
+                  <div>
+                    <h2 className="text-lg font-bold text-[#0B2345] leading-snug">
+                      {t.title}
+                    </h2>
+                    <p className="text-xs font-medium text-[#008F83] mt-0.5">
+                      {t.tagline}
+                    </p>
+                    <p className="text-xs text-[#60738C] mt-2 leading-relaxed">
+                      {t.desc}
+                    </p>
+                  </div>
+
+                  {/* Prerequisites Checklist */}
+                  <div className="pt-3 border-t border-[#DCE5EF] space-y-2">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#0B2345] block">
+                      Mandatory Documentation:
+                    </span>
+                    <ul className="space-y-1.5 text-xs text-[#14243B]">
+                      {t.requirements.map((req, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-[#0A9878] shrink-0 mt-0.5" />
+                          <span className="text-[11px] leading-tight text-[#60738C]">{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Card CTA */}
+                <div className="pt-6 mt-6 border-t border-[#DCE5EF]">
+                  <Link
+                    href={t.href}
+                    className={`w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-xs font-bold text-white shadow-md transition-all ${t.buttonBg}`}
                   >
-                    {t.badge}
-                  </span>
-                </div>
-
-                <h2 className="mt-4 text-lg font-bold text-white">{t.title}</h2>
-                <p className="mt-2 text-xs text-slate-400 leading-relaxed">{t.desc}</p>
-
-                <div className="mt-6 border-t border-slate-800/80 pt-4">
-                  <h3 className="text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-2.5">
-                    Prerequisites & Requirements
-                  </h3>
-                  <ul className="space-y-2 text-xs text-slate-400">
-                    {t.requirements.map((req, i) => (
-                      <li key={i} className="flex items-start gap-2">
-                        <span className="text-blue-400 text-[10px] mt-0.5">✔</span>
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    <span>{t.cta}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
-
-              <div className="mt-8 pt-4">
-                <Link
-                  href={t.href}
-                  className={`block w-full text-center rounded-xl py-3 px-4 text-xs font-bold transition shadow ${
-                    t.popular
-                      ? "bg-blue-600 text-white hover:bg-blue-500"
-                      : "bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white border border-slate-700"
-                  }`}
-                >
-                  {t.cta} →
-                </Link>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Bottom Fast Access Banner */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="space-y-1 text-center sm:text-left">
-            <h3 className="text-base font-bold text-white">Already Have An Active Application?</h3>
-            <p className="text-xs text-slate-400">
-              Track real-time approval milestones with your tracking token or resume editing your draft application.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href="/application/track"
-              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition"
-            >
-              🔍 Track by Reference Token
-            </Link>
-            <Link
-              href="/application/status"
-              className="rounded-xl bg-blue-600/20 border border-blue-500/30 px-4 py-2.5 text-xs font-semibold text-blue-300 hover:bg-blue-600/30 transition"
-            >
-              🔐 Applicant Login / Resume Draft
-            </Link>
+        {/* Live Application Tracking Quick Access Strip */}
+        <div className="gov-card p-6 sm:p-8 bg-white border border-[#DCE5EF] shadow-sm">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="space-y-1 text-center lg:text-left">
+              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#008F83] uppercase tracking-wider">
+                <FileCheck2 className="w-4 h-4" />
+                <span>Already Registered?</span>
+              </div>
+              <h3 className="text-lg font-bold text-[#0B2345]">
+                Track Existing Application Status
+              </h3>
+              <p className="text-xs text-[#60738C] max-w-xl">
+                Enter your official Application Number and Secret Tracking Token provided during submission to view live multi-tier review milestones.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+              <Link
+                href="/application/track"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-[#0B2345] text-white px-6 py-3 text-xs font-bold hover:bg-[#07182F] transition shadow-sm"
+              >
+                <Search className="w-4 h-4 text-teal-400" />
+                <span>Track Application &rarr;</span>
+              </Link>
+              <Link
+                href="/application/status"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-[#DCE5EF] bg-white text-[#0B2345] px-5 py-3 text-xs font-bold hover:bg-slate-50 transition shadow-xs"
+              >
+                <Lock className="w-4 h-4 text-[#008F83]" />
+                <span>Sign in to Applicant Portal</span>
+              </Link>
+            </div>
           </div>
         </div>
       </main>

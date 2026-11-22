@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   Shield,
   ArrowRight,
+  ChevronRight,
 } from "lucide-react";
 import { GovernmentHeader } from "@/components/shared/GovernmentHeader";
 import { GovernmentFooter } from "@/components/shared/GovernmentFooter";
@@ -106,27 +107,27 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800">
+    <div className="min-h-screen bg-[#F4F8FC] flex flex-col font-sans text-[#14243B]">
       <GovernmentHeader />
 
       {/* Breadcrumb Section */}
-      <div className="bg-white border-b border-slate-200 py-3 px-4 sm:px-6">
+      <div className="bg-white border-b border-[#DCE5EF] py-3 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-slate-500">
-            <Link href="/" className="hover:text-blue-900 font-medium transition">
+          <div className="flex items-center gap-2 text-[#60738C]">
+            <Link href="/" className="hover:text-[#0B2345] font-medium transition">
               Home
             </Link>
-            <span>/</span>
-            <Link href="/portal" className="hover:text-blue-900 font-medium transition">
+            <ChevronRight className="w-3.5 h-3.5 text-[#60738C]/60" />
+            <Link href="/portal" className="hover:text-[#0B2345] font-medium transition">
               Department Selection
             </Link>
-            <span>/</span>
-            <span className="text-slate-800 font-semibold">{title}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#60738C]/60" />
+            <span className="text-[#14243B] font-semibold">{title}</span>
           </div>
 
           <Link
             href="/portal"
-            className="inline-flex items-center gap-1.5 text-blue-900 font-semibold hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#008F83] font-semibold hover:underline"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Switch Department</span>
@@ -140,14 +141,14 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
           {/* Back Navigation Button */}
           <Link
             href="/portal"
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-blue-900 transition"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-[#60738C] hover:text-[#0B2345] transition"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Department Selection</span>
           </Link>
 
           {/* Login Card */}
-          <div className="rounded-xl bg-white border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+          <div className="rounded-2xl bg-white border border-[#DCE5EF] shadow-sm p-6 sm:p-8 space-y-6">
             {/* Header / Identity */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -164,10 +165,10 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
               </div>
 
               <div>
-                <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl font-extrabold text-[#14243B] tracking-tight">
                   {title}
                 </h1>
-                <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                <p className="text-xs text-[#60738C] mt-1 leading-relaxed">
                   {subtitle}
                 </p>
               </div>
@@ -175,23 +176,23 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
 
             {/* Role Mismatch Warning Banner */}
             {roleMismatch && (
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-900 space-y-2.5 animate-in fade-in duration-200">
+              <div className="rounded-xl border border-[#D99A27]/40 bg-[#D99A27]/10 p-4 text-xs text-[#14243B] space-y-2.5">
                 <div className="flex items-start gap-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-4 h-4 text-[#D99A27] shrink-0 mt-0.5" />
                   <div>
-                    <h2 className="text-xs font-bold text-amber-900 uppercase">
+                    <h2 className="text-xs font-bold text-[#D99A27] uppercase">
                       Department Role Mismatch
                     </h2>
-                    <p className="mt-1 text-slate-700">
+                    <p className="mt-1 text-[#14243B]">
                       Your authenticated account has role <strong>{roleMismatch.detectedRole}</strong>, but this portal is reserved strictly for <strong>{expectedRole}</strong> personnel.
                     </p>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-amber-200 flex justify-end">
+                <div className="pt-2 border-t border-[#D99A27]/20 flex justify-end">
                   <Link
                     href={roleMismatch.authorizedPortal.path}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-amber-800 text-white px-3 py-1.5 text-xs font-bold hover:bg-amber-900 transition shadow-xs"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#D99A27] text-white px-3 py-1.5 text-xs font-bold hover:bg-[#b57e1b] transition shadow-xs"
                   >
                     <span>Proceed to {roleMismatch.authorizedPortal.name}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -202,16 +203,16 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
 
             {/* Standard Login Error Banner */}
             {error && !roleMismatch && (
-              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-800 flex items-start gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <span>{error}</span>
+              <div className="rounded-xl border border-[#D94B4B]/30 bg-[#D94B4B]/10 p-3.5 text-xs text-[#D94B4B] flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-[#D94B4B] shrink-0 mt-0.5" />
+                <span className="font-medium">{error}</span>
               </div>
             )}
 
             {/* Authentication Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                <label className="block text-xs font-bold text-[#14243B] uppercase tracking-wider">
                   Official Username / Handle
                 </label>
                 <div className="mt-1.5 relative">
@@ -229,19 +230,19 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
                         : "e.g. central_admin"
                     }
                     required
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                    className="w-full rounded-lg border border-[#DCE5EF] bg-white px-3.5 py-2.5 text-xs text-[#14243B] placeholder-[#60738C]/50 focus:outline-none focus:border-[#008F83] focus:ring-4 focus:ring-[#008F83]/10 transition"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">
+                  <label className="block text-xs font-bold text-[#14243B] uppercase tracking-wider">
                     Password
                   </label>
                   <Link
                     href="/forgot-password"
-                    className="text-xs font-medium text-blue-800 hover:underline"
+                    className="text-xs font-semibold text-[#008F83] hover:text-[#0B2345] transition"
                   >
                     Forgot Password?
                   </Link>
@@ -254,12 +255,12 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter official password"
                     required
-                    className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 pr-10 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition"
+                    className="w-full rounded-lg border border-[#DCE5EF] bg-white px-3.5 py-2.5 pr-10 text-xs text-[#14243B] placeholder-[#60738C]/50 focus:outline-none focus:border-[#008F83] focus:ring-4 focus:ring-[#008F83]/10 transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#60738C] hover:text-[#14243B]"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -284,22 +285,22 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
             </form>
 
             {/* Quick Registration & Help Links */}
-            <div className="pt-4 border-t border-slate-100 flex flex-col gap-2 text-xs text-slate-500">
+            <div className="pt-4 border-t border-[#DCE5EF]/60 flex flex-col gap-2 text-xs text-[#60738C]">
               <div className="flex items-center justify-between">
                 <span>Unregistered facility or authority?</span>
-                <Link href="/register" className="font-semibold text-blue-900 hover:underline">
+                <Link href="/register" className="font-semibold text-[#008F83] hover:text-[#0B2345] transition">
                   Register Facility →
                 </Link>
               </div>
               <div className="flex items-center justify-between">
                 <span>Approved applicant?</span>
-                <Link href="/activate" className="font-semibold text-emerald-700 hover:underline">
+                <Link href="/activate" className="font-semibold text-[#0A9878] hover:text-[#07182F] transition">
                   Activate Account →
                 </Link>
               </div>
               <div className="flex items-center justify-between">
                 <span>Check submitted application?</span>
-                <Link href="/application/track" className="font-semibold text-slate-700 hover:underline">
+                <Link href="/application/track" className="font-semibold text-[#60738C] hover:text-[#14243B] transition">
                   Track Application →
                 </Link>
               </div>
@@ -307,8 +308,8 @@ export const DepartmentLoginPage: React.FC<DepartmentLoginPageProps> = ({
           </div>
 
           {/* Security Assurance Notice */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 text-[11px] text-slate-500 flex items-start gap-2.5 shadow-2xs">
-            <Shield className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+          <div className="rounded-xl border border-[#DCE5EF] bg-white p-4 text-[11px] text-[#60738C] flex items-start gap-2.5 shadow-2xs">
+            <Shield className="w-4 h-4 text-[#008F83] shrink-0 mt-0.5" />
             <p>
               This is a restricted healthcare access gateway. All authentication attempts and system actions are logged and audited in accordance with role-based access control policies.
             </p>

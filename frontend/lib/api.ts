@@ -4,6 +4,8 @@ import {
   Referral,
   NotificationItem,
   Patient,
+  PatientIntakePayload,
+  ConditionAssessmentPayload,
   HospitalRecommendation,
   DistrictMetrics,
   DistrictHospital,
@@ -40,7 +42,9 @@ import {
 } from "./types";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:8050";
 
 const TOKEN_KEY = "access_token";
 const USER_KEY = "sih_auth_user";
@@ -403,13 +407,74 @@ export async function apiCreateReferral(payload: {
   });
 }
 
-export async function apiGetHospitalPatients(hospitalId: string) {
+export async function apiAdmitPatient(payload: PatientIntakePayload) {
   return apiFetch<{
     success: boolean;
-    hospital_id: string;
-    count: number;
-    patients: Patient[];
-  }>(`/patients/hospital/${hospitalId}`);
+    message: string;
+    patient: Patient;
+  }>("/api/hospital/patients", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function apiGetHospitalPatients(hospitalId?: string) {
+  try {
+    return await apiFetch<{
+      success: boolean;
+      hospital_id: string;
+      count: number;
+      patients: Patient[];
+    }>("/api/hospital/patients");
+  } catch {
+    return apiFetch<{
+      success: boolean;
+      hospital_id: string;
+      count: number;
+      patients: Patient[];
+    }>(`/patients/hospital/${hospitalId || "GH00046"}`);
+  }
+}
+
+export async function apiAssessAndRecommendHospitals(
+  patientId: string,
+  assessment: ConditionAssessmentPayload
+) {
+  return apiFetch<{
+    success: boolean;
+    patient_id: string;
+    condition_summary: string;
+    urgency: string;
+    required_specialty: string;
+    required_bed_type: string;
+    transport_requirement: string;
+    total_hospitals: number;
+    hospitals: HospitalRecommendation[];
+  }>(`/api/hospital/patients/${encodeURIComponent(patientId)}/recommend-hospitals`, {
+    method: "POST",
+    body: JSON.stringify(assessment),
+  });
+}
+
+export async function apiInitiatePatientReferral(
+  patientId: string,
+  payload: {
+    to_hospital_id: string;
+    reason: string;
+    priority?: string;
+    bed_type?: string;
+    transport_requirement?: string;
+    clinical_condition_snapshot?: Record<string, any>;
+  }
+) {
+  return apiFetch<{
+    success: boolean;
+    message: string;
+    referral: Referral;
+  }>(`/api/hospital/patients/${encodeURIComponent(patientId)}/refer`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function apiGetPatientReferrals(patientId: string) {

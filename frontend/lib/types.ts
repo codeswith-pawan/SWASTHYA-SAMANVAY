@@ -17,6 +17,7 @@ export type ReferralStatus =
   | "IN_TRANSIT"
   | "ARRIVED"
   | "TREATMENT_ACTIVE"
+  | "IN_TREATMENT"
   | "COMPLETED"
   | "TRANSFERRED"
   | "DIED"
@@ -117,9 +118,14 @@ export type HospitalRecommendation = {
   district?: string;
   city?: string;
   distance_km?: number | null;
+  eta_minutes?: number;
   available_beds: number;
   available_icu_beds: number;
+  ventilators?: string;
+  ambulance?: string;
+  specialties?: string[];
   final_score?: number;
+  match_score?: number;
   success_probability?: number | null;
   specialty_match?: number;
   bed_match?: number;
@@ -127,6 +133,7 @@ export type HospitalRecommendation = {
   test_match?: number;
   recommendation_type?: string;
   reasons?: string[];
+  ai_rationale?: string[];
   disqualification_reasons?: string[];
   is_eligible?: boolean;
   rank?: number;
@@ -161,7 +168,81 @@ export type Patient = {
   admitted_at?: string;
   treatment_started_at?: string;
   completed_at?: string;
+  blood_group?: string;
+  contact_phone?: string;
+  emergency_contact?: string;
+  address?: string;
+  district?: string;
+  state?: string;
+  chief_complaint?: string;
+  severity_level?: string;
+  bed_type?: string;
+  required_specialty?: string;
+  vitals?: {
+    heart_rate?: number;
+    systolic_bp?: number;
+    diastolic_bp?: number;
+    blood_pressure?: string;
+    spo2?: number;
+    temperature?: number;
+    respiratory_rate?: number;
+    gcs_score?: number;
+  };
+  clinical_notes?: string;
+  referral_status?: string;
+  active_referral?: {
+    referral_id?: string;
+    status?: string;
+    to_hospital_id?: string;
+    created_at?: string;
+  };
 };
+
+export interface PatientIntakePayload {
+  name: string;
+  age: number;
+  gender: string;
+  blood_group?: string;
+  contact_phone?: string;
+  emergency_contact?: string;
+  address?: string;
+  district?: string;
+  state?: string;
+  chief_complaint: string;
+  required_specialty?: string;
+  bed_type_assigned?: string;
+  severity_level?: string;
+  vitals?: {
+    heart_rate?: number;
+    systolic_bp?: number;
+    diastolic_bp?: number;
+    blood_pressure?: string;
+    spo2?: number;
+    temperature?: number;
+    respiratory_rate?: number;
+    gcs_score?: number;
+  };
+  clinical_notes?: string;
+  patient_id?: string;
+}
+
+export interface ConditionAssessmentPayload {
+  condition_summary: string;
+  urgency: "ROUTINE" | "URGENT" | "EMERGENCY" | "CRITICAL" | string;
+  required_specialty?: string;
+  required_bed_type?: "GENERAL" | "ICU" | "VENTILATOR" | "EMERGENCY" | "NICU" | string;
+  transport_requirement?: "NONE" | "BASIC_AMBULANCE" | "ALS_AMBULANCE" | string;
+  vitals?: {
+    heart_rate?: number;
+    systolic_bp?: number;
+    diastolic_bp?: number;
+    blood_pressure?: string;
+    spo2?: number;
+    temperature?: number;
+    respiratory_rate?: number;
+    gcs_score?: number;
+  };
+}
 
 export type DistrictMetrics = {
   total_hospitals: number;

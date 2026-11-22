@@ -12,7 +12,7 @@ Provides FastAPI routes for:
 import os
 import logging
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, Depends, HTTPException, Request, Header, Query, status, UploadFile, File, Form, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Header, Query, status, UploadFile, File, Form, Response, BackgroundTasks
 from sqlalchemy.orm import Session
 
 from src.database.db_manager import get_db_session
@@ -839,10 +839,30 @@ def delete_document(
     return {"message": "Document successfully deleted.", "document_id": document_id}
 
 
+def _safe_post_commit_outbox_drain(bind_engine):
+    """
+    Opportunistic post-commit background worker trigger.
+    Executes asynchronously in FastAPI background tasks AFTER the HTTP response is returned.
+    If an external OutboxWorker daemon is running, SKIP LOCKED prevents duplicate delivery.
+    If no worker daemon is running, this ensures prompt dispatch without delaying or failing the HTTP response.
+    """
+    try:
+        from sqlalchemy.orm import sessionmaker
+        SessionLocal = sessionmaker(bind=bind_engine, autocommit=False, autoflush=False)
+        with SessionLocal() as bg_session:
+            from src.services.email_outbox_service import EmailOutboxService
+            outbox_svc = EmailOutboxService(bg_session)
+            outbox_svc.process_outbox(batch_size=5, worker_id="api_post_commit_drain")
+            bg_session.commit()
+    except Exception as exc:
+        logger.debug("Opportunistic background outbox drain completed or deferred: %s", exc)
+
+
 @router.post("/applications/submit", response_model=SubmitApplicationResponse)
 def submit_application(
     payload: SubmitApplicationRequest,
     request: Request,
+    background_tasks: BackgroundTasks,
     applicant: dict = Depends(require_applicant_user),
     db: Session = Depends(get_db_session),
 ):
@@ -867,6 +887,13 @@ def submit_application(
     except Exception as e:
         db.rollback()
         raise _map_exception(e)
+
+    # Safe opportunistic post-commit background outbox drain
+    try:
+        db_engine = db.get_bind()
+        background_tasks.add_task(_safe_post_commit_outbox_drain, db_engine)
+    except Exception as bg_err:
+        logger.debug("Failed to schedule background outbox drain: %s", bg_err)
 
     submitted_at_str = res["submitted_at"] if isinstance(res.get("submitted_at"), str) else (
         res["submitted_at"].isoformat() if res.get("submitted_at") else ""

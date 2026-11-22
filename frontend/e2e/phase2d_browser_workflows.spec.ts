@@ -63,7 +63,7 @@ const openDossier = async (page: any, appNum: string) => {
 test.describe.serial("Phase 2D End-to-End Browser Workflows", () => {
   test("1. Applicant Registration & Submission Workflow", async ({ page }) => {
     await page.goto("/register/hospital");
-    await expect(page).toHaveTitle(/SIH Hospital AI/);
+    await expect(page).toHaveTitle(/ArogyaSetu Grid/);
     await expect(page.locator("text=Hospital Onboarding & Accreditation")).toBeVisible({ timeout: 15000 });
 
     // Step 1: Physical Infrastructure

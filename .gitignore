@@ -4,6 +4,10 @@ data/*.db-*
 data/*.backup
 data/*.before_*
 data/runtime/
+/data/
+
+# Seeded preview credentials & local passwords
+/SEEDED_HOSPITAL_CREDENTIALS.md
 
 # Nested old project snapshot
 SIH_Hospital_AI/.venv/
@@ -12,14 +16,9 @@ SIH_Hospital_AI/**/__pycache__/
 SIH_Hospital_AI/**/*.pyc
 SIH_Hospital_AI/frontend/node_modules/
 SIH_Hospital_AI/frontend/.next/
-# Separate older project clone — keep outside this repository
 /SIH_Hospital_AI/
 
-
-# Local application data, SQLite databases and runtime state
-/data/
-
-# Environment files and credentials
+# Environment files and credentials (never commit secrets)
 .env
 .env.*
 !.env.example
@@ -31,62 +30,60 @@ frontend/.env.*
 # macOS metadata
 .DS_Store
 
-# Python cache
+# Python cache & virtual environments
 __pycache__/
 *.py[cod]
+.venv/
+.venv*/
+venv/
+
+# Testing artifacts & caches
+.pytest_cache/
+.coverage
+htmlcov/
+test-results/
+playwright-report/
+e2e-results.json
+frontend/test-results/
+frontend/playwright-report/
+frontend/e2e-results.json
+
+# Node & Next.js build output
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Cryptographic keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Temporary and backup files
 *.save
 *.backup
 *.before_*
-
-# Local README conflict-resolution backups
 /README_conflict_backup.md
 /README_github_version.md
 
-# Duplicate backup copies created during file operations
-"phase16_live_postgresql_verification_report 2.md"
-"phase20_evaluation_integrity_report 2.md"
-"src/auth/rate_limiter 2.py"
-"src/database/patient_service.py 2.save"
-"src/prediction/bed_reservation.py 2.backup"
-"tests/test_admin_hierarchy 2.py"
-"tests/test_live_postgresql_integration 2.py"
-"tests/test_postgresql_migration_and_transactions 2.py"
-"tests/test_redis_distributed_security 2.py"
-"tests/test_security_and_reliability 2.py"
-"tests/test_ui_defects_and_serialization 2.py"
+# Duplicate backup copies created during macOS / file operations
+* 2.*
+* 2.tsx
+* 2.sql
+* 2.py
+* 2.md
 
-# Accidental duplicate files
-frontend/components/shared/ConfirmationModal 2.tsx
-frontend/components/shared/DataTable 2.tsx
-frontend/components/shared/EmptyState 2.tsx
-frontend/components/shared/LoadingAndErrorStates 2.tsx
-frontend/components/shared/NotificationPanel 2.tsx
-frontend/components/shared/ReferralTimeline 2.tsx
-frontend/components/shared/StatCard 2.tsx
-frontend/components/shared/StatusBadge 2.tsx
-
-migrations/001_initial_postgresql_schema 2.sql
-migrations/001_rollback_postgresql_schema 2.sql
-migrations/002_referral_workflow_and_notifications 2.sql
-
-src/auth/rate_limiter 2.py
-
-tests/test_admin_hierarchy 2.py
-tests/test_live_postgresql_integration 2.py
-tests/test_postgresql_migration_and_transactions 2.py
-tests/test_redis_distributed_security 2.py
-tests/test_security_and_reliability 2.py
-tests/test_ui_defects_and_serialization 2.py
-
-phase16_live_postgresql_verification_report 2.md
-phase20_evaluation_integrity_report 2.md
-
-src/database/patient_service.py 2.save
-src/prediction/bed_reservation.py 2.backup
-
-# Test execution artifacts and reports
-test-results/
-frontend/test-results/
-frontend/e2e-results.json
+# Historical development status and phase reports (kept locally, excluded from public repo)
+/PHASE_*.md
+/phase*.md
+/INVENTORY_ACCOUNTING_*.md
+/HIERARCHICAL_REGISTRATION_*.md
+/BREVO_SMTP_*.md
+/FRONTEND_PORTAL_REDESIGN_REPORT.md
+/MASTER_PROJECT_DELIVERY_AND_INTERVIEW_GUIDE.md
+/SIH_HOSPITAL_AI_COMPLETE_SYSTEM_AUDIT.md
+/DATABASE_BACKUP_RECOVERY.md
+/PRODUCTION_SETUP.md
+/SECURITY_CHECKLIST.md
+/SMTP_BREVO_SETUP.md
+/WORKER_OPERATIONS.md

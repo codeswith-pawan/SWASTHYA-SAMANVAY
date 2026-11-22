@@ -14,11 +14,11 @@ export default function CentralLoginPage() {
       expectedRole="CENTRAL_ADMIN"
       icon={Globe}
       accentColor={{
-        bg: "bg-purple-600",
-        text: "text-purple-700",
-        border: "border-purple-200",
-        button: "bg-purple-900 hover:bg-purple-800",
-        lightBg: "bg-purple-50",
+        bg: "bg-[#07182F]",
+        text: "text-[#07182F]",
+        border: "border-[#07182F]/30",
+        button: "bg-[#07182F] hover:bg-[#0B2345]",
+        lightBg: "bg-[#07182F]/10",
       }}
     />
   );

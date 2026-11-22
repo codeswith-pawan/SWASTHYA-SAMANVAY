@@ -8,6 +8,7 @@ duplicate referral prevention, in-app notifications, and audit logging.
 """
 
 import uuid
+import json
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
@@ -371,6 +372,14 @@ class PgReferralRepository:
         bed = self.session.execute(bed_stmt).scalar_one_or_none()
 
         if not bed:
+            bed_count = self.session.execute(
+                select(func.count(Bed.id)).where(Bed.hospital_id == referral.to_hospital_id)
+            ).scalar() or 0
+            if bed_count == 0:
+                self.initialize_default_inventory(referral.to_hospital_id)
+                bed = self.session.execute(bed_stmt).scalar_one_or_none()
+
+        if not bed:
             # Bed unavailable: referral remains PENDING
             audit = AuditLog(
                 entity_type="REFERRAL",
@@ -594,6 +603,55 @@ class PgReferralRepository:
             if notes:
                 referral.notes = notes
 
+            # Release originating hospital bed and mark active origin visit as TRANSFERRED
+            try:
+                from src.database.pg_models import HospitalVisit
+                origin_v_stmt = (
+                    select(HospitalVisit)
+                    .where(
+                        HospitalVisit.hospital_id == referral.from_hospital_id,
+                        HospitalVisit.patient_id == referral.patient_id,
+                        HospitalVisit.status == "ACTIVE",
+                    )
+                    .with_for_update()
+                )
+                origin_visit = self.session.execute(origin_v_stmt).scalars().first()
+                if origin_visit:
+                    origin_visit.status = "TRANSFERRED"
+                    origin_visit.completed_at = now
+                    v_meta = {}
+                    if origin_visit.notes:
+                        try:
+                            v_meta = json.loads(origin_visit.notes)
+                        except Exception:
+                            v_meta = {"raw": origin_visit.notes}
+                    v_meta["transferred_to"] = referral.to_hospital_id
+                    v_meta["referral_id"] = referral.referral_id
+                    v_meta["transferred_at"] = now.isoformat()
+                    origin_visit.notes = json.dumps(v_meta)
+
+                    # Update originating hospital bed counters
+                    origin_hosp_stmt = (
+                        select(Hospital)
+                        .where(Hospital.hospital_id == referral.from_hospital_id)
+                        .with_for_update()
+                    )
+                    origin_hosp = self.session.execute(origin_hosp_stmt).scalar_one_or_none()
+                    if origin_hosp:
+                        b_type = (v_meta.get("bed_type_assigned") or referral.bed_type or "GENERAL").upper()
+                        if b_type in ["ICU", "VENTILATOR"]:
+                            origin_hosp.occupied_icu_beds = max(0, (origin_hosp.occupied_icu_beds or 1) - 1)
+                            origin_hosp.available_icu_beds = min(origin_hosp.icu_beds, (origin_hosp.available_icu_beds or 0) + 1)
+                        elif b_type == "EMERGENCY":
+                            origin_hosp.occupied_emergency_beds = max(0, (origin_hosp.occupied_emergency_beds or 1) - 1)
+                            origin_hosp.available_emergency_beds = min(origin_hosp.emergency_beds, (origin_hosp.available_emergency_beds or 0) + 1)
+                        else:
+                            origin_hosp.occupied_beds = max(0, (origin_hosp.occupied_beds or 1) - 1)
+                            origin_hosp.available_beds = min(origin_hosp.total_beds, (origin_hosp.available_beds or 0) + 1)
+                        origin_hosp.updated_at = now
+            except Exception as e:
+                logger.warning("Could not release originating hospital bed during transfer: %s", e)
+
             # Notification for destination hospital
             notif = Notification(
                 hospital_id=referral.to_hospital_id,
@@ -658,6 +716,41 @@ class PgReferralRepository:
                         hosp.occupied_beds = (hosp.occupied_beds or 0) + 1
                     hosp.updated_at = now
 
+            # Ensure an active HospitalVisit exists at the destination hospital
+            try:
+                from src.database.pg_models import HospitalVisit
+                import uuid
+                dest_v_stmt = (
+                    select(HospitalVisit)
+                    .where(
+                        HospitalVisit.hospital_id == referral.to_hospital_id,
+                        HospitalVisit.patient_id == referral.patient_id,
+                        HospitalVisit.status == "ACTIVE",
+                    )
+                )
+                dest_visit = self.session.execute(dest_v_stmt).scalars().first()
+                if not dest_visit:
+                    dest_visit = HospitalVisit(
+                        hospital_id=referral.to_hospital_id,
+                        patient_id=referral.patient_id,
+                        admission_type="REFERRAL",
+                        status="ACTIVE",
+                        admitted_at=now,
+                        treatment_started_at=now,
+                        notes=json.dumps({
+                            "referral_id": referral.referral_id,
+                            "transferred_from": referral.from_hospital_id,
+                            "bed_id": bed.id if bed else None,
+                            "bed_type_assigned": bed.bed_type if bed else (referral.bed_type or "GENERAL"),
+                            "chief_complaint": f"Transferred via Referral {referral.referral_id}",
+                        }),
+                        created_at=now,
+                        updated_at=now,
+                    )
+                    self.session.add(dest_visit)
+            except Exception as e:
+                logger.warning("Could not create destination HospitalVisit: %s", e)
+
             # Notification for source hospital
             notif = Notification(
                 hospital_id=referral.from_hospital_id,
@@ -703,6 +796,26 @@ class PgReferralRepository:
                         else:
                             hosp.occupied_beds = max(0, (hosp.occupied_beds or 1) - 1)
                     hosp.updated_at = now
+
+            # Discharge destination hospital visit if any active
+            try:
+                from src.database.pg_models import HospitalVisit
+                dest_v_stmt = (
+                    select(HospitalVisit)
+                    .where(
+                        HospitalVisit.hospital_id == referral.to_hospital_id,
+                        HospitalVisit.patient_id == referral.patient_id,
+                        HospitalVisit.status == "ACTIVE",
+                    )
+                    .with_for_update()
+                )
+                dest_visit = self.session.execute(dest_v_stmt).scalars().first()
+                if dest_visit:
+                    dest_visit.status = "DISCHARGED" if new_status in ["COMPLETED", "DISCHARGED"] else new_status
+                    dest_visit.completed_at = now
+                    dest_visit.updated_at = now
+            except Exception as e:
+                logger.warning("Could not close destination HospitalVisit: %s", e)
 
             # Notification for source hospital
             notif = Notification(
@@ -781,14 +894,25 @@ class PgReferralRepository:
         scope="outgoing": from_hospital_id == hospital_id
         scope="all": either
         """
+        hid = hospital_id.strip()
+        hid_lower = hid.lower()
         if scope == "outgoing":
-            stmt = select(Referral).where(Referral.from_hospital_id == hospital_id).order_by(Referral.created_at.desc())
+            stmt = select(Referral).where(
+                or_(Referral.from_hospital_id == hid, func.lower(Referral.from_hospital_id) == hid_lower)
+            ).order_by(Referral.created_at.desc())
         elif scope == "all":
             stmt = select(Referral).where(
-                or_(Referral.to_hospital_id == hospital_id, Referral.from_hospital_id == hospital_id)
+                or_(
+                    Referral.to_hospital_id == hid,
+                    func.lower(Referral.to_hospital_id) == hid_lower,
+                    Referral.from_hospital_id == hid,
+                    func.lower(Referral.from_hospital_id) == hid_lower,
+                )
             ).order_by(Referral.created_at.desc())
         else:
-            stmt = select(Referral).where(Referral.to_hospital_id == hospital_id).order_by(Referral.created_at.desc())
+            stmt = select(Referral).where(
+                or_(Referral.to_hospital_id == hid, func.lower(Referral.to_hospital_id) == hid_lower)
+            ).order_by(Referral.created_at.desc())
 
         refs = self.session.execute(stmt).scalars().all()
         return [self._serialize_referral(r) for r in refs]

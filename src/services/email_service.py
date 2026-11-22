@@ -200,7 +200,7 @@ class SMTPEmailProvider(BaseEmailProvider):
             or os.getenv("SMTP_FROM_EMAIL")
             or os.getenv("SMTP_FROM")
             or os.getenv("SIH_SMTP_FROM")
-            or "no-reply@hospital.sih.gov.in"
+            or "pawanbussiness108@gmail.com"
         ).strip()
 
         if use_tls is not None:
@@ -249,11 +249,11 @@ class SMTPEmailProvider(BaseEmailProvider):
         role_title: str,
         application_number: str,
     ) -> bool:
-        subject = f"Official Portal Account Activation: {role_title} ({application_number})"
+        subject = f"Official Portal Account Activation: {role_title} ({application_number}) - ArogyaSetu Grid"
         
         body_text = f"""Dear {recipient_name},
 
-Your registration application ({application_number}) has received final Central Government approval.
+Your registration application ({application_number}) has received final administrative approval.
 
 An official operational account ({role_title}) has been provisioned for you.
 
@@ -264,8 +264,8 @@ This activation link is one-time use and will expire in 72 hours.
 For security reasons, do not share this link with anyone.
 
 Regards,
-National Smart Hospital Referral System
-Government of India
+ArogyaSetu Grid - Unified Critical Care & Hospital Command Network
+Support: pawanbussiness108@gmail.com
 """
 
         msg = MIMEMultipart("alternative")
