@@ -103,11 +103,16 @@ APPLICANT_JWT_EXPIRE_MINUTES=1440
 # 5. EMAIL GATEWAY & OTP PROVIDER
 # ------------------------------------------------------------------------------
 
-# Email backend: 'simulated' (for demo logs) or 'smtp' (for real live delivery)
+# Email backend: 'simulated' (for demo logs), 'mailjet' (HTTPS API for cloud/Render), or 'smtp' (for real live delivery)
 SIH_EMAIL_BACKEND=simulated
 
-# OTP verification channel: 'SIMULATED' (for demo logs) or 'EMAIL' (for SMTP dispatch)
+# OTP verification channel: 'SIMULATED' (for demo logs) or 'EMAIL' (for SMTP/Mailjet dispatch)
 SIH_OTP_PROVIDER=SIMULATED
+
+# Mailjet HTTPS Send API v3.1 Configuration (Required ONLY if SIH_EMAIL_BACKEND=mailjet)
+# Ideal for Render Free Tier where outbound SMTP ports (25, 465, 587) are blocked.
+MAILJET_API_KEY=REPLACE_WITH_YOUR_MAILJET_API_KEY
+MAILJET_SECRET_KEY=REPLACE_WITH_YOUR_MAILJET_SECRET_KEY
 
 # SMTP Gateway Configuration (Required ONLY if SIH_EMAIL_BACKEND=smtp)
 # For Gmail: Use smtp.gmail.com with port 587 and a 16-character Google App Password

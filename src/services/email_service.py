@@ -13,6 +13,10 @@ import os
 import ssl
 import smtplib
 import logging
+import json
+import base64
+import urllib.request
+import urllib.error
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 from email.mime.text import MIMEText
@@ -135,6 +139,10 @@ class SimulatedEmailProvider(BaseEmailProvider):
     def clear(self):
         self.sent_emails.clear()
         self.fail_next = False
+
+
+# Alias for backward compatibility
+MockEmailProvider = SimulatedEmailProvider
 
 
 def _mask_email(email: str) -> str:
@@ -304,13 +312,267 @@ Support: pawanbussiness108@gmail.com
         return self._send_mime(to_email, msg, f"email '{subject}'")
 
 
+class MailjetEmailProvider(BaseEmailProvider):
+    """
+    Mailjet HTTPS Send API v3.1 Provider.
+    Dispatches transactional and notification emails via HTTPS POST to
+    https://api.mailjet.com/v3.1/send using HTTP Basic Authentication.
+
+    Ideal for cloud hosts (such as Render Free Tier) where outbound SMTP ports
+    (25, 465, 587) are restricted or blocked.
+    """
+
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        secret_key: Optional[str] = None,
+        sender_email: Optional[str] = None,
+        sender_name: Optional[str] = None,
+        api_url: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ):
+        self.api_key = (
+            api_key
+            or os.getenv("MAILJET_API_KEY")
+            or os.getenv("SIH_MAILJET_API_KEY")
+            or ""
+        ).strip()
+
+        self.secret_key = (
+            secret_key
+            or os.getenv("MAILJET_SECRET_KEY")
+            or os.getenv("SIH_MAILJET_SECRET_KEY")
+            or ""
+        ).strip()
+
+        self.sender = (
+            sender_email
+            or os.getenv("SMTP_FROM_EMAIL")
+            or os.getenv("SMTP_FROM")
+            or os.getenv("SIH_SMTP_FROM")
+            or os.getenv("MAILJET_FROM_EMAIL")
+            or "pawanbussiness108@gmail.com"
+        ).strip()
+
+        self.sender_name = (
+            sender_name
+            or os.getenv("SMTP_SENDER_NAME")
+            or os.getenv("MAILJET_SENDER_NAME")
+            or "SWASTHYA SAMANVAY"
+        ).strip()
+
+        self.api_url = (
+            api_url
+            or os.getenv("MAILJET_API_URL")
+            or "https://api.mailjet.com/v3.1/send"
+        ).strip()
+
+        timeout_val = timeout or os.getenv("MAILJET_TIMEOUT", os.getenv("SMTP_TIMEOUT", "10"))
+        self.timeout = int(timeout_val)
+
+    def _send_payload(
+        self,
+        to_email: str,
+        subject: str,
+        body_text: str,
+        body_html: Optional[str] = None,
+        html_body: Optional[str] = None,
+    ) -> bool:
+        if not self.api_key or not self.secret_key:
+            raise EmailDeliveryError(
+                "Mailjet API key or Secret key is not configured (MAILJET_API_KEY / MAILJET_SECRET_KEY)."
+            )
+
+        if not self.sender:
+            raise EmailDeliveryError("Mailjet sender email is not configured (SMTP_FROM_EMAIL).")
+
+        effective_html = html_body or body_html
+
+        message: Dict[str, Any] = {
+            "From": {
+                "Email": self.sender,
+                "Name": self.sender_name,
+            },
+            "To": [
+                {
+                    "Email": to_email,
+                }
+            ],
+            "Subject": subject,
+            "TextPart": body_text,
+        }
+        if effective_html:
+            message["HTMLPart"] = effective_html
+
+        payload = {"Messages": [message]}
+        payload_bytes = json.dumps(payload).encode("utf-8")
+
+        auth_str = f"{self.api_key}:{self.secret_key}".encode("utf-8")
+        b64_auth = base64.b64encode(auth_str).decode("ascii")
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Basic {b64_auth}",
+            "User-Agent": "Swasthya-Samanvay/1.0",
+        }
+
+        masked_to = _mask_email(to_email)
+        req = urllib.request.Request(
+            self.api_url,
+            data=payload_bytes,
+            headers=headers,
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                status_code = resp.getcode()
+                raw_response = resp.read().decode("utf-8")
+
+                if status_code not in (200, 201):
+                    logger.error(
+                        "Mailjet API returned unexpected HTTP status %d: %s",
+                        status_code,
+                        raw_response,
+                    )
+                    raise EmailDeliveryError(
+                        f"Mailjet API returned HTTP {status_code}: {raw_response}"
+                    )
+
+                try:
+                    data = json.loads(raw_response)
+                except Exception:
+                    data = {}
+
+                # Mailjet v3.1 returns {"Messages": [{"Status": "success", ...}]}
+                messages = data.get("Messages", [])
+                if messages:
+                    first_msg = messages[0]
+                    status = first_msg.get("Status")
+                    if status == "error":
+                        errors = first_msg.get("Errors", [])
+                        err_msg = json.dumps(errors) if errors else "Unknown Mailjet error"
+                        logger.error(
+                            "Mailjet reported message dispatch error for %s: %s",
+                            masked_to,
+                            err_msg,
+                        )
+                        raise EmailDeliveryError(f"Mailjet message dispatch error: {err_msg}")
+
+                logger.info(
+                    "MailjetEmailProvider: Successfully dispatched email '%s' to %s via HTTPS v3.1.",
+                    subject,
+                    masked_to,
+                )
+                return True
+
+        except urllib.error.HTTPError as http_err:
+            err_body = http_err.read().decode("utf-8") if http_err.fp else str(http_err)
+            logger.error(
+                "MailjetEmailProvider: HTTP %d error delivering to %s: %s",
+                http_err.code,
+                masked_to,
+                err_body,
+            )
+            raise EmailDeliveryError(
+                f"Mailjet HTTP {http_err.code} error: {err_body}"
+            ) from http_err
+        except urllib.error.URLError as url_err:
+            logger.error("MailjetEmailProvider: Network error contacting Mailjet API: %s", url_err)
+            raise EmailDeliveryError(f"Mailjet network failure: {url_err}") from url_err
+        except TimeoutError as t_err:
+            logger.error("MailjetEmailProvider: Request timed out contacting Mailjet API: %s", t_err)
+            raise EmailDeliveryError(
+                f"Mailjet connection timed out after {self.timeout}s."
+            ) from t_err
+        except EmailDeliveryError:
+            raise
+        except Exception as exc:
+            logger.error("MailjetEmailProvider: Unexpected exception delivering to %s: %s", masked_to, exc)
+            raise EmailDeliveryError(
+                f"Mailjet delivery failed: {type(exc).__name__}: {exc}"
+            ) from exc
+
+    def send_activation_email(
+        self,
+        to_email: str,
+        recipient_name: str,
+        activation_link: str,
+        role_title: str,
+        application_number: str,
+    ) -> bool:
+        subject = f"Official Portal Account Activation: {role_title} ({application_number}) - SWASTHYA SAMANVAY"
+
+        body_text = f"""Dear {recipient_name},
+
+Your registration application ({application_number}) has received final administrative approval.
+
+An official operational account ({role_title}) has been provisioned for you.
+
+To activate your account and establish your secure password, please visit the link below:
+{activation_link}
+
+This activation link is one-time use and will expire in 72 hours.
+For security reasons, do not share this link with anyone.
+
+Regards,
+SWASTHYA SAMANVAY - Hospital Coordination & Referral Platform
+Support: {self.sender}
+"""
+
+        body_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #0f172a; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 0.5px;">SWASTHYA SAMANVAY</h1>
+    <p style="color: #94a3b8; margin: 4px 0 0; font-size: 13px;">Hospital Coordination & Referral Platform</p>
+  </div>
+  <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="font-size: 16px;">Dear <strong>{recipient_name}</strong>,</p>
+    <p>Your registration application (<strong>{application_number}</strong>) has received final administrative approval.</p>
+    <p>An official operational account (<strong>{role_title}</strong>) has been provisioned for you.</p>
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="{activation_link}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Activate Your Account</a>
+    </div>
+    <p style="font-size: 13px; color: #64748b;">Or copy and paste this link in your browser:<br><span style="color: #2563eb; word-break: break-all;">{activation_link}</span></p>
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+    <p style="font-size: 12px; color: #94a3b8; margin: 0;">This activation link is one-time use and will expire in 72 hours.<br>For security reasons, do not share this link with anyone.</p>
+  </div>
+</body>
+</html>"""
+
+        return self._send_payload(
+            to_email=to_email,
+            subject=subject,
+            body_text=body_text,
+            html_body=body_html,
+        )
+
+    def send_email(
+        self,
+        to_email: str,
+        subject: str,
+        body_text: str,
+        body_html: Optional[str] = None,
+    ) -> bool:
+        return self._send_payload(
+            to_email=to_email,
+            subject=subject,
+            body_text=body_text,
+            html_body=body_html,
+        )
+
+
 _ACTIVE_EMAIL_PROVIDER: Optional[BaseEmailProvider] = None
 
 def get_email_provider() -> BaseEmailProvider:
     """
     Retrieve active email provider singleton.
-    In production (SIH_ENV=production or ENVIRONMENT=production), fails closed
-    if SMTP is missing or misconfigured.
+    Supports backends:
+    - 'mailjet': Mailjet HTTPS Send API v3.1 (ideal for Render & cloud hosts without outbound SMTP ports)
+    - 'smtp': Standard SMTP with TLS
+    - 'simulated' / 'mock': In-memory provider for tests & development
     """
     global _ACTIVE_EMAIL_PROVIDER
     if _ACTIVE_EMAIL_PROVIDER is not None:
@@ -322,19 +584,24 @@ def get_email_provider() -> BaseEmailProvider:
     backend = os.getenv("SIH_EMAIL_BACKEND", os.getenv("EMAIL_BACKEND", "")).strip().lower()
 
     if is_prod:
-        host = os.getenv("SMTP_HOST", os.getenv("SIH_SMTP_HOST", "")).strip()
-        if backend and backend != "smtp":
+        if backend and backend not in ("smtp", "mailjet"):
             raise RuntimeError(
                 f"CRITICAL SECURITY ERROR: Production environment forbids email backend '{backend}'. "
-                f"Only 'smtp' is permitted."
+                f"Only 'mailjet' and 'smtp' are permitted."
             )
-        if not host:
-            raise RuntimeError(
-                "CRITICAL SECURITY ERROR: Production environment requires a valid SMTP configuration (SMTP_HOST is not set)."
-            )
-        _ACTIVE_EMAIL_PROVIDER = SMTPEmailProvider()
+        if backend == "mailjet":
+            _ACTIVE_EMAIL_PROVIDER = MailjetEmailProvider()
+        else:
+            host = os.getenv("SMTP_HOST", os.getenv("SIH_SMTP_HOST", "")).strip()
+            if not host:
+                raise RuntimeError(
+                    "CRITICAL SECURITY ERROR: Production environment requires a valid SMTP configuration (SMTP_HOST is not set)."
+                )
+            _ACTIVE_EMAIL_PROVIDER = SMTPEmailProvider()
     else:
-        if backend == "smtp":
+        if backend == "mailjet":
+            _ACTIVE_EMAIL_PROVIDER = MailjetEmailProvider()
+        elif backend == "smtp":
             _ACTIVE_EMAIL_PROVIDER = SMTPEmailProvider()
         else:
             _ACTIVE_EMAIL_PROVIDER = SimulatedEmailProvider()

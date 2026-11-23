@@ -271,6 +271,7 @@ def get_sanitized_config() -> Dict[str, Any]:
             "smtp_password_set": bool(s.smtp_password),
             "smtp_from_email": mask_email(s.smtp_from_email),
             "smtp_use_tls": s.smtp_use_tls,
+            "mailjet_configured": bool(os.getenv("MAILJET_API_KEY") and os.getenv("MAILJET_SECRET_KEY")),
         },
         "outbox_worker": {
             "poll_interval": s.outbox_poll_interval,
@@ -322,14 +323,19 @@ def validate_production_configuration() -> None:
     if "*" in s.cors_origins:
         violations.append("Production CORS policy forbids wildcard '*' when credentials are permitted.")
 
-    # 4. Email validation: Must be SMTP, host must be configured, no simulated fallback
-    if s.email_backend != "smtp":
+    # 4. Email validation: Must be SMTP or Mailjet, credentials must be configured, no simulated fallback
+    if s.email_backend not in ("smtp", "mailjet"):
         violations.append(
             f"Production forbids email backend '{s.email_backend}'. "
-            "SIH_EMAIL_BACKEND must be set to 'smtp' for live delivery."
+            "SIH_EMAIL_BACKEND must be set to 'mailjet' or 'smtp' for live delivery."
         )
-    if not s.smtp_host:
+    if s.email_backend == "smtp" and not s.smtp_host:
         violations.append("Production requires SMTP_HOST (e.g. smtp-relay.brevo.com).")
+    if s.email_backend == "mailjet":
+        mailjet_key = (os.getenv("MAILJET_API_KEY") or os.getenv("SIH_MAILJET_API_KEY") or "").strip()
+        mailjet_secret = (os.getenv("MAILJET_SECRET_KEY") or os.getenv("SIH_MAILJET_SECRET_KEY") or "").strip()
+        if not mailjet_key or not mailjet_secret:
+            violations.append("Production Mailjet email backend requires MAILJET_API_KEY and MAILJET_SECRET_KEY.")
     if not s.smtp_from_email or "@" not in s.smtp_from_email:
         violations.append("Production requires a valid SMTP_FROM_EMAIL sender address.")
     if s.otp_provider == "SIMULATED" or s.otp_provider == "CONSOLE":
