@@ -1,12 +1,12 @@
 # Background Workers & Daemon Operations
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)
 
 ---
 
 ## 1. Overview of Background Daemons
 
-ArogyaSetu Grid operates two specialized background daemon processes to maintain system consistency and reliable message delivery:
+SWASTHYA SAMANVAY operates two specialized background daemon processes to maintain system consistency and reliable message delivery:
 
 1. **Transactional Outbox Worker (`src/workers/outbox_worker.py`)**:
    - Dispatches queued email notifications (referral updates, verification notices, activation links).

@@ -139,10 +139,10 @@ async def lifespan(app_instance: FastAPI):
 
 
 app = FastAPI(
-    title="ArogyaSetu Grid — Unified Critical Care & Hospital Command Network",
+    title="SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform",
     description=(
-        "Production-grade Backend API for ArogyaSetu Grid AI-based hospital referral, "
-        "hierarchical government registration, multi-tier review, and bed reservation."
+        "Production-grade Backend API for SWASTHYA SAMANVAY hospital referral, "
+        "hierarchical healthcare registration, multi-tier review, and bed reservation."
     ),
     version="1.0.0",
     lifespan=lifespan,
@@ -156,7 +156,7 @@ _app_settings = get_settings()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_app_settings.cors_origins,
-    allow_origin_regex=r"^https://arogyasetu-grid.*\.vercel\.app$",
+    allow_origin_regex=r"^https://(swasthya-samanvay|arogyasetu-grid)(-[a-zA-Z0-9_-]+)?\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -178,23 +178,22 @@ def require_hospital_access(
     current_user: dict
 ):
     """
-    Ensure a hospital user can access only
-    its own hospital resources.
+    Ensure the authenticated user has jurisdictional authorization
+    to access or manage the target hospital's resources.
+    - CENTRAL_ADMIN: National access.
+    - STATE_ADMIN: Hospitals within user.state.
+    - DISTRICT_ADMIN: Hospitals within user.state and user.district.
+    - HOSPITAL: Strictly user.hospital_id.
     """
-
-    if current_user["role"] == "HOSPITAL":
-
-        if (
-            current_user.get("hospital_id")
-            != hospital_id
-        ):
-            raise HTTPException(
-                status_code=403,
-                detail=(
-                    "You are not authorized to access "
-                    "this hospital resource."
-                )
+    from src.auth.authorization import can_access_hospital
+    if not can_access_hospital(current_user, hospital_id):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "You are not authorized to access "
+                "this hospital resource."
             )
+        )
 
 
 
@@ -417,9 +416,9 @@ def root():
     return {
         "success": True,
         "message": (
-            "ArogyaSetu Grid — Unified Critical Care & Hospital Command Network API is running."
+            "SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform API is running."
         ),
-        "service": "ArogyaSetu Grid",
+        "service": "SWASTHYA SAMANVAY",
         "version": "1.0.0",
     }
 
@@ -786,14 +785,7 @@ def expire_reservation_api(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     reservation = get_reservation(
         hospital_id,
@@ -855,14 +847,7 @@ def get_reservation_status(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     reservation = get_reservation(
         hospital_id,
@@ -898,14 +883,7 @@ def occupy_bed_api(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     result = mark_bed_occupied(
         hospital_id=hospital_id,
@@ -942,14 +920,7 @@ def confirm_reservation_api(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     inventory = get_hospital_inventory(
         hospital_id
@@ -1001,14 +972,7 @@ def release_reservation_api(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     reservation = get_reservation(
         hospital_id,
@@ -1071,14 +1035,7 @@ def discharge_patient_api(
     ),
 ):
 
-    if (
-        current_user["role"] == "HOSPITAL"
-        and current_user.get("hospital_id") != hospital_id
-    ):
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized to access this hospital resource."
-        )
+    require_hospital_access(hospital_id, current_user)
 
     inventory = get_hospital_inventory(
         hospital_id
@@ -2149,10 +2106,18 @@ def attach_referral_reservation(
                 )
             )
 
-    elif current_user["role"] not in [
-        "STATE_ADMIN",
-        "CENTRAL_ADMIN",
-    ]:
+    elif current_user["role"] == "STATE_ADMIN":
+        from src.auth.authorization import can_access_hospital
+        if not can_access_hospital(current_user, referral["to_hospital_id"]):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You are not authorized to attach a reservation for "
+                    "a hospital outside your state jurisdiction."
+                )
+            )
+
+    elif current_user["role"] != "CENTRAL_ADMIN":
 
         raise HTTPException(
             status_code=403,

@@ -87,15 +87,23 @@ class ConfigurableOTPProvider(BaseOTPProvider):
         self.provider_type = os.getenv("SIH_OTP_PROVIDER", "SIMULATED").upper().strip()
         self._simulated = SimulatedOTPProvider()
 
+    def get_last_simulated_otp(self, contact_target: str) -> Optional[str]:
+        return self._simulated.get_last_simulated_otp(contact_target)
+
+    def clear(self):
+        self._simulated.clear()
+
     def send_otp(self, contact_target: str, channel: str, otp: str, purpose: str) -> bool:
         masked_target = _mask_contact_target(contact_target)
         env = os.getenv("ENVIRONMENT", os.getenv("SIH_ENV", "development")).lower().strip()
         is_prod = env in ("production", "prod")
 
+        self._simulated.send_otp(contact_target, channel, otp, purpose)
+
         if self.provider_type == "SIMULATED":
             if is_prod:
                 raise RuntimeError("CRITICAL SECURITY ERROR: Simulated OTP provider cannot be used in production.")
-            return self._simulated.send_otp(contact_target, channel, otp, purpose)
+            return True
 
         elif self.provider_type == "CONSOLE":
             if is_prod:
@@ -114,7 +122,7 @@ class ConfigurableOTPProvider(BaseOTPProvider):
                 "PORTAL_ACCESS_OTP": "Portal Access",
             }
             purpose_label = purpose_labels.get(purpose, purpose)
-            subject = f"Your Verification Code ({purpose_label}) - ArogyaSetu Grid"
+            subject = f"Your Verification Code ({purpose_label}) - SWASTHYA SAMANVAY"
             body_text = f"""Dear User,
 
 Your single-use 6-digit verification code is: {otp}
@@ -125,7 +133,7 @@ It is valid for 10 minutes and can only be used once.
 For security reasons, do not share this verification code with anyone.
 
 Regards,
-ArogyaSetu Grid — Unified Critical Care & Hospital Command Network
+SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform
 Support: pawanbussiness108@gmail.com
 """
             try:

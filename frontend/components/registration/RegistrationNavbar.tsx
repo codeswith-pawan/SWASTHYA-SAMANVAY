@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Hospital, Lock, Shield, Menu, X, ArrowRight, AlertCircle, PhoneCall } from "lucide-react";
+import { Lock, Menu, X, ArrowRight, Activity } from "lucide-react";
+import { SwasthyaLogo } from "@/components/shared/SwasthyaLogo";
 
 export const RegistrationNavbar: React.FC = () => {
   const pathname = usePathname();
@@ -18,26 +19,27 @@ export const RegistrationNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-[#07182F] text-white border-b border-[#0B2345] shadow-md">
-      {/* Top Prototype Disclaimer Strip */}
-      <div className="bg-[#040E1E] text-slate-300 text-[11px] py-1 px-4 sm:px-6 border-b border-slate-800/80">
+      {/* Top Professional Utility Strip */}
+      <div className="bg-[#040E1E] text-slate-300 text-[11px] py-1.5 px-4 sm:px-6 border-b border-slate-800/80">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              PROTOTYPE
+            <span className="flex h-1.5 w-1.5 rounded-full bg-[#00A99D] animate-pulse-glow" />
+            <span className="font-semibold text-slate-200">
+              National Healthcare Onboarding & Accreditation Gateway
             </span>
-            <span className="text-slate-300">
-              Smart India Hackathon Technical Prototype &bull; Not an official Government of India portal.
+            <span className="text-slate-600 hidden sm:inline">&bull;</span>
+            <span className="text-slate-400 hidden sm:inline">
+              Multi-Tier Hospital & Health Administration Verification
             </span>
           </div>
-          <div className="hidden sm:flex items-center gap-3 text-slate-400">
-            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse-glow" />
-              Emergency Ambulance: <strong className="text-white">108</strong>
-            </span>
-            <span>&bull;</span>
-            <span className="text-teal-300 font-medium">
-              National Health Helpline: <strong className="text-white">1075</strong>
-            </span>
+          <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+            <span>Technical Inquiries:</span>
+            <a
+              href="mailto:pawanbussiness108@gmail.com"
+              className="text-[#00A99D] hover:text-white font-medium underline underline-offset-2"
+            >
+              pawanbussiness108@gmail.com
+            </a>
           </div>
         </div>
       </div>
@@ -47,22 +49,7 @@ export const RegistrationNavbar: React.FC = () => {
         <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo & Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#008F83] to-[#00A99D] text-white shadow-md shadow-[#008F83]/20 group-hover:scale-105 transition-transform duration-200">
-              <Hospital className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base sm:text-lg font-extrabold tracking-tight text-white group-hover:text-teal-300 transition">
-                  ArogyaSetu Grid
-                </span>
-                <span className="hidden sm:inline-block rounded-full bg-[#008F83]/20 border border-[#008F83]/40 px-2 py-0.5 text-[10px] font-bold text-teal-300 uppercase tracking-wider">
-                  Healthcare Grid
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Hospital Coordination & Referral Portal
-              </p>
-            </div>
+            <SwasthyaLogo size="md" inverted={true} />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -99,14 +86,13 @@ export const RegistrationNavbar: React.FC = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex md:hidden items-center gap-2">
+          <div className="flex md:hidden">
             <button
-              type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg bg-slate-800 text-slate-200 hover:text-white"
-              aria-label="Toggle navigation menu"
+              className="p-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800"
+              aria-label="Toggle navigation"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
@@ -114,31 +100,32 @@ export const RegistrationNavbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-[#07182F] px-4 py-4 space-y-2 animate-fade-in-up">
-          {navLinks.map((link) => {
-            const isActive =
-              pathname === link.href ||
-              (link.href !== "/register" && pathname.startsWith(link.href));
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-xs font-semibold ${
-                  isActive
-                    ? "bg-[#008F83] text-white font-bold"
-                    : "text-slate-300 hover:bg-slate-800"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+        <div className="md:hidden border-t border-slate-800 bg-[#07182F] px-4 pt-2 pb-6 space-y-3 shadow-xl">
+          <nav className="flex flex-col space-y-1">
+            {navLinks.map((link) => {
+              const isActive =
+                pathname === link.href ||
+                (link.href !== "/register" && pathname.startsWith(link.href));
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-3 py-2 rounded-lg text-xs font-semibold ${
+                    isActive ? "bg-[#008F83] text-white font-bold" : "text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+
           <div className="pt-2 border-t border-slate-800">
             <Link
               href="/portal"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#008F83] to-[#00A99D] px-4 py-2.5 text-xs font-bold text-white"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#008F83] py-2.5 text-xs font-bold text-white"
             >
               <Lock className="w-3.5 h-3.5" />
               <span>Department Portals</span>

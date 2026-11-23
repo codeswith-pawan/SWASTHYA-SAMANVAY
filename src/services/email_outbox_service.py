@@ -311,13 +311,13 @@ class EmailOutboxService:
                 subject=event.subject,
                 body_text=(
                     f"Hello {event.recipient_name or 'User'},\n\n"
-                    f"We received a request to reset your password for ArogyaSetu Grid — Unified Critical Care & Hospital Command Network.\n"
+                    f"We received a request to reset your password for SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform.\n"
                     f"Please reset your password using the secure link below:\n\n"
                     f"{reset_link}\n\n"
                     f"This link is single-use and will expire in 1 hour.\n"
                     f"If you did not request this, please ignore this email or contact support at pawanbussiness108@gmail.com.\n\n"
                     f"Regards,\n"
-                    f"ArogyaSetu Grid Command Support"
+                    f"SWASTHYA SAMANVAY Support Desk"
                 ),
             )
         else:

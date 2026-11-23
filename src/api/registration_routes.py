@@ -13,6 +13,7 @@ import os
 import logging
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, Request, Header, Query, status, UploadFile, File, Form, Response, BackgroundTasks
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from src.database.db_manager import get_db_session
@@ -1035,15 +1036,18 @@ def list_reviewer_applications(
 
     # Enforce geographic scoping
     if role == "DISTRICT_ADMIN":
+        reviewer_state = (reviewer.get("state") or "").strip().lower()
+        reviewer_district = (reviewer.get("district") or "").strip().lower()
         query = query.filter(
-            RegistrationApplication.state == reviewer["state"],
-            RegistrationApplication.district == reviewer["district"],
+            func.lower(func.trim(RegistrationApplication.state)) == reviewer_state,
+            func.lower(func.trim(RegistrationApplication.district)) == reviewer_district,
         )
         if not stage_filter:
             stage_filter = "DISTRICT_REVIEW"
     elif role == "STATE_ADMIN":
+        reviewer_state = (reviewer.get("state") or "").strip().lower()
         query = query.filter(
-            RegistrationApplication.state == reviewer["state"],
+            func.lower(func.trim(RegistrationApplication.state)) == reviewer_state,
         )
         if not stage_filter:
             stage_filter = "STATE_REVIEW"
@@ -1111,13 +1115,19 @@ def get_reviewer_application_detail(
 
     role = reviewer["role"]
     if role == "DISTRICT_ADMIN":
-        if app.state != reviewer.get("state") or app.district != reviewer.get("district"):
+        app_state = (app.state or "").strip().lower()
+        app_district = (app.district or "").strip().lower()
+        rev_state = (reviewer.get("state") or "").strip().lower()
+        rev_district = (reviewer.get("district") or "").strip().lower()
+        if app_state != rev_state or app_district != rev_district:
             raise HTTPException(
                 status_code=403,
                 detail=f"Access denied: Application is outside your district jurisdiction ({reviewer.get('district')}, {reviewer.get('state')}).",
             )
     elif role == "STATE_ADMIN":
-        if app.state != reviewer.get("state"):
+        app_state = (app.state or "").strip().lower()
+        rev_state = (reviewer.get("state") or "").strip().lower()
+        if app_state != rev_state:
             raise HTTPException(
                 status_code=403,
                 detail=f"Access denied: Application is outside your state jurisdiction ({reviewer.get('state')}).",

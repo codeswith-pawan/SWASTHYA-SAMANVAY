@@ -17,6 +17,12 @@ from typing import List, Optional, Dict, Any
 from urllib.parse import urlparse
 from pydantic import BaseModel, Field
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 logger = logging.getLogger("sih.config")
 
 INSECURE_DEV_JWT_SECRET = "sih-hospital-ai-demo-secret-change-later"

@@ -106,23 +106,23 @@ export default function Home() {
             <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse-glow" />
             <span>
               {isHindi
-                ? "राष्ट्रीय स्वास्थ्य ग्रिड • एकीकृत अस्पताल समन्वय पोर्टल"
-                : "National Health Grid • Unified Hospital Coordination Portal"}
+                ? "राष्ट्रीय स्वास्थ्य सेवा समन्वय प्लेटफॉर्म"
+                : "NATIONAL HEALTHCARE COORDINATION PLATFORM"}
             </span>
           </div>
 
           {/* Clear, Authoritative Headline */}
           <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black text-slate-950 tracking-tight leading-[1.18] max-w-4xl mx-auto">
             {isHindi
-              ? "एकीकृत अस्पताल बेड समन्वय एवं आपातकालीन मरीज रेफरल पोर्टल"
-              : "Integrated Hospital Bed Coordination & Emergency Patient Referral Portal"}
+              ? "अस्पतालों का जुड़ाव। देखभाल का समन्वय। समय की बचत।"
+              : "Connecting Hospitals. Coordinating Care. Saving Time."}
           </h1>
 
           {/* Concise 2-line Description */}
           <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto">
             {isHindi
-              ? "अस्पतालों, जिला स्वास्थ्य कार्यालयों और राज्य निदेशालयों को रीयल-टाइम बेड उपलब्धता, सुरक्षित रेफरल और त्वरित आपातकालीन स्थानांतरण हेतु जोड़ने वाला आधिकारिक राष्ट्रीय मंच।"
-              : "A unified digital platform connecting frontline hospitals, district health administrations, and state directorates for transparent bed availability, smart referrals, and zero-delay critical care transfers."}
+              ? "अस्पतालों के संसाधनों के समन्वय, बेड उपलब्धता की दृश्यता, मरीज रेफरल को सुव्यवस्थित करने तथा अस्पतालों व स्वास्थ्य प्रशासनों के बीच सहयोग बढ़ाने के लिए डिज़ाइन किया गया एक एकीकृत डिजिटल प्लेटफॉर्म।"
+              : "A unified digital platform designed to coordinate hospital resources, improve bed visibility, streamline patient referrals, and support collaboration between hospitals and healthcare administrations."}
           </p>
 
           {/* 3 Clear Action Buttons */}
@@ -132,14 +132,14 @@ export default function Home() {
               className="rounded-xl bg-teal-700 px-6 py-3.5 text-sm font-bold text-white hover:bg-teal-800 transition shadow-sm flex items-center gap-2 btn-hover-lift"
             >
               <FileCheck2 className="w-4 h-4" />
-              <span>{isHindi ? "अस्पताल पंजीकरण" : "Register Hospital"}</span>
+              <span>{isHindi ? "अस्पताल पंजीकृत करें" : "Register Hospital"}</span>
             </Link>
 
             <Link
-              href="/application/status"
+              href="/application/track"
               className="rounded-xl border border-slate-300 bg-white px-5 py-3.5 text-sm font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition shadow-2xs flex items-center gap-2 btn-hover-lift"
             >
-              <span>{isHindi ? "आवेदन स्थिति जांचें" : "Track Application"}</span>
+              <span>{isHindi ? "आवेदन ट्रैक करें" : "Track Application"}</span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </Link>
 
@@ -393,41 +393,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Quick Emergency Strip Callout */}
+      {/* 4. Technical Support & Onboarding Assistance */}
       <section className="py-8 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="rounded-2xl bg-slate-900 text-white p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+          <div className="rounded-2xl bg-[#0B132B] text-white p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm border border-slate-800">
             <div className="space-y-1 text-center md:text-left">
               <h3 className="text-lg font-bold text-white">
-                {isHindi ? "24/7 राष्ट्रीय आपातकालीन हेल्पलाइन" : "24/7 National Emergency Helplines"}
-              </h3>
-              <p className="text-xs text-slate-400">
                 {isHindi
-                  ? "तत्काल एम्बुलेंस सेवा अथवा स्वास्थ्य मार्गदर्शन हेतु राष्ट्रीय टोल-फ्री नंबर पर कॉल करें।"
-                  : "For immediate ambulance dispatch or public health assistance, dial verified toll-free helplines."}
+                  ? "तकनीकी सहायता एवं ऑनबोर्डिंग परामर्श"
+                  : "Technical Support & Hospital Onboarding"}
+              </h3>
+              <p className="text-xs text-slate-300">
+                {isHindi
+                  ? "अस्पताल पंजीकरण, बहु-स्तरीय अनुमोदन, अथवा क्रेडेंशियल सक्रियण हेतु हमारी तकनीकी टीम से संपर्क करें।"
+                  : "Need assistance with facility onboarding, multi-tier accreditation, or credential activation? Reach our technical desk."}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
-              <div className="flex items-center gap-2 bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-700">
-                <PhoneCall className="w-4 h-4 text-emerald-400" />
-                <span>
-                  {isHindi ? "आपातकालीन एम्बुलेंस: " : "Ambulance: "}
-                  <strong className="text-white">108</strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-2 bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-700">
-                <PhoneCall className="w-4 h-4 text-teal-400" />
-                <span>
-                  {isHindi ? "राष्ट्रीय स्वास्थ्य हेल्पलाइन: " : "Health Helpline: "}
-                  <strong className="text-white">1075</strong>
-                </span>
-              </div>
+              <a
+                href="mailto:pawanbussiness108@gmail.com"
+                className="flex items-center gap-2 bg-slate-900/90 px-4 py-2.5 rounded-xl border border-teal-500/30 hover:border-teal-400 text-teal-300 transition"
+              >
+                <span>pawanbussiness108@gmail.com</span>
+              </a>
+              <Link
+                href="/application/track"
+                className="flex items-center gap-1.5 bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-700 text-slate-200 hover:text-white transition"
+              >
+                <span>{isHindi ? "आवेदन स्थिति" : "Track Application"}</span>
+              </Link>
               <Link
                 href="/contact"
-                className="rounded-xl bg-teal-600 px-4 py-2.5 text-white font-bold hover:bg-teal-500 transition"
+                className="rounded-xl bg-teal-600 px-4 py-2.5 text-white font-bold hover:bg-teal-500 transition shadow-2xs"
               >
-                {isHindi ? "सहायता केंद्र विवरण →" : "Helpdesk Details →"}
+                {isHindi ? "सहायता केंद्र →" : "Helpdesk Details →"}
               </Link>
             </div>
           </div>

@@ -1,8 +1,8 @@
 # Installation & Local Setup Guide
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)
 
-This guide walks through setting up the complete ArogyaSetu Grid platform on a local machine for development, testing, and evaluation.
+This guide walks through setting up the complete SWASTHYA SAMANVAY platform on a local machine for development, testing, and evaluation.
 
 ---
 
@@ -60,7 +60,7 @@ Review `.env`:
 - By default, `DATABASE_URL=sqlite:///data/hospital_app.db` allows instant local testing without configuring PostgreSQL.
 - For full PostgreSQL testing, set:
   ```env
-  DATABASE_URL=postgresql://postgres:password@localhost:5432/arogyasetu_local
+  DATABASE_URL=postgresql://postgres:password@localhost:5432/swasthya-samanvay_local
   ```
 
 ### Step 3.4: Seed the Database (Optional)

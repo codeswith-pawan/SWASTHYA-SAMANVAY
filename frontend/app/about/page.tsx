@@ -33,7 +33,7 @@ export default function AboutPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-950 tracking-tight">
-            {isHindi ? "आरोग्यसेतु ग्रिड के बारे में" : "About ArogyaSetu Grid"}
+            {isHindi ? "स्वास्थ्य समन्वय के बारे में" : "About SWASTHYA SAMANVAY"}
           </h1>
 
           <p className="text-sm sm:text-base text-slate-600 max-w-3xl mx-auto leading-relaxed">
@@ -59,7 +59,7 @@ export default function AboutPage() {
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 {isHindi
                   ? "किसी भी गंभीर मरीज को बेड या वेंटिलेटर की कमी के कारण अस्पताल-दर-अस्पताल भटकना न पड़े। रीयल-टाइम बेड समन्वय और स्थिति-आधारित रेफरल द्वारा हर मरीज को सही समय पर सही अस्पताल में सुरक्षित प्रवेश दिलाना हमारा संकल्प है।"
-                  : "To prevent tragic delays during critical emergencies by connecting frontline medical officers with live bed and ICU availability across participating hospitals. ArogyaSetu Grid guarantees that when an ambulance leaves with a critical patient, a verified bed is already reserved and prepared at the destination facility."}
+                  : "To prevent tragic delays during critical emergencies by connecting frontline medical officers with live bed and ICU availability across participating hospitals. SWASTHYA SAMANVAY guarantees that when an ambulance leaves with a critical patient, a verified bed is already reserved and prepared at the destination facility."}
               </p>
             </div>
             <div className="pt-4 border-t border-slate-100 flex items-center gap-2 text-xs font-semibold text-teal-800">

@@ -181,7 +181,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <footer className="border-t border-slate-800/80 bg-slate-900/60 py-4 text-center text-xs text-slate-400">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p>
-            ArogyaSetu Grid • Unified Critical Care & Hospital Command Network
+            SWASTHYA SAMANVAY • Hospital Coordination & Referral Platform
           </p>
           <p className="text-[11px] text-slate-400">
             Clinical Decision Support (CDS) only. All patient admissions require physician confirmation.

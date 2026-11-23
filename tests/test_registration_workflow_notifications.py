@@ -786,7 +786,7 @@ def test_submission_email_confirmation_and_delivery(workflow_db_session):
     assert res["tracking_token"] in body_text
     assert "District Verification" in body_text
     assert "/track" in body_text
-    assert "ArogyaSetu Grid" in body_text
+    assert "SWASTHYA SAMANVAY" in body_text
 
     body_html = payload["body_html"]
     assert app_record.application_number in body_html

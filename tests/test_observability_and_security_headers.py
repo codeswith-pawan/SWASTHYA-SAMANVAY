@@ -75,6 +75,7 @@ def test_production_configuration_validation_fails_closed(monkeypatch):
     # In production with SQLite or default settings, validation must fail fast
     monkeypatch.setenv("DATABASE_URL", "sqlite:///test.db")
     monkeypatch.setenv("JWT_SECRET_KEY", INSECURE_DEV_JWT_SECRET)
+    monkeypatch.setenv("SIH_EMAIL_BACKEND", "simulated")
 
     with pytest.raises(RuntimeError) as exc_info:
         reset_settings()

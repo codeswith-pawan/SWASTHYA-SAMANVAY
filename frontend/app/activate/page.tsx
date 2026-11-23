@@ -87,7 +87,7 @@ function ActivateForm() {
               Account Activated Successfully
             </span>
             <h2 className="mt-3 text-2xl font-bold text-slate-900">
-              Welcome to ArogyaSetu Grid Operations
+              Welcome to SWASTHYA SAMANVAY Operations
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-600">
               Your credentials have been securely provisioned and stored with PBKDF2-HMAC-SHA256 encryption.

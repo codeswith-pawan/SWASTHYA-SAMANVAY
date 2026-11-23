@@ -28,7 +28,7 @@ def get_jwt_secret() -> str:
     env = os.getenv("SIH_ENV", os.getenv("ENVIRONMENT", "development")).lower().strip()
     secret = os.getenv("SIH_JWT_SECRET", os.getenv("JWT_SECRET_KEY", "")).strip()
 
-    is_production = env in ("production", "prod", "staging")
+    is_production = env in ("production", "prod", "staging", "demo")
 
     if is_production:
         if not secret or secret == INSECURE_DEV_SECRET or len(secret) < 32:

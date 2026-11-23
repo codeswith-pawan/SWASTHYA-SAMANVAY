@@ -1,13 +1,13 @@
 # System Architecture & Technical Design
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)  
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)  
 **Architecture Style:** Modular Monolithic Backend (FastAPI) + Standalone SSR/CSR Frontend (Next.js 16) + Distributed Background Processing (Transactional Outbox)
 
 ---
 
 ## 1. High-Level System Architecture
 
-ArogyaSetu Grid unites healthcare facilities across local, district, state, and national tiers into an integrated clinical referral and bed management network.
+SWASTHYA SAMANVAY unites healthcare facilities across local, district, state, and national tiers into an integrated clinical referral and bed management network.
 
 ```mermaid
 graph TD

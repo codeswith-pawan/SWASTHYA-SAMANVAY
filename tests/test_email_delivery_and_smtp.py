@@ -126,7 +126,7 @@ def test_smtp_successful_delivery_mock(smtp_env):
 
         sent_msg = mock_server.send_message.call_args[0][0]
         assert sent_msg["To"] == "admin@hospital.punjab.gov.in"
-        assert sent_msg["From"] == "no-reply@test.sih.gov.in"
+        assert "no-reply@test.sih.gov.in" in sent_msg["From"]
         assert "Official Portal Account Activation" in sent_msg["Subject"]
         assert "ABC123SECURETOKEN" in sent_msg.get_payload()[0].get_payload()
 

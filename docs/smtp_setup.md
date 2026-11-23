@@ -1,6 +1,6 @@
 # SMTP Configuration & Email Delivery Guide
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)
 
 ---
 

@@ -102,8 +102,8 @@ export default function TermsOfServicePage() {
           </div>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
             {isHindi
-              ? "आरोग्यसेतु ग्रिड का एल्गोरिथम रेफरल इंजन दूरी, जीवन संकेत और विशेषज्ञता के आधार पर सक्षम अस्पतालों की सिफारिश करता है। यह प्रणाली चिकित्सकीय परामर्श का विकल्प नहीं है। मरीज के स्थानांतरण और उपचार का अंतिम निर्णय सदैव उपस्थित पंजीकृत चिकित्सा अधिकारी (RMO) के विवेक पर निर्भर होगा।"
-              : "Algorithmic triage scores and destination hospital proximity recommendations provided by ArogyaSetu Grid serve purely as clinical decision-support aids. The system does not practice medicine. The decision to initiate an inter-facility transfer, select a destination hospital, and dispatch emergency transport remains the sole professional responsibility of the attending Registered Medical Officer (RMO)."}
+              ? "स्वास्थ्य समन्वय का एल्गोरिथम रेफरल इंजन दूरी, जीवन संकेत और विशेषज्ञता के आधार पर सक्षम अस्पतालों की सिफारिश करता है। यह प्रणाली चिकित्सकीय परामर्श का विकल्प नहीं है। मरीज के स्थानांतरण और उपचार का अंतिम निर्णय सदैव उपस्थित पंजीकृत चिकित्सा अधिकारी (RMO) के विवेक पर निर्भर होगा।"
+              : "Algorithmic triage scores and destination hospital proximity recommendations provided by SWASTHYA SAMANVAY serve purely as clinical decision-support aids. The system does not practice medicine. The decision to initiate an inter-facility transfer, select a destination hospital, and dispatch emergency transport remains the sole professional responsibility of the attending Registered Medical Officer (RMO)."}
           </p>
         </section>
 

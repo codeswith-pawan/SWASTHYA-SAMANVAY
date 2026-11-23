@@ -203,6 +203,11 @@ class SMTPEmailProvider(BaseEmailProvider):
             or "pawanbussiness108@gmail.com"
         ).strip()
 
+        self.sender_name = (
+            os.getenv("SMTP_SENDER_NAME")
+            or "SWASTHYA SAMANVAY"
+        ).strip()
+
         if use_tls is not None:
             self.use_tls = use_tls
         else:
@@ -241,6 +246,11 @@ class SMTPEmailProvider(BaseEmailProvider):
             logger.error("SMTPEmailProvider: Failed delivering to %s: %s", masked_to, exc)
             raise EmailDeliveryError(f"SMTP delivery failed: {type(exc).__name__}: {exc}") from exc
 
+    def _format_from(self) -> str:
+        if self.sender_name:
+            return f"{self.sender_name} <{self.sender}>"
+        return self.sender
+
     def send_activation_email(
         self,
         to_email: str,
@@ -249,7 +259,7 @@ class SMTPEmailProvider(BaseEmailProvider):
         role_title: str,
         application_number: str,
     ) -> bool:
-        subject = f"Official Portal Account Activation: {role_title} ({application_number}) - ArogyaSetu Grid"
+        subject = f"Official Portal Account Activation: {role_title} ({application_number}) - SWASTHYA SAMANVAY"
         
         body_text = f"""Dear {recipient_name},
 
@@ -264,13 +274,13 @@ This activation link is one-time use and will expire in 72 hours.
 For security reasons, do not share this link with anyone.
 
 Regards,
-ArogyaSetu Grid - Unified Critical Care & Hospital Command Network
+SWASTHYA SAMANVAY - Hospital Coordination & Referral Platform
 Support: pawanbussiness108@gmail.com
 """
 
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = self.sender
+        msg["From"] = self._format_from()
         msg["To"] = to_email
         msg.attach(MIMEText(body_text, "plain"))
 
@@ -285,7 +295,7 @@ Support: pawanbussiness108@gmail.com
     ) -> bool:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
-        msg["From"] = self.sender
+        msg["From"] = self._format_from()
         msg["To"] = to_email
         msg.attach(MIMEText(body_text, "plain"))
         if body_html:

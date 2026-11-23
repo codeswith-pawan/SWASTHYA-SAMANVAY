@@ -11,20 +11,19 @@ test.describe("Government Portal Redesign - Navigation & Department Journey", ()
 
   test("1. Landing Page renders government branding and hero sections", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/ArogyaSetu Grid/);
+    await expect(page).toHaveTitle(/SWASTHYA SAMANVAY/);
 
     // Official Header Banner
-    await expect(page.locator("text=Grid Online").first()).toBeVisible();
-    await expect(page.locator("text=ArogyaSetu Grid").first()).toBeVisible();
-    await expect(page.locator("text=1075").first()).toBeVisible();
+    await expect(page.locator("text=System Operational").first()).toBeVisible();
+    await expect(page.locator("text=SWASTHYA SAMANVAY").first()).toBeVisible();
 
     // Hero Section
     await expect(
-      page.locator("h1:has-text('Integrated Hospital Bed Coordination & Emergency Patient Referral Portal')")
+      page.locator("h1:has-text('Connecting Hospitals. Coordinating Care. Saving Time.')")
     ).toBeVisible();
     await expect(
       page.locator(
-        "text=A unified digital platform connecting frontline hospitals"
+        "text=A unified digital platform designed to coordinate hospital resources"
       )
     ).toBeVisible();
 
@@ -36,7 +35,6 @@ test.describe("Government Portal Redesign - Navigation & Department Journey", ()
     // Meaningful Sections
     await expect(page.locator("text=Departmental Sign-In Gateways")).toBeVisible();
     await expect(page.locator("text=Access Your Healthcare Jurisdiction")).toBeVisible();
-    await expect(page.locator("text=How ArogyaSetu Grid Operates")).toBeVisible();
   });
 
   test("2. Explore Portal navigation opens Department Selection Page", async ({ page }) => {

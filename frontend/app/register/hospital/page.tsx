@@ -263,7 +263,7 @@ export default function RegisterHospitalPage() {
                 Hospital Onboarding & Accreditation
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                Accredit your medical facility to onboard inpatient beds, ICU inventory, and emergency transfers into ArogyaSetu Grid.
+                Accredit your medical facility to onboard inpatient beds, ICU inventory, and emergency transfers into SWASTHYA SAMANVAY.
               </p>
             </div>
             {application && (
@@ -966,8 +966,8 @@ export default function RegisterHospitalPage() {
                     </a>
                   </div>
                   <div className="flex items-center gap-2 text-slate-300 text-[11px]">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Helpline: <strong>108</strong> (Ambulance) • <strong>1075</strong> (Health)</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span>Technical Support Desk • Nodal Verification</span>
                   </div>
                 </div>
               </div>

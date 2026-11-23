@@ -99,7 +99,7 @@ export default function RegisterHubPage() {
             Healthcare Entity Registration
           </h1>
           <p className="text-sm sm:text-base text-[#60738C] leading-relaxed">
-            Select your administrative jurisdiction or medical facility classification to initiate the official multi-tier verification and credential provisioning workflow on ArogyaSetu Grid.
+            Select your administrative jurisdiction or medical facility classification to initiate the official multi-tier verification and credential provisioning workflow on SWASTHYA SAMANVAY.
           </p>
         </div>
 

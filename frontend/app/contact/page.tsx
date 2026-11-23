@@ -72,6 +72,23 @@ export default function ContactPage() {
 
       {/* Main Content Body */}
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+        {/* Public Health & Platform Advisory Note */}
+        <div className="rounded-2xl border border-teal-200 bg-teal-50/60 p-5 sm:p-6 text-xs text-slate-700 leading-relaxed space-y-2">
+          <div className="flex items-center gap-2 font-bold text-teal-900 text-sm">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-teal-600" />
+            <span>
+              {isHindi
+                ? "प्लेटफॉर्म उद्देश्य एवं आपातकालीन सूचना परामर्श"
+                : "Platform Scope & Emergency Helplines Advisory"}
+            </span>
+          </div>
+          <p>
+            {isHindi
+              ? "स्वास्थ्य समन्वय (SWASTHYA SAMANVAY) एक डिजिटल अस्पताल समन्वय एवं रेफरल प्लेटफॉर्म है। यह सीधे एम्बुलेंस प्रेषण केंद्र का संचालन नहीं करता है। आपातकालीन एम्बुलेंस (108) एवं राष्ट्रीय स्वास्थ्य हेल्पलाइन (1075) स्वतंत्र सार्वजनिक टेलीफोन सेवाएं हैं जो नागरिकों की सीधी सहायता हेतु कार्यरत हैं।"
+              : "SWASTHYA SAMANVAY is a digital hospital resource coordination and patient referral platform; it does not operate a direct ambulance dispatch center. Standard emergency telephone helplines (108 for Ambulance, 1075 for National Health) operate independently as public phone services for direct citizen assistance."}
+          </p>
+        </div>
+
         {/* Contact Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: 108 Ambulance */}

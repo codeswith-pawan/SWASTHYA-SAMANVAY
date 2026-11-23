@@ -11,7 +11,8 @@ export interface LanguageContextType {
   t: (enText: string, hiText: string) => string;
 }
 
-const STORAGE_KEY = "arogyasetu_lang";
+const STORAGE_KEY = "swasthya_samanvay_lang";
+const LEGACY_STORAGE_KEY = "arogyasetu_lang";
 
 const LanguageContext = createContext<LanguageContextType>({
   lang: "en",
@@ -26,7 +27,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
       if (saved === "en" || saved === "hi") {
         setLangState(saved);
       }

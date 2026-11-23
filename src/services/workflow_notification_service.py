@@ -303,7 +303,7 @@ class WorkflowNotificationService:
 
         body_text = (
             f"Dear {application.applicant_name},\n\n"
-            f"Thank you for submitting your healthcare registration application on ArogyaSetu Grid — Unified Critical Care & Hospital Command Network.\n\n"
+            f"Thank you for submitting your healthcare registration application on SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform.\n\n"
             f"Your application has been received and assigned for administrative review.\n\n"
             f"OFFICIAL REGISTRATION DETAILS:\n"
             f"--------------------------------------------------\n"
@@ -334,7 +334,7 @@ class WorkflowNotificationService:
             f"automated email notification when your application status changes or if additional\n"
             f"documents are required.\n\n"
             f"Regards,\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
 
@@ -348,8 +348,8 @@ class WorkflowNotificationService:
 <body style="margin: 0; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0f172a; color: #f8fafc;">
   <div style="max-width: 600px; margin: 0 auto; background-color: #1e293b; border-radius: 12px; border: 1px solid #334155; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
     <div style="background: linear-gradient(135deg, #0f172a 0%, #0b132b 100%); padding: 28px 24px; text-align: center; border-bottom: 1px solid #1e293b;">
-      <h1 style="margin: 0 0 6px 0; font-size: 20px; color: #14b8a6; font-weight: 700; letter-spacing: -0.025em;">ArogyaSetu Grid</h1>
-      <p style="margin: 0; font-size: 13px; color: #94a3b8;">Unified Critical Care & Hospital Command Network</p>
+      <h1 style="margin: 0 0 6px 0; font-size: 20px; color: #14b8a6; font-weight: 700; letter-spacing: -0.025em;">SWASTHYA SAMANVAY</h1>
+      <p style="margin: 0; font-size: 13px; color: #94a3b8;">Hospital Coordination & Referral Platform</p>
     </div>
     <div style="padding: 28px 24px;">
       <p style="margin-top: 0; font-size: 15px; color: #f8fafc;">Dear <strong>{application.applicant_name}</strong>,</p>
@@ -398,7 +398,7 @@ class WorkflowNotificationService:
       </div>
     </div>
     <div style="padding: 16px 24px; background-color: #0b132b; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #1e293b;">
-      ArogyaSetu Grid &bull; National Critical Care & Hospital Command Network &bull; Support: pawanbussiness108@gmail.com<br>
+      SWASTHYA SAMANVAY &bull; Hospital Coordination & Referral Platform &bull; Support: pawanbussiness108@gmail.com<br>
       Automated confirmation &bull; Please do not reply directly to this email.
     </div>
   </div>
@@ -472,7 +472,7 @@ class WorkflowNotificationService:
                         f"Current Stage: {stage}\n\n"
                         f"Please access the Reviewer Portal to inspect credentials and verify mandatory documents:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                         f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
@@ -534,7 +534,7 @@ class WorkflowNotificationService:
                 f"and resubmit your dossier.\n\n"
                 f"Tracking & Resubmission Link:\n"
                 f"{tracking_url}\n\n"
-                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                 f"Support: pawanbussiness108@gmail.com"
             ),
         }
@@ -592,7 +592,7 @@ class WorkflowNotificationService:
                 f"Current Status: SUBMITTED (Assigned to {stage})\n\n"
                 f"You can monitor review status at:\n"
                 f"{tracking_url}\n\n"
-                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                 f"Support: pawanbussiness108@gmail.com"
             ),
         }
@@ -648,7 +648,7 @@ class WorkflowNotificationService:
                         f"Applicant Notes: {applicant_notes or 'Updated per reviewer instructions.'}\n\n"
                         f"Please re-inspect the updated documents in the Reviewer Portal:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                         f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
@@ -710,7 +710,7 @@ class WorkflowNotificationService:
                 f"The application has now advanced to {next_tier_name} Review ({new_stage}).\n\n"
                 f"You can track the ongoing verification status at:\n"
                 f"{tracking_url}\n\n"
-                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                 f"Support: pawanbussiness108@gmail.com"
             ),
         }
@@ -762,7 +762,7 @@ class WorkflowNotificationService:
                         f"Jurisdiction: {application.district or 'Statewide'}, {application.state}\n\n"
                         f"Please access the Reviewer Portal to perform your review:\n"
                         f"{reviewer_dossier_url}\n\n"
-                        f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                        f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                         f"Support: pawanbussiness108@gmail.com"
                     ),
                 }
@@ -821,7 +821,7 @@ class WorkflowNotificationService:
                 f"Please note that facility operations will commence once your account is fully activated.\n\n"
                 f"You can verify your final approval record at:\n"
                 f"{tracking_url}\n\n"
-                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                 f"Support: pawanbussiness108@gmail.com"
             ),
         }
@@ -878,7 +878,7 @@ class WorkflowNotificationService:
                 f"{tracking_url}\n\n"
                 f"If you believe this decision was reached in error, you may submit a fresh registration "
                 f"dossier addressing the deficiencies noted above.\n\n"
-                f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+                f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
                 f"Support: pawanbussiness108@gmail.com"
             ),
         }
@@ -1080,7 +1080,7 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"Please review and accept or redirect this referral in your clinical dashboard:\n"
             f"{get_portal_base_url()}/hospitals/{to_hid}?tab=referrals\n\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
@@ -1142,7 +1142,7 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"Please coordinate ambulance transport. You can track progress at:\n"
             f"{get_portal_base_url()}/hospitals/{from_hid}?tab=referrals\n\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
@@ -1187,7 +1187,7 @@ class WorkflowNotificationService:
             f"Reason/Notes: {safe_reason}\n\n"
             f"Please request recommendations for alternative facilities in your portal:\n"
             f"{get_portal_base_url()}/hospitals/{from_hid}?tab=referrals\n\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
@@ -1371,7 +1371,7 @@ class WorkflowNotificationService:
             f"Patient Identifier: {masked_pid}\n\n"
             f"The reservation window exceeded its time-to-live without patient confirmation. "
             f"The bed capacity has been automatically returned to the active pool.\n\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(
@@ -1531,7 +1531,7 @@ class WorkflowNotificationService:
             f"Jurisdiction: {hospital.district}, {hospital.state}\n\n"
             f"Please manage admissions or request diversion support via your dashboard:\n"
             f"{get_portal_base_url()}/hospitals/{hid}?tab=inventory\n\n"
-            f"ArogyaSetu Grid — Unified Critical Care & Hospital Command Network\n"
+            f"SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform\n"
             f"Support: pawanbussiness108@gmail.com"
         )
         self._enqueue_hospital_emails(

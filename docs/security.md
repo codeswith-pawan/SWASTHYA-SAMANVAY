@@ -1,12 +1,12 @@
 # Security Architecture & Operations Checklist
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)
 
 ---
 
 ## 1. Security Principles & Architecture
 
-ArogyaSetu Grid enforces defense-in-depth across every layer of the platform:
+SWASTHYA SAMANVAY enforces defense-in-depth across every layer of the platform:
 
 1. **Role-Based Access Control (RBAC):**
    - Four distinct administrative scopes: `HOSPITAL`, `DISTRICT_ADMIN`, `STATE_ADMIN`, and `CENTRAL_ADMIN`.

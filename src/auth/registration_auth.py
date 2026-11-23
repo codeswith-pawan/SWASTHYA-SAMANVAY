@@ -161,6 +161,14 @@ def require_reviewer_user(
             detail="Invalid or expired access token."
         ) from exc
 
+    sub = payload.get("sub")
+    iat = payload.get("iat")
+    if sub and is_user_session_revoked(sub, iat):
+        raise HTTPException(
+            status_code=401,
+            detail="Session has been revoked. Please log in again."
+        )
+
     role = payload.get("role")
     if role == "APPLICANT":
         raise HTTPException(
@@ -222,7 +230,16 @@ def get_caller_user_context(
             algorithms=[ALGORITHM],
             options={"require": ["exp", "sub"]},
         )
+        sub = payload.get("sub")
+        iat = payload.get("iat")
+        if sub and is_user_session_revoked(sub, iat):
+            raise HTTPException(
+                status_code=401,
+                detail="Session has been revoked. Please log in again."
+            )
         return payload
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=401,

@@ -165,8 +165,8 @@ export default function PortalSelectionPage() {
             <Lock className="w-3.5 h-3.5 text-[#008F83]" />
             <span className="text-[11px] font-medium hidden sm:inline">
               {isHindi
-                ? "आरोग्यसेतु ग्रिड • सुरक्षित स्वास्थ्य गेटवे"
-                : "ArogyaSetu Grid • Secured Health Gateway"}
+                ? "स्वास्थ्य समन्वय • सुरक्षित स्वास्थ्य गेटवे"
+                : "SWASTHYA SAMANVAY • Secured Health Gateway"}
             </span>
           </div>
         </div>

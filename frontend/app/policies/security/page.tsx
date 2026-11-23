@@ -87,7 +87,7 @@ export default function SecurityPolicyPage() {
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
             {isHindi
               ? "प्रत्येक अधिकृत उपयोगकर्ता को उनके प्रशासनिक दायित्व के अनुसार सख्त क्षेत्राधिकार में सीमित रखा जाता है। अस्पताल केवल अपने मरीज और बेड का डेटा देख सकते हैं, जिला अधिकारी केवल अपने जिले के अस्पतालों की समीक्षा कर सकते हैं, तथा राज्य एवं केंद्र अधिकारी समग्र विश्लेषिकी का अवलोकन करते हैं।"
-              : "Access to ArogyaSetu Grid is strictly partitioned by institutional hierarchy. Hospital personnel can only manipulate bed counters and referrals within their accredited facility; District CMOs are restricted to facilities within their administrative district; and State/Central Directorates possess aggregate telemetry privileges without cross-facility clinical record leakage."}
+              : "Access to SWASTHYA SAMANVAY is strictly partitioned by institutional hierarchy. Hospital personnel can only manipulate bed counters and referrals within their accredited facility; District CMOs are restricted to facilities within their administrative district; and State/Central Directorates possess aggregate telemetry privileges without cross-facility clinical record leakage."}
           </p>
           <ul className="space-y-2 text-xs text-slate-700 pt-2 border-t border-slate-100">
             <li className="flex items-start gap-2">

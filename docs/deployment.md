@@ -1,8 +1,8 @@
 # Production Deployment Guide
 
-**Project:** ArogyaSetu Grid — Unified Critical Care & Hospital Command Network (`SIH_Hospital_AI`)
+**Project:** SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform (`SIH_Hospital_AI`)
 
-This document outlines deployment architectures for hosting ArogyaSetu Grid on cloud platforms (Render + Vercel) or on containerized Linux servers (Docker Compose).
+This document outlines deployment architectures for hosting SWASTHYA SAMANVAY on cloud platforms (Render + Vercel) or on containerized Linux servers (Docker Compose).
 
 ---
 
@@ -27,7 +27,7 @@ The repository includes a ready-to-use Render Blueprint (`render.yaml`):
 ```yaml
 services:
   - type: web
-    name: arogyasetu-grid-api
+    name: swasthya-samanvay-grid-api
     runtime: python
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn src.api.main:app --host 0.0.0.0 --port $PORT"
@@ -36,18 +36,18 @@ services:
         value: production
       - key: DATABASE_URL
         fromDatabase:
-          name: arogyasetu-db
+          name: swasthya-samanvay-db
           property: connectionString
       - key: PORTAL_BASE_URL
-        value: https://arogyasetu-grid.vercel.app
+        value: https://swasthya-samanvay-grid.vercel.app
 ```
 
 ### 1.2 Vercel Frontend Deployment
 1. Connect the GitHub repository to Vercel.
 2. Set **Root Directory** to `frontend`.
 3. Set Environment Variables:
-   - `NEXT_PUBLIC_API_BASE_URL=https://arogyasetu-grid-api.onrender.com`
-   - `NEXT_PUBLIC_API_URL=https://arogyasetu-grid-api.onrender.com`
+   - `NEXT_PUBLIC_API_BASE_URL=https://swasthya-samanvay-grid-api.onrender.com`
+   - `NEXT_PUBLIC_API_URL=https://swasthya-samanvay-grid-api.onrender.com`
 4. Deploy.
 
 ---

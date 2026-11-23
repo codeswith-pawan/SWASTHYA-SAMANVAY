@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ArogyaSetu Grid | Unified Critical Care & Hospital Command Network",
+  title: "SWASTHYA SAMANVAY | Hospital Coordination & Referral Platform",
   description:
-    "Unified critical care telemetry, real-time bed & ICU reservation, and condition-based inter-hospital emergency referrals across accredited healthcare facilities.",
+    "A healthcare coordination platform for hospital resource visibility, bed management, patient referrals, and multi-level healthcare administration.",
 };
 
 export default function RootLayout({

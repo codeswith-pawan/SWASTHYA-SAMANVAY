@@ -206,7 +206,7 @@ export default function NetworkPage() {
               {isHindi ? "प्रत्यायन मानक" : "Network Admission Process"}
             </span>
             <h3 className="text-xl sm:text-2xl font-bold text-slate-900">
-              {isHindi ? "अस्पताल नेटवर्क में कैसे शामिल हों?" : "How Healthcare Facilities Join ArogyaSetu Grid"}
+              {isHindi ? "अस्पताल नेटवर्क में कैसे शामिल हों?" : "How Healthcare Facilities Join Swasthya Samanvay"}
             </h3>
             <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               {isHindi
