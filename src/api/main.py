@@ -135,6 +135,11 @@ async def lifespan(app_instance: FastAPI):
     from src.database.db_manager import validate_production_database_config
     validate_production_database_config()
     validate_production_redis_config()
+
+    # Automatically register all ORM models and ensure all tables (including verification_tokens) exist
+    from src.database.init_db import init_database
+    init_database()
+
     yield
 
 

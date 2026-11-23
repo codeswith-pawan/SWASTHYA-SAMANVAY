@@ -28,12 +28,22 @@ DEFAULT_PASSWORD = "Hospital@123"
 
 
 def get_target_db_url() -> str:
-    url = os.getenv("PREVIEW_DATABASE_URL") or DEFAULT_PREVIEW_URL
+    url = (
+        os.getenv("PREVIEW_DATABASE_URL")
+        or os.getenv("TARGET_DATABASE_URL")
+        or os.getenv("SEED_DATABASE_URL")
+        or DEFAULT_PREVIEW_URL
+    )
     # Strict safety assertions
     if "sih_hospital_dev" in url:
-        raise RuntimeError("CRITICAL SAFETY VIOLATION: Refusing to seed `sih_hospital_dev`! Target must be `sih_hospital_local_preview`.")
-    if "local_preview" not in url:
-        raise RuntimeError(f"CRITICAL SAFETY VIOLATION: Database URL must target a local preview database, got: {url}")
+        raise RuntimeError(
+            "CRITICAL SAFETY VIOLATION: Refusing to seed `sih_hospital_dev`! "
+            "Never target the core development database."
+        )
+    if "local_preview" not in url and not os.getenv("ALLOW_SEED_DEPLOYMENT"):
+        raise RuntimeError(
+            f"CRITICAL SAFETY VIOLATION: Database URL must target a local preview database or explicitly set ALLOW_SEED_DEPLOYMENT=1, got: {url}"
+        )
     return url
 
 
