@@ -107,8 +107,8 @@
   - Framework Preset: `Next.js`.
   - Root Directory: `frontend`.
 - [ ] **Configure Vercel Environment Variables:**
-  - `NEXT_PUBLIC_API_URL=https://swasthya-samanvay-api.onrender.com`
-  - `NEXT_PUBLIC_API_BASE_URL=https://swasthya-samanvay-api.onrender.com`
+  - `NEXT_PUBLIC_API_URL=https://swasthya-samanvay.onrender.com`
+  - `NEXT_PUBLIC_API_BASE_URL=https://swasthya-samanvay.onrender.com`
   - `NODE_ENV=production`
 - [ ] **Deploy Vercel Project:**
   - Confirm build compiles cleanly without errors.
@@ -122,22 +122,22 @@
 
 - [ ] **1. Test Backend Liveness Endpoint:**
   ```bash
-  curl -i https://swasthya-samanvay-api.onrender.com/health/live
+  curl -i https://swasthya-samanvay.onrender.com/health/live
   # Must return: HTTP 200 {"status": "alive"}
   ```
 - [ ] **2. Test Backend Readiness Endpoint:**
   ```bash
-  curl -i https://swasthya-samanvay-api.onrender.com/health/ready
+  curl -i https://swasthya-samanvay.onrender.com/health/ready
   # Must return: HTTP 200 with "ready": true
   ```
 - [ ] **3. Test Public Application Stats:**
   ```bash
-  curl -i https://swasthya-samanvay-api.onrender.com/api/registration/applications/stats/public
+  curl -i https://swasthya-samanvay.onrender.com/api/registration/applications/stats/public
   # Must return: HTTP 200 with JSON stats
   ```
 - [ ] **4. Test CORS Preflight Request:**
   ```bash
-  curl -I -X OPTIONS https://swasthya-samanvay-api.onrender.com/health \
+  curl -I -X OPTIONS https://swasthya-samanvay.onrender.com/health \
     -H "Origin: https://swasthya-samanvay.vercel.app" \
     -H "Access-Control-Request-Method: GET"
   # Must return: Access-Control-Allow-Origin: https://swasthya-samanvay.vercel.app

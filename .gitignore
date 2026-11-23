@@ -87,3 +87,20 @@ frontend/out/
 /SECURITY_CHECKLIST.md
 /SMTP_BREVO_SETUP.md
 /WORKER_OPERATIONS.md
+
+# Build outputs, logs, and type-checker caches
+*.log
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.sqlite
+*.sqlite3
+
+# IDE & Editor metadata
+.vscode/
+.idea/
+
+# AI-agent workspace artifacts and metadata
+.gemini/
+.antigravity/

@@ -11,7 +11,7 @@ The **SWASTHYA SAMANVAY** platform comprises three distinct operational tiers:
 ```mermaid
 flowchart TD
     Client["Browser / Client (Desktop & Mobile)"] -->|HTTPS / Next.js| Vercel["Frontend Tier: Vercel\nNext.js 16 + React 19\nswasthya-samanvay.vercel.app"]
-    Vercel -->|REST API / CORS| RenderAPI["Backend Tier: Render Web Service\nFastAPI (Python 3.11 / 3.14)\nswasthya-samanvay-api.onrender.com"]
+    Vercel -->|REST API / CORS| RenderAPI["Backend Tier: Render Web Service\nFastAPI (Python 3.11 / 3.14)\nswasthya-samanvay.onrender.com"]
     RenderAPI -->|TCP / SSL| Postgres["Database Tier: PostgreSQL 16+\n(Render PostgreSQL, Neon, or Supabase)"]
     RenderAPI -->|TCP / TLS| Redis["Cache & Distributed Revocation\n(Upstash Redis or Hosted Redis)"]
     RenderWorkers["Background Workers Tier\n(Outbox & Bed Expiry Workers)"] -->|Poll & Heartbeat| Postgres
@@ -37,8 +37,8 @@ Add the following environment variables under **Project Settings → Environment
 
 | Variable Name | Required | Example / Target Value | Description |
 | :--- | :--- | :--- | :--- |
-| `NEXT_PUBLIC_API_URL` | **Yes** | `https://swasthya-samanvay-api.onrender.com` | Base URL of your live Render backend API (no trailing slash). |
-| `NEXT_PUBLIC_API_BASE_URL` | Optional | `https://swasthya-samanvay-api.onrender.com` | Fallback alias for backend API base URL. |
+| `NEXT_PUBLIC_API_URL` | **Yes** | `https://swasthya-samanvay.onrender.com` | Base URL of your live Render backend API (no trailing slash). |
+| `NEXT_PUBLIC_API_BASE_URL` | Optional | `https://swasthya-samanvay.onrender.com` | Fallback alias for backend API base URL. |
 | `NODE_ENV` | Optional | `production` | Production environment flag. |
 
 ---
