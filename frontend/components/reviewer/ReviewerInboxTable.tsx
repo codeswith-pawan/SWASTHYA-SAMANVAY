@@ -58,37 +58,37 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
     switch (status) {
       case "APPROVED":
       case "PROVISIONED":
-        return "bg-emerald-50 text-[#0A9878] border-emerald-200";
+        return "bg-emerald-950/60 text-emerald-400 border-emerald-500/30";
       case "REJECTED":
-        return "bg-rose-50 text-[#D94B4B] border-rose-200";
+        return "bg-rose-950/60 text-rose-400 border-rose-500/30";
       case "CORRECTION_REQUIRED":
-        return "bg-amber-50 text-[#D99A27] border-amber-300";
+        return "bg-amber-950/60 text-amber-400 border-amber-500/30";
       case "SUBMITTED":
       case "UNDER_REVIEW":
-        return "bg-teal-50 text-[#008F83] border-teal-200";
+        return "bg-teal-950/60 text-teal-400 border-teal-500/30";
       case "DRAFT":
       default:
-        return "bg-slate-100 text-[#60738C] border-slate-200";
+        return "bg-slate-800 text-slate-400 border-slate-700";
     }
   };
 
   const getTypeBadge = (type: string) => {
     switch (type) {
       case "HOSPITAL":
-        return "bg-teal-50 text-[#008F83] border-teal-200";
+        return "bg-teal-950/60 text-teal-400 border-teal-500/30";
       case "DISTRICT":
-        return "bg-blue-50 text-[#0B2345] border-blue-200";
+        return "bg-blue-950/60 text-blue-400 border-blue-500/30";
       case "STATE":
-        return "bg-cyan-50 text-[#00A99D] border-cyan-200";
+        return "bg-cyan-950/60 text-cyan-400 border-cyan-500/30";
       default:
-        return "bg-slate-100 text-[#60738C] border-slate-200";
+        return "bg-slate-800 text-slate-400 border-slate-700";
     }
   };
 
   return (
-    <div className="gov-card bg-white border border-[#DCE5EF] overflow-hidden shadow-sm">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 overflow-hidden shadow-sm">
       {/* Top Controls Bar */}
-      <div className="p-4 sm:p-5 border-b border-[#DCE5EF] flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-white">
+      <div className="p-4 sm:p-5 border-b border-slate-800 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-slate-900/60">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
           <input
@@ -99,9 +99,9 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               setCurrentPage(1);
             }}
             placeholder="Search by application #, name, or jurisdiction..."
-            className="w-full rounded-xl border border-[#DCE5EF] bg-[#F4F8FC] px-3.5 py-2 pl-9 text-xs text-[#14243B] placeholder-[#60738C] outline-none focus:bg-white focus:border-[#008F83] focus:ring-4 focus:ring-[#008F83]/10 transition"
+            className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3.5 py-2 pl-9 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition"
           />
-          <Search className="w-4 h-4 text-[#60738C] absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-500 absolute left-3 top-2.5" />
         </div>
 
         {/* Filters */}
@@ -112,7 +112,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               onStatusFilterChange(e.target.value);
               setCurrentPage(1);
             }}
-            className="rounded-xl border border-[#DCE5EF] bg-white px-3 py-2 text-xs text-[#14243B] outline-none focus:border-[#008F83] transition"
+            className="rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 outline-none focus:border-teal-500 transition"
           >
             <option value="">All Statuses</option>
             <option value="SUBMITTED">Submitted</option>
@@ -128,7 +128,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               onStageFilterChange(e.target.value);
               setCurrentPage(1);
             }}
-            className="rounded-xl border border-[#DCE5EF] bg-white px-3 py-2 text-xs text-[#14243B] outline-none focus:border-[#008F83] transition"
+            className="rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 outline-none focus:border-teal-500 transition"
           >
             <option value="">All Stages</option>
             <option value="DISTRICT_REVIEW">District Review</option>
@@ -142,7 +142,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               onTypeFilterChange(e.target.value);
               setCurrentPage(1);
             }}
-            className="rounded-xl border border-[#DCE5EF] bg-white px-3 py-2 text-xs text-[#14243B] outline-none focus:border-[#008F83] transition"
+            className="rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-xs text-slate-200 outline-none focus:border-teal-500 transition"
           >
             <option value="">All Types</option>
             <option value="HOSPITAL">Hospital</option>
@@ -153,10 +153,10 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
           <button
             onClick={onRefresh}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-[#DCE5EF] bg-[#F4F8FC] px-3.5 py-2 text-xs font-semibold text-[#0B2345] hover:bg-slate-100 transition disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition disabled:opacity-50"
             title="Refresh application queue"
           >
-            <RotateCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#008F83]" : ""}`} />
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-teal-400" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
@@ -166,7 +166,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className="border-b border-[#DCE5EF] bg-[#F4F8FC] text-[11px] font-bold text-[#60738C] uppercase tracking-wider">
+            <tr className="border-b border-slate-800 bg-slate-950/60 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
               <th className="py-3.5 px-4">Application #</th>
               <th className="py-3.5 px-4">Applicant / Institution</th>
               <th className="py-3.5 px-4">Tier</th>
@@ -178,23 +178,23 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#DCE5EF]">
+          <tbody className="divide-y divide-slate-800/80">
             {loading ? (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-[#60738C]">
+                <td colSpan={9} className="py-12 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#008F83] border-t-transparent" />
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
                     <span className="font-medium text-xs">Loading reviewer queue...</span>
                   </div>
                 </td>
               </tr>
             ) : pagedApps.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-12 text-center text-[#60738C]">
+                <td colSpan={9} className="py-12 text-center text-slate-400">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <Inbox className="w-8 h-8 text-[#60738C]/60" />
-                    <span className="font-bold text-[#0B2345]">No applications match the selected criteria.</span>
-                    <p className="text-[11px] text-[#60738C] max-w-sm">
+                    <Inbox className="w-8 h-8 text-slate-600" />
+                    <span className="font-bold text-slate-200">No applications match the selected criteria.</span>
+                    <p className="text-[11px] text-slate-400 max-w-sm">
                       Check your filters or refresh the queue to view newly submitted applications in your jurisdiction.
                     </p>
                   </div>
@@ -204,22 +204,22 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
               pagedApps.map((app) => (
                 <tr
                   key={app.application_id}
-                  className="hover:bg-[#F4F8FC] transition group cursor-pointer"
+                  className="hover:bg-slate-800/50 transition group cursor-pointer"
                   onClick={() => onSelectApplication(app.application_id)}
                 >
-                  <td className="py-3.5 px-4 font-mono font-bold text-[#008F83]">
+                  <td className="py-3.5 px-4 font-mono font-bold text-teal-400">
                     {app.application_number}
                     {app.resubmission_version > 1 && (
-                      <span className="ml-1 text-[10px] text-amber-700 font-normal">
+                      <span className="ml-1 text-[10px] text-amber-400 font-normal">
                         (v{app.resubmission_version})
                       </span>
                     )}
                   </td>
                   <td className="py-3.5 px-4">
-                    <p className="font-bold text-[#0B2345] group-hover:text-[#008F83] transition">
+                    <p className="font-bold text-slate-100 group-hover:text-teal-300 transition">
                       {app.applicant_name}
                     </p>
-                    <p className="text-[11px] text-[#60738C] truncate max-w-xs">{app.applicant_email}</p>
+                    <p className="text-[11px] text-slate-400 truncate max-w-xs">{app.applicant_email}</p>
                   </td>
                   <td className="py-3.5 px-4">
                     <span
@@ -230,9 +230,9 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
                       {app.applicant_type}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-[#14243B]">
+                  <td className="py-3.5 px-4 text-slate-300">
                     {app.district ? `${app.district}, ` : ""}
-                    <strong className="text-[#0B2345] font-semibold">{app.state}</strong>
+                    <strong className="text-slate-100 font-semibold">{app.state}</strong>
                   </td>
                   <td className="py-3.5 px-4">
                     <span
@@ -243,19 +243,19 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
                       {app.status.replace(/_/g, " ")}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 font-semibold text-[#60738C]">
+                  <td className="py-3.5 px-4 font-semibold text-slate-300">
                     {app.current_stage.replace(/_/g, " ")}
                   </td>
                   <td className="py-3.5 px-4 text-center">
                     <span
                       className={`font-bold ${
-                        app.pending_documents_count > 0 ? "text-amber-700" : "text-[#0A9878]"
+                        app.pending_documents_count > 0 ? "text-amber-400" : "text-emerald-400"
                       }`}
                     >
                       {Math.max(0, app.documents_count - app.pending_documents_count)}/{app.documents_count}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-[#60738C] font-mono text-[11px]">
+                  <td className="py-3.5 px-4 text-slate-400 font-mono text-[11px]">
                     {app.submitted_at ? formatDateTime(app.submitted_at) : "Draft"}
                   </td>
                   <td className="py-3.5 px-4 text-right">
@@ -265,7 +265,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
                         e.stopPropagation();
                         onSelectApplication(app.application_id);
                       }}
-                      className="inline-flex items-center gap-1 rounded-lg bg-teal-50 border border-teal-200 px-3 py-1.5 text-xs font-bold text-[#008F83] hover:bg-[#008F83] hover:text-white transition shadow-2xs"
+                      className="inline-flex items-center gap-1 rounded-lg bg-teal-950/60 border border-teal-500/30 px-3 py-1.5 text-xs font-bold text-teal-300 hover:bg-teal-600 hover:text-white transition shadow-2xs"
                     >
                       <span>Inspect Dossier</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -280,26 +280,26 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
 
       {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div className="p-4 border-t border-[#DCE5EF] flex items-center justify-between text-xs text-[#60738C] bg-white">
+        <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 bg-slate-950/60">
           <span>
-            Showing page <strong className="text-[#0B2345]">{currentPage}</strong> of{" "}
-            <strong className="text-[#0B2345]">{totalPages}</strong> ({filtered.length} total)
+            Showing page <strong className="text-slate-200">{currentPage}</strong> of{" "}
+            <strong className="text-slate-200">{totalPages}</strong> ({filtered.length} total)
           </span>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-[#DCE5EF] text-[#60738C] hover:bg-[#F4F8FC] disabled:opacity-40 transition"
+              className="p-1.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-40 transition"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-mono text-xs font-semibold px-2">{currentPage}</span>
+            <span className="font-mono text-xs font-semibold px-2 text-slate-200">{currentPage}</span>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-[#DCE5EF] text-[#60738C] hover:bg-[#F4F8FC] disabled:opacity-40 transition"
+              className="p-1.5 rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800 disabled:opacity-40 transition"
               aria-label="Next page"
             >
               <ChevronRight className="w-4 h-4" />

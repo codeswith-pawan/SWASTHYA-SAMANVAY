@@ -4,7 +4,7 @@ AI Powered Smart Hospital Referral System - Phase 1 Task 1D
 """
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 # ============================================================
@@ -310,9 +310,18 @@ class ReviewDecisionResponse(BaseModel):
 
 
 class ActivateAccountRequest(BaseModel):
-    activation_token: str = Field(..., min_length=16, description="One-time activation token")
+    activation_token: Optional[str] = Field(None, description="One-time activation token")
+    token: Optional[str] = Field(None, description="Alias for activation_token")
     password: str = Field(..., min_length=8, description="New secure password meeting complexity criteria")
     confirm_password: str = Field(..., min_length=8, description="Password confirmation")
+
+    @model_validator(mode="before")
+    @classmethod
+    def populate_token_alias(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            if not data.get("activation_token") and data.get("token"):
+                data["activation_token"] = data["token"]
+        return data
 
 
 class ActivateAccountResponse(BaseModel):

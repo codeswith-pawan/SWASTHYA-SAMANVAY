@@ -310,6 +310,7 @@ def applicant_logout(
 
 
 @router.post("/auth/activate", response_model=ActivateAccountResponse)
+@router.post("/account/activate", response_model=ActivateAccountResponse)
 def activate_account(
     payload: ActivateAccountRequest,
     db: Session = Depends(get_db_session),
@@ -1016,6 +1017,7 @@ def track_application_public(
 # ============================================================
 
 @router.get("/review/applications", response_model=ReviewerApplicationListResponse)
+@router.get("/applications", response_model=ReviewerApplicationListResponse)
 def list_reviewer_applications(
     status_filter: Optional[str] = Query(default=None, alias="status"),
     stage_filter: Optional[str] = Query(default=None, alias="stage"),
@@ -1027,33 +1029,39 @@ def list_reviewer_applications(
 ):
     """
     View assigned/pending applications filtered strictly by reviewer's geographic jurisdiction and role:
-    - DISTRICT_ADMIN: only applications in reviewer's state and district. Default stage: DISTRICT_REVIEW.
-    - STATE_ADMIN: only applications in reviewer's state. Default stage: STATE_REVIEW.
-    - CENTRAL_ADMIN: national applications. Default stage: CENTRAL_REVIEW.
+    - DISTRICT_ADMIN: only applications in reviewer's state and district.
+    - STATE_ADMIN: only applications in reviewer's state (both STATE_REVIEW and in-progress DISTRICT_REVIEW).
+    - CENTRAL_ADMIN: national applications.
     """
     role = reviewer["role"]
     query = db.query(RegistrationApplication)
 
-    # Enforce geographic scoping
+    # Reviewers only review submitted or active applications, never incomplete drafts
+    query = query.filter(RegistrationApplication.status != "DRAFT")
+
+    # Enforce geographic scoping with DB fallback if token lacked state/district
+    reviewer_state = (reviewer.get("state") or "").strip().lower()
+    reviewer_district = (reviewer.get("district") or "").strip().lower()
+    if (not reviewer_state or (role == "DISTRICT_ADMIN" and not reviewer_district)) and reviewer.get("user_id"):
+        from src.database.pg_models import User
+        db_u = db.query(User).filter(User.user_id == reviewer["user_id"]).first()
+        if db_u:
+            if not reviewer_state and db_u.state:
+                reviewer_state = db_u.state.strip().lower()
+            if not reviewer_district and db_u.district:
+                reviewer_district = db_u.district.strip().lower()
+
     if role == "DISTRICT_ADMIN":
-        reviewer_state = (reviewer.get("state") or "").strip().lower()
-        reviewer_district = (reviewer.get("district") or "").strip().lower()
         query = query.filter(
             func.lower(func.trim(RegistrationApplication.state)) == reviewer_state,
             func.lower(func.trim(RegistrationApplication.district)) == reviewer_district,
         )
-        if not stage_filter:
-            stage_filter = "DISTRICT_REVIEW"
     elif role == "STATE_ADMIN":
-        reviewer_state = (reviewer.get("state") or "").strip().lower()
         query = query.filter(
             func.lower(func.trim(RegistrationApplication.state)) == reviewer_state,
         )
-        if not stage_filter:
-            stage_filter = "STATE_REVIEW"
     elif role == "CENTRAL_ADMIN":
-        if not stage_filter:
-            stage_filter = "CENTRAL_REVIEW"
+        pass
 
     if stage_filter:
         query = query.filter(RegistrationApplication.current_stage == stage_filter)
@@ -1092,7 +1100,62 @@ def list_reviewer_applications(
     return ReviewerApplicationListResponse(total=total, applications=items)
 
 
+@router.get("/applications/notifications")
+def get_applicant_notifications_endpoint(
+    unread_only: bool = Query(default=False),
+    limit: int = Query(default=50, ge=1, le=100),
+    applicant: dict = Depends(require_applicant_user),
+    db: Session = Depends(get_db_session),
+):
+    """
+    Retrieve in-app notifications for the authenticated applicant's application dossier.
+    """
+    from src.database.pg_repository import PgReferralRepository
+    repo = PgReferralRepository(db)
+    return repo.get_applicant_notifications(
+        applicant["application_id"], unread_only=unread_only, limit=limit
+    )
+
+
+@router.post("/applications/notifications/{notification_id}/read")
+def mark_applicant_notification_read_endpoint(
+    notification_id: int,
+    applicant: dict = Depends(require_applicant_user),
+    db: Session = Depends(get_db_session),
+):
+    """
+    Mark an applicant notification as read.
+    Enforces isolation: applicant can only mark their own notifications.
+    """
+    from src.database.pg_repository import PgReferralRepository
+    repo = PgReferralRepository(db)
+    success = repo.mark_applicant_notification_as_read(
+        notification_id, applicant["application_id"]
+    )
+    if not success:
+        raise HTTPException(
+            status_code=403,
+            detail="Unauthorized or notification not found.",
+        )
+    return {"success": True}
+
+
+@router.post("/applications/notifications/read-all")
+def mark_all_applicant_notifications_read_endpoint(
+    applicant: dict = Depends(require_applicant_user),
+    db: Session = Depends(get_db_session),
+):
+    """
+    Mark all unread notifications for the authenticated applicant as read.
+    """
+    from src.database.pg_repository import PgReferralRepository
+    repo = PgReferralRepository(db)
+    count = repo.mark_all_applicant_notifications_read(applicant["application_id"])
+    return {"success": True, "marked_count": count}
+
+
 @router.get("/review/applications/{application_id}")
+@router.get("/applications/{application_id}")
 def get_reviewer_application_detail(
     application_id: str,
     reviewer: dict = Depends(require_reviewer_user),
@@ -1114,11 +1177,20 @@ def get_reviewer_application_detail(
         raise HTTPException(status_code=404, detail="Application not found.")
 
     role = reviewer["role"]
+    rev_state = (reviewer.get("state") or "").strip().lower()
+    rev_district = (reviewer.get("district") or "").strip().lower()
+    if (not rev_state or (role == "DISTRICT_ADMIN" and not rev_district)) and reviewer.get("user_id"):
+        from src.database.pg_models import User
+        db_u = db.query(User).filter(User.user_id == reviewer["user_id"]).first()
+        if db_u:
+            if not rev_state and db_u.state:
+                rev_state = db_u.state.strip().lower()
+            if not rev_district and db_u.district:
+                rev_district = db_u.district.strip().lower()
+
     if role == "DISTRICT_ADMIN":
         app_state = (app.state or "").strip().lower()
         app_district = (app.district or "").strip().lower()
-        rev_state = (reviewer.get("state") or "").strip().lower()
-        rev_district = (reviewer.get("district") or "").strip().lower()
         if app_state != rev_state or app_district != rev_district:
             raise HTTPException(
                 status_code=403,
@@ -1126,7 +1198,6 @@ def get_reviewer_application_detail(
             )
     elif role == "STATE_ADMIN":
         app_state = (app.state or "").strip().lower()
-        rev_state = (reviewer.get("state") or "").strip().lower()
         if app_state != rev_state:
             raise HTTPException(
                 status_code=403,
@@ -1186,6 +1257,7 @@ def get_reviewer_application_detail(
 
 
 @router.post("/review/documents/{document_id}/verify")
+@router.post("/documents/{document_id}/verify")
 def verify_document(
     document_id: str,
     payload: VerifyDocumentRequest,
@@ -1220,6 +1292,7 @@ def verify_document(
 
 
 @router.post("/review/applications/{application_id}/decision", response_model=ReviewDecisionResponse)
+@router.post("/applications/{application_id}/decision", response_model=ReviewDecisionResponse)
 def execute_review_decision(
     application_id: str,
     payload: ReviewDecisionRequest,
@@ -1269,6 +1342,7 @@ def execute_review_decision(
 
 
 @router.post("/review/applications/{application_id}/request-correction")
+@router.post("/applications/{application_id}/request-correction")
 def request_application_correction(
     application_id: str,
     payload: RequestCorrectionRequest,
@@ -1358,59 +1432,5 @@ def mark_all_reviewer_notifications_read_endpoint(
     from src.database.pg_repository import PgReferralRepository
     repo = PgReferralRepository(db)
     count = repo.mark_all_reviewer_notifications_read(reviewer)
-    return {"success": True, "marked_count": count}
-
-
-@router.get("/applications/notifications")
-def get_applicant_notifications_endpoint(
-    unread_only: bool = Query(default=False),
-    limit: int = Query(default=50, ge=1, le=100),
-    applicant: dict = Depends(require_applicant_user),
-    db: Session = Depends(get_db_session),
-):
-    """
-    Retrieve in-app notifications for the authenticated applicant's application dossier.
-    """
-    from src.database.pg_repository import PgReferralRepository
-    repo = PgReferralRepository(db)
-    return repo.get_applicant_notifications(
-        applicant["application_id"], unread_only=unread_only, limit=limit
-    )
-
-
-@router.post("/applications/notifications/{notification_id}/read")
-def mark_applicant_notification_read_endpoint(
-    notification_id: int,
-    applicant: dict = Depends(require_applicant_user),
-    db: Session = Depends(get_db_session),
-):
-    """
-    Mark an applicant notification as read.
-    Enforces isolation: applicant can only mark their own notifications.
-    """
-    from src.database.pg_repository import PgReferralRepository
-    repo = PgReferralRepository(db)
-    success = repo.mark_applicant_notification_as_read(
-        notification_id, applicant["application_id"]
-    )
-    if not success:
-        raise HTTPException(
-            status_code=403,
-            detail="Unauthorized or notification not found.",
-        )
-    return {"success": True}
-
-
-@router.post("/applications/notifications/read-all")
-def mark_all_applicant_notifications_read_endpoint(
-    applicant: dict = Depends(require_applicant_user),
-    db: Session = Depends(get_db_session),
-):
-    """
-    Mark all unread notifications for the authenticated applicant as read.
-    """
-    from src.database.pg_repository import PgReferralRepository
-    repo = PgReferralRepository(db)
-    count = repo.mark_all_applicant_notifications_read(applicant["application_id"])
     return {"success": True, "marked_count": count}
 

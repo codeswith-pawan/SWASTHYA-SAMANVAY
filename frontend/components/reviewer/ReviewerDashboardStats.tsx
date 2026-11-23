@@ -43,14 +43,14 @@ export const ReviewerDashboardStats: React.FC<ReviewerDashboardStatsProps> = ({
       label: "Total Queue Applications",
       value: totalCount,
       icon: ClipboardList,
-      color: "text-[#0B2345] bg-blue-50 border-blue-200",
+      color: "text-blue-400 bg-blue-950/40 border-blue-500/30",
       sub: "In reviewer jurisdiction",
     },
     {
       label: "Awaiting Action",
       value: awaitingMyAction,
       icon: Zap,
-      color: "text-amber-800 bg-amber-50 border-amber-300",
+      color: "text-amber-400 bg-amber-950/40 border-amber-500/30",
       sub: `Pending at ${myActionStage.replace(/_/g, " ")}`,
       highlight: true,
     },
@@ -58,21 +58,21 @@ export const ReviewerDashboardStats: React.FC<ReviewerDashboardStatsProps> = ({
       label: "Under Active Review",
       value: pendingCount,
       icon: Clock,
-      color: "text-[#008F83] bg-teal-50 border-teal-200",
+      color: "text-teal-400 bg-teal-950/40 border-teal-500/30",
       sub: "Processing through workflow",
     },
     {
       label: "Correction Required",
       value: correctionCount,
       icon: AlertTriangle,
-      color: "text-rose-800 bg-rose-50 border-rose-200",
+      color: "text-rose-400 bg-rose-950/40 border-rose-500/30",
       sub: "Awaiting applicant resubmission",
     },
     {
       label: "Approved & Cleared",
       value: approvedCount,
       icon: CheckCircle2,
-      color: "text-[#0A9878] bg-emerald-50 border-emerald-200",
+      color: "text-emerald-400 bg-emerald-950/40 border-emerald-500/30",
       sub: "Provisioned or forwarded",
     },
   ];
@@ -84,14 +84,14 @@ export const ReviewerDashboardStats: React.FC<ReviewerDashboardStatsProps> = ({
         return (
           <div
             key={idx}
-            className={`gov-card p-4 sm:p-5 flex flex-col justify-between transition-all bg-white border ${
+            className={`rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all bg-slate-900/90 border ${
               s.highlight
-                ? "border-amber-400 ring-2 ring-amber-400/20 shadow-sm"
-                : "border-[#DCE5EF]"
+                ? "border-amber-500/40 ring-1 ring-amber-500/20 shadow-sm"
+                : "border-slate-800 shadow-sm"
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#60738C] leading-tight">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 leading-tight">
                 {s.label}
               </span>
               <div className={`p-2 rounded-xl border ${s.color}`}>
@@ -100,10 +100,10 @@ export const ReviewerDashboardStats: React.FC<ReviewerDashboardStatsProps> = ({
             </div>
 
             <div className="mt-3">
-              <span className="text-2xl sm:text-3xl font-extrabold text-[#0B2345] tracking-tight">
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
                 {s.value}
               </span>
-              <p className="text-[10px] sm:text-[11px] text-[#60738C] mt-1 font-medium truncate">
+              <p className="text-[10px] sm:text-[11px] text-slate-400 mt-1 font-medium truncate">
                 {s.sub}
               </p>
             </div>

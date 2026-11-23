@@ -229,7 +229,8 @@ def test_otp_email_delivery_via_configured_email_provider(test_db_session, monke
     # Verify email was captured by active provider
     last_email = sim_email.get_last_email(target_email)
     assert last_email is not None
-    assert "Your Verification Code (Portal Registration)" in last_email["subject"]
+    assert "Your Swasthya Samanvay Verification Code" in last_email["subject"]
+    assert "Portal Registration" in last_email["subject"]
     assert "Your single-use 6-digit verification code is:" in last_email["body_text"]
 
     # Extract 6-digit OTP from body text
@@ -500,7 +501,8 @@ def test_get_otp_provider_dynamic_resolution_and_default_routing(test_db_session
     # Email provider captured the OTP email
     last_email = sim_email.get_last_email(target_email)
     assert last_email is not None
-    assert "Your Verification Code (Portal Registration)" in last_email["subject"]
+    assert "Your Swasthya Samanvay Verification Code" in last_email["subject"]
+    assert "Portal Registration" in last_email["subject"]
 
     # Reset provider
     set_otp_provider(None)

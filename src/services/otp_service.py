@@ -122,7 +122,7 @@ class ConfigurableOTPProvider(BaseOTPProvider):
                 "PORTAL_ACCESS_OTP": "Portal Access",
             }
             purpose_label = purpose_labels.get(purpose, purpose)
-            subject = f"Your Verification Code ({purpose_label}) - SWASTHYA SAMANVAY"
+            subject = f"Your Swasthya Samanvay Verification Code - {purpose_label}"
             body_text = f"""Dear User,
 
 Your single-use 6-digit verification code is: {otp}
@@ -133,14 +133,31 @@ It is valid for 10 minutes and can only be used once.
 For security reasons, do not share this verification code with anyone.
 
 Regards,
-SWASTHYA SAMANVAY — Hospital Coordination & Referral Platform
+Swasthya Samanvay Support Desk
+Ministry of Health & Family Welfare
 Support: pawanbussiness108@gmail.com
 """
+            body_html = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 500px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #0f172a; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 18px; font-weight: 700;">SWASTHYA SAMANVAY</h1>
+    <p style="color: #94a3b8; margin: 4px 0 0; font-size: 12px;">National Health Network Verification</p>
+  </div>
+  <div style="background-color: #ffffff; padding: 28px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px; text-align: center;">
+    <p style="font-size: 14px; color: #475569; margin-top: 0;">Your single-use verification code for <strong>{purpose_label}</strong> is:</p>
+    <div style="font-size: 32px; font-weight: 800; letter-spacing: 6px; color: #0d9488; margin: 20px 0; padding: 12px; background: #f0fdfa; border-radius: 8px; border: 1px dashed #99f6e4;">{otp}</div>
+    <p style="font-size: 13px; color: #64748b; margin-bottom: 0;">This code is valid for 10 minutes and can only be used once.<br>For security, never share this code with anyone.</p>
+  </div>
+</body>
+</html>"""
             try:
                 success = email_provider.send_email(
                     to_email=contact_target,
                     subject=subject,
                     body_text=body_text,
+                    body_html=body_html,
                 )
                 if not success:
                     logger.error("Email provider returned False delivering OTP to %s", masked_target)

@@ -36,33 +36,33 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
       case "APPROVED":
       case "PROVISIONED":
         return {
-          bg: "bg-emerald-50 border-emerald-200 text-emerald-700",
+          bg: "bg-emerald-950/60 border-emerald-500/30 text-emerald-400",
           label: "Approved & Provisioned",
           icon: "✓",
         };
       case "REJECTED":
         return {
-          bg: "bg-rose-50 border-rose-200 text-rose-700",
+          bg: "bg-rose-950/60 border-rose-500/30 text-rose-400",
           label: "Application Rejected",
           icon: "✕",
         };
       case "CORRECTION_REQUIRED":
         return {
-          bg: "bg-amber-50 border-amber-200 text-amber-700",
+          bg: "bg-amber-950/60 border-amber-500/30 text-amber-400",
           label: `Correction Required (v${resubmissionVersion})`,
           icon: "⚠",
         };
       case "SUBMITTED":
       case "UNDER_REVIEW":
         return {
-          bg: "bg-indigo-50 border-indigo-200 text-indigo-700",
+          bg: "bg-teal-950/60 border-teal-500/30 text-teal-400",
           label: "Under Active Review",
           icon: "⟳",
         };
       case "DRAFT":
       default:
         return {
-          bg: "bg-slate-100 border-slate-200 text-slate-600",
+          bg: "bg-slate-800 border-slate-700 text-slate-400",
           label: "Draft - Pending Submission",
           icon: "✎",
         };
@@ -72,12 +72,12 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
   const badge = getStatusBadge();
 
   return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-5 sm:p-6 shadow-[0_4px_20px_rgb(15,23,42,0.04)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/90 backdrop-blur-sm p-5 sm:p-6 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-900">Application Verification Progress</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Current Stage: <span className="text-slate-800 font-semibold">{currentStage.replace(/_/g, " ")}</span>
+          <h3 className="text-sm font-bold text-slate-100">Application Verification Progress</h3>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Current Stage: <span className="text-teal-400 font-semibold">{currentStage.replace(/_/g, " ")}</span>
           </p>
         </div>
         <div
@@ -114,12 +114,12 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
               <div
                 className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold border transition ${
                   stepState === "completed"
-                    ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
+                    ? "bg-emerald-600 border-emerald-600 text-white shadow-sm"
                     : stepState === "current"
-                    ? "bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/30 ring-4 ring-indigo-500/15"
+                    ? "bg-teal-600 border-teal-600 text-white shadow-md shadow-teal-600/30 ring-4 ring-teal-500/15"
                     : stepState === "alert"
-                    ? "bg-amber-500 border-amber-500 text-white shadow-sm"
-                    : "bg-slate-100 border-slate-200 text-slate-400"
+                    ? "bg-amber-600 border-amber-600 text-white shadow-sm"
+                    : "bg-slate-950/60 border-slate-800 text-slate-500"
                 }`}
               >
                 {stepState === "completed" ? (
@@ -133,12 +133,12 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
               <span
                 className={`mt-2 text-[11px] leading-tight font-medium ${
                   stepState === "current"
-                    ? "text-indigo-700 font-bold"
+                    ? "text-teal-400 font-bold"
                     : stepState === "completed"
-                    ? "text-emerald-700 font-semibold"
+                    ? "text-emerald-400 font-semibold"
                     : stepState === "alert"
-                    ? "text-amber-700 font-semibold"
-                    : "text-slate-400"
+                    ? "text-amber-400 font-semibold"
+                    : "text-slate-500"
                 }`}
               >
                 {stage.label}
@@ -150,34 +150,34 @@ export const ApplicationTimeline: React.FC<ApplicationTimelineProps> = ({
 
       {/* Milestones Log List */}
       {milestones && milestones.length > 0 && (
-        <div className="mt-6 border-t border-slate-100 pt-5">
-          <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">
+        <div className="mt-6 border-t border-slate-800 pt-5">
+          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">
             Milestone Audit History ({milestones.length})
           </h4>
           <div className="space-y-2.5">
             {milestones.map((m, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-xs"
+                className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs"
               >
-                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-[10px] font-bold">
+                <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-950 border border-teal-800 text-teal-400 text-[10px] font-bold">
                   ●
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center justify-between gap-1">
-                    <span className="font-bold text-slate-800">
+                    <span className="font-bold text-slate-100">
                       {m.action ? m.action.replace(/_/g, " ") : m.stage}
                     </span>
                     {m.timestamp && (
-                      <span className="text-[11px] text-slate-500 font-mono">
+                      <span className="text-[11px] text-slate-400 font-mono">
                         {new Date(m.timestamp).toLocaleString()}
                       </span>
                     )}
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-500">
-                    <span>Stage: <strong className="text-slate-700">{m.stage}</strong></span>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                    <span>Stage: <strong className="text-slate-200">{m.stage}</strong></span>
                     <span>•</span>
-                    <span>Status: <strong className="text-slate-700">{m.status}</strong></span>
+                    <span>Status: <strong className="text-slate-200">{m.status}</strong></span>
                   </div>
                 </div>
               </div>

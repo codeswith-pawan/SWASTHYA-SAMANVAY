@@ -358,7 +358,7 @@ class MailjetEmailProvider(BaseEmailProvider):
             sender_name
             or os.getenv("SMTP_SENDER_NAME")
             or os.getenv("MAILJET_SENDER_NAME")
-            or "SWASTHYA SAMANVAY"
+            or "Swasthya Samanvay Portal"
         ).strip()
 
         self.api_url = (
@@ -391,7 +391,11 @@ class MailjetEmailProvider(BaseEmailProvider):
         message: Dict[str, Any] = {
             "From": {
                 "Email": self.sender,
-                "Name": self.sender_name,
+                "Name": self.sender_name or "Swasthya Samanvay Portal",
+            },
+            "ReplyTo": {
+                "Email": self.sender,
+                "Name": "Swasthya Samanvay Support",
             },
             "To": [
                 {
@@ -501,13 +505,14 @@ class MailjetEmailProvider(BaseEmailProvider):
         role_title: str,
         application_number: str,
     ) -> bool:
-        subject = f"Official Portal Account Activation: {role_title} ({application_number}) - SWASTHYA SAMANVAY"
+        account_type = "Hospital" if "Hospital" in role_title else "Healthcare"
+        subject = f"Activate Your Swasthya Samanvay {account_type} Account ({application_number})"
 
         body_text = f"""Dear {recipient_name},
 
 Your registration application ({application_number}) has received final administrative approval.
 
-An official operational account ({role_title}) has been provisioned for you.
+An official operational account ({role_title}) has been provisioned for your facility.
 
 To activate your account and establish your secure password, please visit the link below:
 {activation_link}
@@ -516,7 +521,8 @@ This activation link is one-time use and will expire in 72 hours.
 For security reasons, do not share this link with anyone.
 
 Regards,
-SWASTHYA SAMANVAY - Hospital Coordination & Referral Platform
+Swasthya Samanvay Support Desk
+Ministry of Health & Family Welfare
 Support: {self.sender}
 """
 
@@ -524,19 +530,19 @@ Support: {self.sender}
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background-color: #0f172a; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-    <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 0.5px;">SWASTHYA SAMANVAY</h1>
-    <p style="color: #94a3b8; margin: 4px 0 0; font-size: 13px;">Hospital Coordination & Referral Platform</p>
+  <div style="background-color: #0f172a; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+    <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px;">SWASTHYA SAMANVAY</h1>
+    <p style="color: #94a3b8; margin: 6px 0 0; font-size: 13px;">National Emergency Health Referral Network</p>
   </div>
-  <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-    <p style="font-size: 16px;">Dear <strong>{recipient_name}</strong>,</p>
+  <div style="background-color: #ffffff; padding: 32px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
+    <p style="font-size: 16px; margin-top: 0;">Dear <strong>{recipient_name}</strong>,</p>
     <p>Your registration application (<strong>{application_number}</strong>) has received final administrative approval.</p>
-    <p>An official operational account (<strong>{role_title}</strong>) has been provisioned for you.</p>
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="{activation_link}" style="background-color: #2563eb; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">Activate Your Account</a>
+    <p>An official operational account (<strong>{role_title}</strong>) has been provisioned for your facility.</p>
+    <div style="text-align: center; margin: 28px 0;">
+      <a href="{activation_link}" style="background-color: #0d9488; color: #ffffff; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block;">Activate Your Account</a>
     </div>
-    <p style="font-size: 13px; color: #64748b;">Or copy and paste this link in your browser:<br><span style="color: #2563eb; word-break: break-all;">{activation_link}</span></p>
-    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+    <p style="font-size: 13px; color: #64748b; line-height: 1.5;">Or copy and paste this link in your browser:<br><span style="color: #0d9488; word-break: break-all;">{activation_link}</span></p>
+    <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
     <p style="font-size: 12px; color: #94a3b8; margin: 0;">This activation link is one-time use and will expire in 72 hours.<br>For security reasons, do not share this link with anyone.</p>
   </div>
 </body>

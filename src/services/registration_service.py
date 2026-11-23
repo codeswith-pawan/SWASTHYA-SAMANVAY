@@ -878,6 +878,15 @@ class RegistrationService:
             # Geographic jurisdiction check (case-insensitive and whitespace-stripped)
             rev_state = (reviewer.get("state") or "").strip().lower()
             rev_district = (reviewer.get("district") or "").strip().lower()
+            if (not rev_state or not rev_district) and reviewer.get("user_id"):
+                from src.database.pg_models import User
+                db_u = self.session.query(User).filter(User.user_id == reviewer["user_id"]).first()
+                if db_u:
+                    if not rev_state and db_u.state:
+                        rev_state = db_u.state.strip().lower()
+                    if not rev_district and db_u.district:
+                        rev_district = db_u.district.strip().lower()
+
             app_state = (app.state or "").strip().lower()
             app_district = (app.district or "").strip().lower()
             if rev_state != app_state or rev_district != app_district:
@@ -892,6 +901,11 @@ class RegistrationService:
                     f"Only STATE_ADMIN can review at STATE_REVIEW stage. Received role: '{reviewer_role}'."
                 )
             rev_state = (reviewer.get("state") or "").strip().lower()
+            if not rev_state and reviewer.get("user_id"):
+                from src.database.pg_models import User
+                db_u = self.session.query(User).filter(User.user_id == reviewer["user_id"]).first()
+                if db_u and db_u.state:
+                    rev_state = db_u.state.strip().lower()
             app_state = (app.state or "").strip().lower()
             if rev_state != app_state:
                 raise GeographicAccessError(
