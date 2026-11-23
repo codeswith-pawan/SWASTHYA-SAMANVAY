@@ -1579,6 +1579,20 @@ def seed_database():
         now = datetime.now(timezone.utc)
         default_pwd_hash = hash_password(DEFAULT_PASSWORD)
 
+        # Ensure reference roles exist before provisioning users
+        cur.execute(
+            """
+            INSERT INTO roles (id, description, created_at)
+            VALUES 
+                ('HOSPITAL', 'Hospital Staff', %s),
+                ('DISTRICT_ADMIN', 'District Admin', %s),
+                ('STATE_ADMIN', 'State Admin', %s),
+                ('CENTRAL_ADMIN', 'Central Admin', %s)
+            ON CONFLICT (id) DO NOTHING;
+            """,
+            (now, now, now, now)
+        )
+
         # ----------------------------------------------------------------------
         # 1. Update Originating Facility GH99927 (Purnea Hospital) Coordinates
         # ----------------------------------------------------------------------

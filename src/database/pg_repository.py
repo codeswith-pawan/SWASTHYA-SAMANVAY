@@ -137,6 +137,16 @@ class PgReferralRepository:
         pat = self.session.execute(
             select(Patient).where(Patient.patient_id == patient_id)
         ).scalar_one_or_none()
+        if not pat:
+            pat = Patient(
+                patient_id=patient_id,
+                name=f"Patient {patient_id}",
+                age=45,
+                gender="Unknown",
+                created_at=now,
+            )
+            self.session.add(pat)
+            self.session.flush()
 
         # 2. Validate or auto-provision source hospital
         from_hosp = self.session.execute(

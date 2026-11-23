@@ -67,8 +67,8 @@ def test_init_database_creates_all_tables_including_verification_tokens():
         assert tbl in table_names, f"Expected table '{tbl}' was not created in database!"
 
 
-def test_baseline_roles_seeded_on_empty_database():
-    """Verify that core reference roles are auto-seeded on initialization."""
+def test_baseline_tables_remain_clean_and_empty_on_startup():
+    """Verify that table schemas are created but all data tables remain completely empty on startup."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -77,11 +77,9 @@ def test_baseline_roles_seeded_on_empty_database():
     init_database(engine)
     
     with engine.connect() as conn:
-        result = conn.execute(text("SELECT id FROM roles ORDER BY id")).fetchall()
-        role_ids = {r[0] for r in result}
-        
-    expected_roles = {"HOSPITAL", "DISTRICT_ADMIN", "STATE_ADMIN", "CENTRAL_ADMIN"}
-    assert expected_roles.issubset(role_ids), f"Expected roles {expected_roles} but found {role_ids}"
+        for tbl in ["users", "hospitals", "roles", "referrals", "beds", "registration_applications"]:
+            cnt = conn.execute(text(f"SELECT count(*) FROM {tbl}")).scalar()
+            assert cnt == 0, f"Table '{tbl}' was expected to be empty on startup, but found {cnt} rows!"
 
 
 def test_src_models_and_src_db_module_exports():
@@ -105,8 +103,8 @@ def test_fastapi_lifespan_startup_initializes_database():
         assert resp.status_code == 200
 
 
-def test_baseline_reviewer_accounts_seeded_on_empty_database():
-    """Verify that default district, state, and central reviewer accounts are seeded on database initialization."""
+def test_no_reviewer_or_hospital_users_seeded_on_clean_startup():
+    """Verify that no default district, state, or central reviewer accounts exist in clean startup database."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -116,37 +114,15 @@ def test_baseline_reviewer_accounts_seeded_on_empty_database():
 
     with engine.connect() as conn:
         result = conn.execute(
-            text("SELECT email, role_id, state, district, is_active FROM users WHERE email IS NOT NULL")
-        ).fetchall()
-        user_map = {r[0]: r for r in result}
-
-    expected_reviewers = {
-        "district.purnea@swasthya.gov.in": ("DISTRICT_ADMIN", "Bihar", "Purnea"),
-        "state.bihar@swasthya.gov.in": ("STATE_ADMIN", "Bihar", None),
-        "central.admin@swasthya.gov.in": ("CENTRAL_ADMIN", None, None),
-    }
-
-    for email, (exp_role, exp_state, exp_district) in expected_reviewers.items():
-        assert email in user_map, f"Reviewer user '{email}' was not seeded into database!"
-        row = user_map[email]
-        assert row[1] == exp_role, f"Expected role {exp_role} for {email}, got {row[1]}"
-        assert row[2] == exp_state, f"Expected state {exp_state} for {email}, got {row[2]}"
-        assert row[3] == exp_district, f"Expected district {exp_district} for {email}, got {row[3]}"
-        assert bool(row[4]) is True, f"Expected user {email} to be active"
-
-    # Verify idempotency: running seed_baseline_reference_data again does not duplicate or raise
-    seed_baseline_reference_data(engine)
-    with engine.connect() as conn:
-        count = conn.execute(
             text("SELECT count(*) FROM users WHERE email IN ('district.purnea@swasthya.gov.in', 'state.bihar@swasthya.gov.in', 'central.admin@swasthya.gov.in')")
         ).scalar()
-        assert count == 3, f"Expected exactly 3 reviewer users after second seed run, found {count}"
+        assert result == 0, f"Expected 0 auto-seeded reviewer accounts, found {result}"
 
 
-def test_reviewer_accounts_login_via_api_auth_login():
+def test_unseeded_reviewer_login_rejected_with_401():
     """
-    Verify that after init_database(), all 3 default reviewer accounts can log in
-    via POST /api/auth/login with HTTP 200 and receive valid Bearer tokens and role claims.
+    Verify that in clean startup mode without auto-seeding, attempts to log in with
+    unseeded reviewer credentials are rejected with HTTP 401 Unauthorized.
     """
     from src.api.main import app
 
@@ -154,30 +130,18 @@ def test_reviewer_accounts_login_via_api_auth_login():
 
     with TestClient(app) as client:
         accounts = [
-            ("district.purnea@swasthya.gov.in", "District@123", "DISTRICT_ADMIN", "Bihar", "Purnea"),
-            ("state.bihar@swasthya.gov.in", "State@123", "STATE_ADMIN", "Bihar", None),
-            ("central.admin@swasthya.gov.in", "Central@123", "CENTRAL_ADMIN", None, None),
+            ("district.purnea@swasthya.gov.in", "District@123"),
+            ("state.bihar@swasthya.gov.in", "State@123"),
+            ("central.admin@swasthya.gov.in", "Central@123"),
         ]
 
-        for email, password, expected_role, expected_state, expected_district in accounts:
+        for email, password in accounts:
             response = client.post(
                 "/api/auth/login",
                 json={"username": email, "password": password},
             )
-            assert response.status_code == 200, (
-                f"POST /api/auth/login failed for {email}: status={response.status_code}, response={response.text}"
+            assert response.status_code == 401, (
+                f"Expected 401 Unauthorized for unseeded {email}, got {response.status_code}"
             )
-            data = response.json()
-            assert data["success"] is True
-            assert "access_token" in data and len(data["access_token"]) > 20
-            assert data["token_type"] == "bearer"
 
-            user_obj = data["user"]
-            assert user_obj["role"] == expected_role, (
-                f"Role mismatch for {email}: expected {expected_role}, got {user_obj.get('role')}"
-            )
-            if expected_state:
-                assert user_obj["state"] == expected_state
-            if expected_district:
-                assert user_obj["district"] == expected_district
 
