@@ -266,7 +266,8 @@ def calculate_hospital_score(
 
 def rank_hospitals(
     hospitals,
-    priority
+    priority,
+    patient=None
 ):
     """
     Rank eligible hospitals using:
@@ -365,6 +366,15 @@ def rank_hospitals(
     result["final_score"] = (
         result["final_score"] * 100
     ).round(2)
+
+    # ----------------------------------------------
+    # Same District / City Priority Bonus
+    # ----------------------------------------------
+    if patient and isinstance(patient, dict):
+        p_dist = (patient.get("district") or patient.get("city") or "").strip().lower()
+        if p_dist and "district" in result.columns:
+            is_same = result["district"].fillna("").astype(str).str.strip().str.lower() == p_dist
+            result["final_score"] = (result["final_score"] + (is_same * 20.0)).round(2)
 
     # ----------------------------------------------
     # Determine available zone

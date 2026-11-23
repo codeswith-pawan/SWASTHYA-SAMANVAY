@@ -29,7 +29,11 @@ from src.services.email_outbox_service import EmailOutboxService
 
 logger = logging.getLogger("workflow_notifications")
 
-DEFAULT_PORTAL_BASE_URL = "http://localhost:3000"
+DEFAULT_PORTAL_BASE_URL = (
+    "https://swasthya-samanvay-ujxm.vercel.app"
+    if (os.getenv("RENDER") or (os.getenv("ENVIRONMENT") or os.getenv("SIH_ENV") or "").lower() in ("production", "prod", "demo", "staging"))
+    else "http://localhost:3000"
+)
 
 
 def get_portal_base_url() -> str:
@@ -44,6 +48,9 @@ def get_portal_base_url() -> str:
             return settings.portal_base_url.rstrip("/")
     except Exception:
         pass
+    env = (os.getenv("ENVIRONMENT") or os.getenv("SIH_ENV") or "").lower()
+    if env in ("production", "prod", "demo", "staging") or os.getenv("RENDER"):
+        return "https://swasthya-samanvay-ujxm.vercel.app"
     return DEFAULT_PORTAL_BASE_URL
 
 

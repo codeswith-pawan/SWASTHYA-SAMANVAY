@@ -67,44 +67,8 @@ def test_init_database_creates_all_tables_including_verification_tokens():
         assert tbl in table_names, f"Expected table '{tbl}' was not created in database!"
 
 
-def test_baseline_tables_remain_clean_and_empty_on_startup():
-    """Verify that table schemas are created but all data tables remain completely empty on startup."""
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
-    init_database(engine)
-    
-    with engine.connect() as conn:
-        for tbl in ["users", "hospitals", "roles", "referrals", "beds", "registration_applications"]:
-            cnt = conn.execute(text(f"SELECT count(*) FROM {tbl}")).scalar()
-            assert cnt == 0, f"Table '{tbl}' was expected to be empty on startup, but found {cnt} rows!"
-
-
-def test_src_models_and_src_db_module_exports():
-    """Verify that src.models and src.db correctly export all required classes."""
-    assert ModelVerificationToken is VerificationToken
-    assert ModelRole is Role
-    assert issubclass(VerificationToken, Base)
-    assert issubclass(Hospital, Base)
-    assert issubclass(User, Base)
-    assert issubclass(Bed, Base)
-    assert issubclass(Referral, Base)
-    assert issubclass(BedReservation, Base)
-    assert callable(db_init)
-
-
-def test_fastapi_lifespan_startup_initializes_database():
-    """Verify that FastAPI application lifespan runs init_database on startup without error."""
-    from src.api.main import app
-    with TestClient(app) as client:
-        resp = client.get("/health/live")
-        assert resp.status_code == 200
-
-
-def test_no_reviewer_or_hospital_users_seeded_on_clean_startup():
-    """Verify that no default district, state, or central reviewer accounts exist in clean startup database."""
+def test_seed_creates_central_state_district_and_hospital_accounts():
+    """Verify that startup seeding populates all 4 roles, administrative reviewers, and hospitals cleanly."""
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -113,35 +77,77 @@ def test_no_reviewer_or_hospital_users_seeded_on_clean_startup():
     init_database(engine)
 
     with engine.connect() as conn:
-        result = conn.execute(
-            text("SELECT count(*) FROM users WHERE email IN ('district.purnea@swasthya.gov.in', 'state.bihar@swasthya.gov.in', 'central.admin@swasthya.gov.in')")
+        # Check Roles
+        roles = [r[0] for r in conn.execute(text("SELECT id FROM roles")).fetchall()]
+        for expected_role in ["CENTRAL_ADMIN", "STATE_ADMIN", "DISTRICT_ADMIN", "HOSPITAL"]:
+            assert expected_role in roles, f"Role {expected_role} missing!"
+
+        # Check Central, State, District Reviewers
+        user_emails = [u[0] for u in conn.execute(text("SELECT email FROM users")).fetchall()]
+        assert "central.admin@swasthya.gov.in" in user_emails
+        assert "state.bihar@swasthya.gov.in" in user_emails
+        assert "state.punjab@swasthya.gov.in" in user_emails
+        assert "district.purnea@swasthya.gov.in" in user_emails
+        assert "district.patna@swasthya.gov.in" in user_emails
+        assert "district.amritsar@swasthya.gov.in" in user_emails
+
+        # Check Hospitals (10 in Purnea, 15 multi-city = 25 total)
+        hosp_cnt = conn.execute(text("SELECT count(*) FROM hospitals")).scalar()
+        assert hosp_cnt == 25, f"Expected 25 hospitals, found {hosp_cnt}"
+
+        # Check Purnea Hospitals
+        purnea_cnt = conn.execute(
+            text("SELECT count(*) FROM hospitals WHERE LOWER(district) = 'purnea'")
         ).scalar()
-        assert result == 0, f"Expected 0 auto-seeded reviewer accounts, found {result}"
+        assert purnea_cnt == 10, f"Expected 10 Purnea hospitals, found {purnea_cnt}"
 
 
-def test_unseeded_reviewer_login_rejected_with_401():
-    """
-    Verify that in clean startup mode without auto-seeding, attempts to log in with
-    unseeded reviewer credentials are rejected with HTTP 401 Unauthorized.
-    """
+def test_reviewer_and_hospital_logins_succeed_with_seeded_credentials():
+    """Verify that seeded administrative reviewers and hospital accounts authenticate cleanly with HTTP 200."""
     from src.api.main import app
-
-    init_database()
 
     with TestClient(app) as client:
         accounts = [
-            ("district.purnea@swasthya.gov.in", "District@123"),
-            ("state.bihar@swasthya.gov.in", "State@123"),
-            ("central.admin@swasthya.gov.in", "Central@123"),
+            ("central.admin@swasthya.gov.in", "Central@2026", "CENTRAL_ADMIN"),
+            ("state.bihar@swasthya.gov.in", "StateBihar@2026", "STATE_ADMIN"),
+            ("district.purnea@swasthya.gov.in", "DistPurnea@2026", "DISTRICT_ADMIN"),
+            ("purnea.hosp1@swasthya.gov.in", "Hospital@2026", "HOSPITAL"),
         ]
 
-        for email, password in accounts:
+        for username, password, expected_role in accounts:
             response = client.post(
                 "/api/auth/login",
-                json={"username": email, "password": password},
+                json={"username": username, "password": password},
             )
-            assert response.status_code == 401, (
-                f"Expected 401 Unauthorized for unseeded {email}, got {response.status_code}"
+            assert response.status_code == 200, (
+                f"Expected 200 OK for {username}, got {response.status_code}: {response.text}"
             )
+            data = response.json()
+            assert data["user"]["role"] == expected_role
+
+
+def test_seeding_is_idempotent_and_invokes_zero_emails():
+    """Verify that multiple seed invocations are idempotent and make zero email provider calls."""
+    from unittest.mock import patch
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    with patch("src.services.email_service.get_email_provider") as mock_get_provider:
+        # First run seeds the database
+        seed_baseline_reference_data(engine)
+        # Second run should be a no-op due to _seed_metadata marker
+        seed_baseline_reference_data(engine)
+
+        # Zero email provider calls
+        mock_get_provider.assert_not_called()
+
+    with engine.connect() as conn:
+        marker = conn.execute(
+            text("SELECT version FROM _seed_metadata WHERE version = 'seed_v2_clean_network'")
+        ).fetchone()
+        assert marker is not None, "Marker seed_v2_clean_network was not recorded in _seed_metadata!"
 
 

@@ -107,9 +107,10 @@ def load_settings() -> SystemSettings:
     is_prod = env in ("production", "prod")
     is_test = env in ("testing", "test")
 
+    prod_portal_url = "https://swasthya-samanvay-ujxm.vercel.app"
     portal_base_url = (
         _clean_str(os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL"))
-        or "http://localhost:3000"
+        or (prod_portal_url if (is_prod or env in ("demo", "staging") or os.getenv("RENDER")) else "http://localhost:3000")
     ).rstrip("/")
 
     # CORS origins (combines explicit CORS_ORIGINS with PORTAL_BASE_URL and standard Vercel/local origins)
@@ -119,6 +120,7 @@ def load_settings() -> SystemSettings:
         "http://localhost:8050",
         "http://127.0.0.1:8050",
         "https://swasthya-samanvay.vercel.app",
+        "https://swasthya-samanvay-ujxm.vercel.app",
         "https://arogyasetu-grid.vercel.app",
     ]
     if portal_base_url and portal_base_url not in default_origins:
@@ -158,7 +160,7 @@ def load_settings() -> SystemSettings:
 
     portal_base_url = (
         _clean_str(os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL"))
-        or "http://localhost:3000"
+        or (prod_portal_url if (is_prod or env in ("demo", "staging") or os.getenv("RENDER")) else "http://localhost:3000")
     ).rstrip("/")
 
     return SystemSettings(

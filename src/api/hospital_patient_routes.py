@@ -746,9 +746,13 @@ def recommend_suitable_hospitals(
         # Geographic Distance & Regional Proximity Scoring
         dist_km = h_data["distance_km"]
         h_dist = (h_data.get("district") or "").strip()
+        h_city = (h_data.get("city") or "").strip()
         h_state = (h_data.get("state") or "").strip()
 
-        is_same_district = bool(orig_district and h_dist and orig_district.lower() == h_dist.lower())
+        is_same_district = bool(
+            (orig_district and h_dist and orig_district.lower() == h_dist.lower())
+            or (orig_district and h_city and orig_district.lower() == h_city.lower())
+        )
         is_same_state = bool(orig_state and h_state and orig_state.lower() == h_state.lower())
 
         # Proximity score based on clinical transit tiers:
@@ -768,11 +772,14 @@ def recommend_suitable_hospitals(
         else:
             dist_score = -5.0 - min(15.0, (dist_km - 600.0) * 0.02)
 
-        same_district_bonus = 6.0 if is_same_district else 0.0
+        same_district_bonus = 20.0 if is_same_district else 0.0
         same_state_bonus = 4.0 if is_same_state else 0.0
 
-        composite_score = round(min(98.5, max(20.0, (ml_score * 0.20) + bed_factor + spec_factor + dist_score + same_district_bonus + same_state_bonus)), 1)
+        composite_score = round(min(99.0, max(20.0, (ml_score * 0.20) + bed_factor + spec_factor + dist_score + same_district_bonus + same_state_bonus)), 1)
         h_data["match_score"] = composite_score
+
+        has_req_bed = (avail_icu > 0) if (req_bed in ["ICU", "VENTILATOR"]) else (avail_gen > 0)
+        is_primary_local_priority = bool(is_same_district and h_data.get("specialty_matched") and has_req_bed)
 
         # Clinical Rationale synthesis
         reasons = generate_recommendation_reason(h_data, patient_dict)
@@ -783,7 +790,7 @@ def recommend_suitable_hospitals(
         if h_data.get("specialty_matched") and payload.required_specialty:
             reasons.insert(0, f"Specialty Available: Verified {payload.required_specialty} on-duty medical staff.")
         if is_same_district:
-            reasons.insert(0, f"Local District Facility: Immediate local access in {h_dist}.")
+            reasons.insert(0, f"Local District Facility: Immediate local access in {h_dist or h_city}.")
         elif is_same_state and dist_km <= 120.0:
             reasons.insert(0, f"Regional Neighbor: Located in neighboring {h_dist} district (~{dist_km} km).")
         elif is_same_state:
@@ -805,11 +812,20 @@ def recommend_suitable_hospitals(
             "ventilators": h_data.get("ventilator", "Yes"),
             "emergency_24x7": h_data.get("emergency_24x7", "Yes"),
             "specialty_matched": h_data.get("specialty_matched", True),
+            "is_same_district": is_same_district,
+            "is_primary_local_priority": is_primary_local_priority,
+            "has_req_bed": has_req_bed,
             "ai_rationale": reasons[:3],
         })
 
-    # Sort by match score descending, then distance ascending
-    ranked_hospitals.sort(key=lambda x: (-x["match_score"], x["distance_km"]))
+    # Prioritize same district/city with matching specialty and available beds first, ranked by Haversine distance
+    ranked_hospitals.sort(
+        key=lambda x: (
+            0 if x.get("is_primary_local_priority") else (1 if x.get("is_same_district") else 2),
+            x["distance_km"] if x.get("is_primary_local_priority") else -x["match_score"],
+            x["distance_km"],
+        )
+    )
 
     return {
         "success": True,

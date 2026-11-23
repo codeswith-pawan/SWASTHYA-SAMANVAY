@@ -875,10 +875,12 @@ class RegistrationService:
                 raise UnauthorizedReviewerError(
                     f"Only DISTRICT_ADMIN can review at DISTRICT_REVIEW stage. Received role: '{reviewer_role}'."
                 )
-            # Geographic jurisdiction check
-            rev_state = (reviewer.get("state") or "").lower()
-            rev_district = (reviewer.get("district") or "").lower()
-            if rev_state != (app.state or "").lower() or rev_district != (app.district or "").lower():
+            # Geographic jurisdiction check (case-insensitive and whitespace-stripped)
+            rev_state = (reviewer.get("state") or "").strip().lower()
+            rev_district = (reviewer.get("district") or "").strip().lower()
+            app_state = (app.state or "").strip().lower()
+            app_district = (app.district or "").strip().lower()
+            if rev_state != app_state or rev_district != app_district:
                 raise GeographicAccessError(
                     f"District Admin ({reviewer.get('district')}, {reviewer.get('state')}) "
                     f"cannot review application in ({app.district}, {app.state})."
@@ -889,8 +891,9 @@ class RegistrationService:
                 raise UnauthorizedReviewerError(
                     f"Only STATE_ADMIN can review at STATE_REVIEW stage. Received role: '{reviewer_role}'."
                 )
-            rev_state = (reviewer.get("state") or "").lower()
-            if rev_state != (app.state or "").lower():
+            rev_state = (reviewer.get("state") or "").strip().lower()
+            app_state = (app.state or "").strip().lower()
+            if rev_state != app_state:
                 raise GeographicAccessError(
                     f"State Admin ({reviewer.get('state')}) cannot review application in State ({app.state})."
                 )

@@ -102,8 +102,14 @@ class AccountProvisioningService:
         env_override = os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL")
         if env_override and env_override.strip():
             return f"{env_override.strip().rstrip('/')}/activate"
-        from src.config import get_settings
-        return f"{get_settings().portal_base_url}/activate"
+        env = (os.getenv("ENVIRONMENT") or os.getenv("SIH_ENV") or "").lower()
+        if env in ("production", "prod", "demo", "staging") or os.getenv("RENDER"):
+            return "https://swasthya-samanvay-ujxm.vercel.app/activate"
+        try:
+            from src.config import get_settings
+            return f"{get_settings().portal_base_url}/activate"
+        except Exception:
+            return "http://localhost:3000/activate"
 
     def _get_base_reset_url(self, explicit_url: Optional[str] = None) -> str:
         """Derive base password reset URL from explicit argument or global portal_base_url setting."""
@@ -112,8 +118,14 @@ class AccountProvisioningService:
         env_override = os.getenv("PORTAL_BASE_URL") or os.getenv("SIH_PORTAL_BASE_URL")
         if env_override and env_override.strip():
             return f"{env_override.strip().rstrip('/')}/reset-password"
-        from src.config import get_settings
-        return f"{get_settings().portal_base_url}/reset-password"
+        env = (os.getenv("ENVIRONMENT") or os.getenv("SIH_ENV") or "").lower()
+        if env in ("production", "prod", "demo", "staging") or os.getenv("RENDER"):
+            return "https://swasthya-samanvay-ujxm.vercel.app/reset-password"
+        try:
+            from src.config import get_settings
+            return f"{get_settings().portal_base_url}/reset-password"
+        except Exception:
+            return "http://localhost:3000/reset-password"
 
     # ============================================================
     # 1. ACCOUNT PROVISIONING (POST FINAL APPROVAL)

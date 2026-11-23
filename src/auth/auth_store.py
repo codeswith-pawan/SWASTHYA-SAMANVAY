@@ -244,9 +244,8 @@ def authenticate_user(username, password):
                 matched_user["password"] = hash_password(password)
                 _save_users(users)
             return matched_user
-        return None
 
-    # Check relational database users if available (activated provisioned users)
+    # Check relational database users if available (activated provisioned users or updated credentials)
     try:
         from src.database.db_manager import get_session_factory
         SessionFactory = get_session_factory()

@@ -38,6 +38,8 @@ from src.database.pg_models import (
 )
 from src.database import models, pg_models  # noqa: F401
 
+from src.database.seed_network import seed_clean_network_data, SEED_VERSION_MARKER
+
 logger = logging.getLogger("db_init")
 
 # Unified Base alias pointing to the full relational DeclarativeBase
@@ -73,12 +75,35 @@ __all__ = [
 
 def seed_baseline_reference_data(engine=None):
     """
-    Automatic startup seeding is disabled so that NO default District, State, Central
-    users, roles, or hospitals are automatically created on startup.
-    The database remains completely clean with all table schemas intact.
+    One-time idempotent baseline reference network data seed for SWASTHYA-SAMANVAY.
+    Guarantees zero email/Mailjet calls and idempotent version checking via _seed_metadata.
     """
-    logger.info("Automatic baseline reference data seeding is disabled (clean database mode).")
-    return
+    logger.info("Verifying and seeding baseline reference data...")
+    seed_clean_network_data(engine)
+
+
+def _ensure_sqlite_hospital_columns(engine):
+    """Ensure legacy SQLite hospitals table has all columns matching PgHospital."""
+    if engine.dialect.name == "sqlite":
+        with engine.connect() as conn:
+            try:
+                res = conn.execute(text("PRAGMA table_info(hospitals);")).fetchall()
+                existing_cols = {r[1] for r in res}
+                missing = [
+                    ("occupied_icu_beds", "INTEGER DEFAULT 0"),
+                    ("occupied_emergency_beds", "INTEGER DEFAULT 0"),
+                    ("approval_status", "VARCHAR(30) DEFAULT 'APPROVED'"),
+                    ("is_grandfathered", "BOOLEAN DEFAULT 1"),
+                    ("approved_at", "DATETIME"),
+                    ("application_id", "VARCHAR(64)"),
+                    ("updated_at", "DATETIME"),
+                ]
+                for col_name, col_def in missing:
+                    if col_name not in existing_cols:
+                        conn.execute(text(f"ALTER TABLE hospitals ADD COLUMN {col_name} {col_def}"))
+                conn.commit()
+            except Exception as ex:
+                logger.debug("SQLite column ensure notice: %s", ex)
 
 
 def init_database(engine=None):
@@ -97,12 +122,14 @@ def init_database(engine=None):
 
         # 2. Also ensure SqliteBase tables exist for backwards compatibility
         SqliteBase.metadata.create_all(bind=engine)
+        _ensure_sqlite_hospital_columns(engine)
 
         # 3. If using SQLite fallback engine separately, also ensure tables exist on it
         if not is_postgres() and engine != sqlite_engine:
             try:
                 PgBase.metadata.create_all(bind=sqlite_engine)
                 SqliteBase.metadata.create_all(bind=sqlite_engine)
+                _ensure_sqlite_hospital_columns(sqlite_engine)
             except Exception as ex:
                 logger.debug("Non-critical SQLite engine init notice: %s", ex)
 

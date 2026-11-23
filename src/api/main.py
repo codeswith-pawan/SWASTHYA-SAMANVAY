@@ -1503,7 +1503,8 @@ def get_ranked_hospitals(
     eligible_df = pd.DataFrame(eligible_hospitals)
     ranked = rank_hospitals(
         eligible_df,
-        patient["priority"]
+        patient["priority"],
+        patient=patient
     )
     ranked = ranked.head(10)
 
