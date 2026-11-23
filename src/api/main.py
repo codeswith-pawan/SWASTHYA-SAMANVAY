@@ -153,10 +153,14 @@ app.add_middleware(ProductionSecurityAndLoggingMiddleware)
 
 # CORS configuration with configurable origins
 _app_settings = get_settings()
+_cors_origins = list(_app_settings.cors_origins)
+if "https://swasthya-samanvay.vercel.app" not in _cors_origins:
+    _cors_origins.append("https://swasthya-samanvay.vercel.app")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_app_settings.cors_origins,
-    allow_origin_regex=r"^https://(swasthya-samanvay|arogyasetu-grid)(-[a-zA-Z0-9_-]+)?\.vercel\.app$",
+    allow_origins=_cors_origins,
+    allow_origin_regex=r"^https://(swasthya-samanvay.*|arogyasetu-grid.*)\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

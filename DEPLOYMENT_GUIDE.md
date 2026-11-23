@@ -24,7 +24,7 @@ flowchart TD
 
 ### 2.1 Project Configuration
 1. Log into your [Vercel Dashboard](https://vercel.com/) and click **Add New...** → **Project**.
-2. Import your GitHub repository: `codeswith-pawan/SIH-Hospital-AI`.
+2. Import your GitHub repository: `codeswith-pawan/SWASTHYA-SAMANVAY`.
 3. Configure the build parameters:
    - **Framework Preset:** `Next.js`
    - **Root Directory:** Click *Edit* and select `frontend`.
@@ -47,7 +47,7 @@ Add the following environment variables under **Project Settings → Environment
 
 ### 3.1 Web Service Configuration
 1. Log into your [Render Dashboard](https://dashboard.render.com/) and click **New +** → **Web Service**.
-2. Connect your GitHub repository: `codeswith-pawan/SIH-Hospital-AI`.
+2. Connect your GitHub repository: `codeswith-pawan/SWASTHYA-SAMANVAY`.
 3. Configure the service settings:
    - **Name:** `swasthya-samanvay-api`
    - **Region:** Choose the region closest to your database (e.g. `Oregon (US West)` or `Frankfurt (EU)`).

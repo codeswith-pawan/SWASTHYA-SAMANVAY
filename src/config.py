@@ -118,6 +118,7 @@ def load_settings() -> SystemSettings:
         "http://127.0.0.1:3000",
         "http://localhost:8050",
         "http://127.0.0.1:8050",
+        "https://swasthya-samanvay.vercel.app",
         "https://arogyasetu-grid.vercel.app",
     ]
     if portal_base_url and portal_base_url not in default_origins:

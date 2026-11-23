@@ -20,8 +20,8 @@ Ensure the following tools are installed:
 ## 2. Clone the Repository
 
 ```bash
-git clone https://github.com/codeswith-pawan/SIH-Hospital-AI.git
-cd SIH-Hospital-AI
+git clone https://github.com/codeswith-pawan/SWASTHYA-SAMANVAY.git
+cd SWASTHYA-SAMANVAY
 ```
 
 ---
@@ -94,7 +94,7 @@ Interactive API documentation will be available at:
 Open a new terminal window:
 
 ```bash
-cd SIH-Hospital-AI/frontend
+cd SWASTHYA-SAMANVAY/frontend
 
 # Install dependencies
 npm install

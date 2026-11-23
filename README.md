@@ -123,7 +123,7 @@ Place your screenshots in `docs/screenshots/` with the filenames below to previe
 | **Testing & CI** | pytest, Playwright |
 
 ```
-SIH_Hospital_AI/
+SWASTHYA-SAMANVAY/
 ├── src/                          # FastAPI backend application
 │   ├── api/                      # REST API routes, auth & security middleware
 │   ├── database/                 # PostgreSQL schema models, db manager & engine
@@ -149,8 +149,8 @@ SIH_Hospital_AI/
 ### 1. Backend Setup
 ```bash
 # Clone the repository
-git clone https://github.com/codeswith-pawan/SIH-Hospital-AI.git
-cd SIH-Hospital-AI
+git clone https://github.com/codeswith-pawan/SWASTHYA-SAMANVAY.git
+cd SWASTHYA-SAMANVAY
 
 # Create and activate virtual environment
 python3 -m venv .venv

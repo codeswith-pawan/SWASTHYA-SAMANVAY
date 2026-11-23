@@ -103,7 +103,7 @@
 ## Stage 5: Frontend Web Service Setup (Vercel)
 
 - [ ] **Create Vercel Project:**
-  - Connect GitHub repository `codeswith-pawan/SIH-Hospital-AI`.
+  - Connect GitHub repository `codeswith-pawan/SWASTHYA-SAMANVAY`.
   - Framework Preset: `Next.js`.
   - Root Directory: `frontend`.
 - [ ] **Configure Vercel Environment Variables:**
