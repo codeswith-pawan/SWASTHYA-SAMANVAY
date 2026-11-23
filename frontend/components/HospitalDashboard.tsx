@@ -1927,7 +1927,7 @@ export default function HospitalDashboard({ user }: HospitalDashboardProps) {
                   <span className="text-base">ℹ️</span>
                   <div>
                     <span className="font-bold">Clinical Condition Evaluation: </span>
-                    Provide the patient's updated real-time physiological condition, required specialized destination capability, and transport urgency. The AI recommendation engine scores facilities against these parameters.
+                    Provide the patient&apos;s updated real-time physiological condition, required specialized destination capability, and transport urgency. The AI recommendation engine scores facilities against these parameters.
                   </div>
                 </div>
 
