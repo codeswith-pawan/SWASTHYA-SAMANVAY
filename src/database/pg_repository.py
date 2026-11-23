@@ -3327,9 +3327,11 @@ class PgAdminRepository:
         if not self._is_pg():
             return self._get_district_metrics_sqlite(district, state)
 
-        hosp_filters = [Hospital.district.ilike(district)]
+        from src.services.registration_service import get_district_aliases
+        dist_aliases = [d.lower() for d in get_district_aliases(district)]
+        hosp_filters = [func.lower(func.trim(Hospital.district)).in_(dist_aliases)]
         if state:
-            hosp_filters.append(Hospital.state.ilike(state))
+            hosp_filters.append(func.lower(func.trim(Hospital.state)) == state.strip().lower())
 
         hosp_stmt = select(
             func.count(Hospital.hospital_id).label("total_hospitals"),
@@ -3384,9 +3386,11 @@ class PgAdminRepository:
 
         # District registration applications
         try:
-            app_filters = [RegistrationApplication.district.ilike(district)]
+            from src.services.registration_service import get_district_aliases
+            dist_aliases = [d.lower() for d in get_district_aliases(district)]
+            app_filters = [func.lower(func.trim(RegistrationApplication.district)).in_(dist_aliases)]
             if state:
-                app_filters.append(RegistrationApplication.state.ilike(state))
+                app_filters.append(func.lower(func.trim(RegistrationApplication.state)) == state.strip().lower())
             app_stmt = select(
                 func.coalesce(
                     func.sum(case((RegistrationApplication.status.in_(["SUBMITTED", "UNDER_REVIEW"]), 1), else_=0)),
@@ -3512,8 +3516,12 @@ class PgAdminRepository:
         from src.database.models import Hospital as SqliteHospital
         from src.prediction.reservation_store import load_bed_inventory
         from src.prediction.referral_store import _load_referrals
+        from src.services.registration_service import get_district_aliases
 
-        query = self.session.query(SqliteHospital).filter(SqliteHospital.district.ilike(district))
+        dist_aliases = [d.lower() for d in get_district_aliases(district)]
+        query = self.session.query(SqliteHospital).filter(
+            func.lower(func.trim(SqliteHospital.district)).in_(dist_aliases)
+        )
         if state:
             query = query.filter(SqliteHospital.state.ilike(state))
         hospitals = query.all()
@@ -3547,16 +3555,15 @@ class PgAdminRepository:
                 })
 
         referrals = _load_referrals()
-        district_l = district.lower()
         active_count = 0
         pending_count = 0
         in_transit_count = 0
         total_refs = 0
 
         for r in referrals:
-            from_d = (r.get("from_district") or "").lower()
-            to_d = (r.get("to_district") or "").lower()
-            if from_d == district_l or to_d == district_l:
+            from_d = (r.get("from_district") or "").strip().lower()
+            to_d = (r.get("to_district") or "").strip().lower()
+            if from_d in dist_aliases or to_d in dist_aliases:
                 total_refs += 1
                 status = r.get("status")
                 if status == "PENDING":

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { User, ReviewerApplicationSummary, ReviewerApplicationDetail } from "@/lib/types";
-import { apiGetReviewerApplications, apiGetReviewerApplicationDetail } from "@/lib/api";
+import { apiGetReviewerApplications, apiGetReviewerApplicationDetail, getToken } from "@/lib/api";
 import { ReviewerDashboardStats } from "./ReviewerDashboardStats";
 import { ReviewerInboxTable } from "./ReviewerInboxTable";
 import { ReviewerDossierView } from "./ReviewerDossierView";
@@ -37,6 +37,14 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
     setError("");
 
     try {
+      const token = getToken();
+      if (!token) {
+        setError("Reviewer session authentication token not found. Please log in via the Department Portal.");
+        setApplications([]);
+        setTotalCount(0);
+        return;
+      }
+
       const res = await apiGetReviewerApplications({
         status: statusFilter || undefined,
         stage: stageFilter || undefined,
@@ -47,6 +55,8 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
       setTotalCount(res.total || 0);
     } catch (err: any) {
       setError(err.message || "Failed to load assigned registration applications.");
+      setApplications([]);
+      setTotalCount(0);
     } finally {
       setLoading(false);
     }
@@ -57,6 +67,14 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
     setError("");
 
     try {
+      const token = getToken();
+      if (!token) {
+        setError("Reviewer session authentication token not found. Please log in.");
+        setSelectedAppId(null);
+        setDossier(null);
+        return;
+      }
+
       const data = await apiGetReviewerApplicationDetail(appId);
       setDossier(data);
       setSelectedAppId(appId);
@@ -132,6 +150,7 @@ export const ReviewerPortal: React.FC<ReviewerPortalProps> = ({
             applications={applications}
             total={totalCount}
             loading={loading}
+            error={error}
             onSelectApplication={handleSelectApplication}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}

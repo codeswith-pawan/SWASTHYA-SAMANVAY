@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import { ReviewerApplicationSummary, Role } from "@/lib/types";
 import { formatDateTime } from "@/lib/formatters";
-import { Search, RotateCw, ChevronLeft, ChevronRight, FileText, ArrowRight, Inbox } from "lucide-react";
+import { Search, RotateCw, ChevronLeft, ChevronRight, FileText, ArrowRight, Inbox, AlertCircle } from "lucide-react";
 
 interface ReviewerInboxTableProps {
   applications: ReviewerApplicationSummary[];
   total: number;
   loading: boolean;
+  error?: string;
   onSelectApplication: (appId: string) => void;
   statusFilter: string;
   onStatusFilterChange: (val: string) => void;
@@ -24,6 +25,7 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
   applications,
   total,
   loading,
+  error,
   onSelectApplication,
   statusFilter,
   onStatusFilterChange,
@@ -38,15 +40,21 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
-  // Client-side search refinement on loaded batch
+  // Client-side search refinement on loaded batch with Purnea / Purnia alias support
   const filtered = applications.filter((app) => {
     if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
+    const q = searchQuery.toLowerCase().trim();
+    const isPurneaQuery = q === "purnea" || q === "purnia";
+    const appDistrict = (app.district || "").toLowerCase().trim();
+    const districtMatches = isPurneaQuery
+      ? (appDistrict === "purnea" || appDistrict === "purnia")
+      : appDistrict.includes(q);
+
     return (
       app.application_number.toLowerCase().includes(q) ||
       app.applicant_name.toLowerCase().includes(q) ||
       app.applicant_email.toLowerCase().includes(q) ||
-      (app.district && app.district.toLowerCase().includes(q)) ||
+      districtMatches ||
       app.state.toLowerCase().includes(q)
     );
   });
@@ -185,6 +193,24 @@ export const ReviewerInboxTable: React.FC<ReviewerInboxTableProps> = ({
                   <div className="flex flex-col items-center justify-center gap-2">
                     <span className="h-5 w-5 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
                     <span className="font-medium text-xs">Loading reviewer queue...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td colSpan={9} className="py-12 text-center text-rose-300">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <AlertCircle className="w-8 h-8 text-rose-400" />
+                    <span className="font-bold text-slate-200">Unable to load reviewer queue</span>
+                    <p className="text-[11px] text-rose-300 max-w-sm">{error}</p>
+                    <button
+                      type="button"
+                      onClick={onRefresh}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition"
+                    >
+                      <RotateCw className="w-3.5 h-3.5" />
+                      <span>Retry Loading</span>
+                    </button>
                   </div>
                 </td>
               </tr>

@@ -57,7 +57,7 @@ from src.services.document_storage import (
 
 # Canonical Recognized Administrative Hierarchy (Indian States & Districts)
 CANONICAL_DIVISIONS: Dict[str, List[str]] = {
-    "Bihar": ["Begusarai", "Bhagalpur", "Darbhanga", "Gaya", "Munger", "Muzaffarpur", "Patna", "Purnia"],
+    "Bihar": ["Begusarai", "Bhagalpur", "Darbhanga", "Gaya", "Munger", "Muzaffarpur", "Patna", "Purnea", "Purnia"],
     "Delhi": ["East Delhi", "New Delhi", "North Delhi", "South Delhi", "West Delhi"],
     "Gujarat": ["Ahmedabad", "Gandhinagar", "Rajkot", "Surat", "Vadodara"],
     "Karnataka": ["Belagavi", "Bengaluru", "Hubballi", "Mangaluru", "Mysuru"],
@@ -81,6 +81,31 @@ _DISTRICT_TO_STATE: Dict[str, str] = {
     for state, dists in CANONICAL_DIVISIONS.items()
     for dist in dists
 }
+
+
+def normalize_district_name(district: Optional[str]) -> str:
+    """
+    Phonetic and transliteration normalizer for Indian district names.
+    Standardizes known spelling variants (e.g. Purnia <-> Purnea) to canonical forms.
+    """
+    if not district:
+        return ""
+    clean = district.strip().lower()
+    if clean in ("purnea", "purnia"):
+        return "purnea"
+    return clean
+
+
+def get_district_aliases(district: Optional[str]) -> List[str]:
+    """
+    Return all recognized spelling variants for a district name.
+    """
+    if not district:
+        return []
+    clean = district.strip().lower()
+    if clean in ("purnea", "purnia"):
+        return ["purnea", "purnia"]
+    return [clean]
 
 ACTIVE_STATUSES = ("DRAFT", "SUBMITTED", "UNDER_REVIEW", "CORRECTION_REQUIRED")
 MANDATORY_HOSPITAL_DOCS = ("CLINICAL_LICENSE", "FIRE_SAFETY_NOC")
@@ -146,23 +171,28 @@ class RegistrationService:
                 raise InvalidHierarchyError(f"District is mandatory for {applicant_type} registration.")
 
             clean_district = district.strip()
-            # Verify district belongs to the specified state
-            known_state_for_dist = _DISTRICT_TO_STATE.get(clean_district.lower())
+            norm_clean_dist = normalize_district_name(clean_district)
+            # Verify district belongs to the specified state (with alias fallback)
+            known_state_for_dist = (
+                _DISTRICT_TO_STATE.get(clean_district.lower())
+                or _DISTRICT_TO_STATE.get(norm_clean_dist)
+            )
             if known_state_for_dist and known_state_for_dist != state_match.lower():
                 correct_state = next(s for s in CANONICAL_DIVISIONS if s.lower() == known_state_for_dist)
                 raise InvalidHierarchyError(
                     f"District '{clean_district}' belongs to State '{correct_state}', not '{state_match}'."
                 )
 
-            # Check if district belongs to the canonical list for this state
+            # Check if district belongs to the canonical list for this state (including aliases)
             canonical_districts = [d.lower() for d in CANONICAL_DIVISIONS.get(state_match, [])]
-            if canonical_districts and clean_district.lower() not in canonical_districts:
+            canonical_norm_districts = [normalize_district_name(d) for d in canonical_districts]
+            if canonical_districts and norm_clean_dist not in canonical_norm_districts and clean_district.lower() not in canonical_districts:
                 # Also allow if an existing hospital or district is recorded in DB for this state
                 existing_db_district = (
                     self.session.query(Hospital)
                     .filter(
                         func.lower(Hospital.state) == state_match.lower(),
-                        func.lower(Hospital.district) == clean_district.lower(),
+                        func.lower(Hospital.district).in_(get_district_aliases(clean_district)),
                     )
                     .first()
                 )
@@ -261,12 +291,13 @@ class RegistrationService:
 
         elif applicant_type == "DISTRICT":
             clean_district = (district or "").strip().lower()
+            dist_aliases = get_district_aliases(clean_district)
             existing = (
                 self.session.query(RegistrationApplication)
                 .filter(
                     RegistrationApplication.applicant_type == "DISTRICT",
                     func.lower(func.trim(RegistrationApplication.state)) == clean_state,
-                    func.lower(func.trim(RegistrationApplication.district)) == clean_district,
+                    func.lower(func.trim(RegistrationApplication.district)).in_(dist_aliases),
                     RegistrationApplication.status.in_(ACTIVE_STATUSES),
                 )
                 .first()
@@ -325,6 +356,10 @@ class RegistrationService:
 
         app_id = f"APP_{secrets.token_hex(16)}"
         app_num = self.generate_application_number(applicant_type)
+
+        # Standardize district to canonical form if alias (e.g. Purnia -> Purnea)
+        if district and normalize_district_name(district) == "purnea":
+            district = "Purnea"
 
         profile_data = dict(data.get("profile_data") or {})
         profile_keys = [
@@ -888,8 +923,9 @@ class RegistrationService:
                         rev_district = db_u.district.strip().lower()
 
             app_state = (app.state or "").strip().lower()
-            app_district = (app.district or "").strip().lower()
-            if rev_state != app_state or rev_district != app_district:
+            app_district_norm = normalize_district_name(app.district)
+            rev_district_norm = normalize_district_name(rev_district)
+            if rev_state != app_state or rev_district_norm != app_district_norm:
                 raise GeographicAccessError(
                     f"District Admin ({reviewer.get('district')}, {reviewer.get('state')}) "
                     f"cannot review application in ({app.district}, {app.state})."

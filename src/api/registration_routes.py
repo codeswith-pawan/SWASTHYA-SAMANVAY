@@ -861,10 +861,12 @@ def _safe_post_commit_outbox_drain(bind_engine):
 
 
 @router.post("/applications/submit", response_model=SubmitApplicationResponse)
+@router.post("/applications/{application_id}/submit", response_model=SubmitApplicationResponse)
 def submit_application(
     payload: SubmitApplicationRequest,
     request: Request,
     background_tasks: BackgroundTasks,
+    application_id: Optional[str] = None,
     applicant: dict = Depends(require_applicant_user),
     db: Session = Depends(get_db_session),
 ):
@@ -876,12 +878,13 @@ def submit_application(
     - Emits SUBMIT approval history record.
     - Returns tracking token for public tracking.
     """
+    target_app_id = application_id or applicant["application_id"]
     client_ip = _get_client_ip(request)
     service = RegistrationService(db)
 
     try:
         res = service.submit_application(
-            application_id=applicant["application_id"],
+            application_id=target_app_id,
             remarks=payload.remarks,
             client_ip=client_ip,
         )
@@ -1052,9 +1055,11 @@ def list_reviewer_applications(
                 reviewer_district = db_u.district.strip().lower()
 
     if role == "DISTRICT_ADMIN":
+        from src.services.registration_service import get_district_aliases
+        dist_aliases = [d.lower() for d in get_district_aliases(reviewer_district)]
         query = query.filter(
             func.lower(func.trim(RegistrationApplication.state)) == reviewer_state,
-            func.lower(func.trim(RegistrationApplication.district)) == reviewer_district,
+            func.lower(func.trim(RegistrationApplication.district)).in_(dist_aliases),
         )
     elif role == "STATE_ADMIN":
         query = query.filter(
@@ -1189,9 +1194,11 @@ def get_reviewer_application_detail(
                 rev_district = db_u.district.strip().lower()
 
     if role == "DISTRICT_ADMIN":
+        from src.services.registration_service import normalize_district_name
         app_state = (app.state or "").strip().lower()
-        app_district = (app.district or "").strip().lower()
-        if app_state != rev_state or app_district != rev_district:
+        app_district = normalize_district_name(app.district)
+        rev_district_norm = normalize_district_name(rev_district)
+        if app_state != rev_state or app_district != rev_district_norm:
             raise HTTPException(
                 status_code=403,
                 detail=f"Access denied: Application is outside your district jurisdiction ({reviewer.get('district')}, {reviewer.get('state')}).",

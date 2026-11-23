@@ -41,10 +41,23 @@ import {
   PasswordResetConfirmPayload,
 } from "./types";
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8050";
+export function getApiBase(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
+    return process.env.NEXT_PUBLIC_API_BASE_URL.trim().replace(/\/+$/, "");
+  }
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.trim().replace(/\/+$/, "");
+  }
+  // In a remote/deployed browser environment (e.g. Vercel), default to the live Render backend
+  if (typeof window !== "undefined") {
+    if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+      return "https://swasthya-samanvay-api.onrender.com";
+    }
+  }
+  return "http://localhost:8050";
+}
+
+const API_BASE = getApiBase();
 
 const TOKEN_KEY = "access_token";
 const USER_KEY = "sih_auth_user";
@@ -52,7 +65,16 @@ const APPLICANT_TOKEN_KEY = "sih_applicant_token";
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  return (
+    localStorage.getItem(TOKEN_KEY) ||
+    localStorage.getItem("token") ||
+    localStorage.getItem("access_token") ||
+    localStorage.getItem("auth_token") ||
+    localStorage.getItem("sih_token") ||
+    sessionStorage.getItem(TOKEN_KEY) ||
+    sessionStorage.getItem("token") ||
+    sessionStorage.getItem("access_token")
+  );
 }
 
 export function setToken(token: string): void {
@@ -135,7 +157,9 @@ export async function apiFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+  const base = getApiBase();
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith("http") ? endpoint : `${base}${cleanEndpoint}`;
 
   let response: Response;
   try {
@@ -719,7 +743,9 @@ export async function apiApplicantFetch<T>(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE}${endpoint}`;
+  const base = getApiBase();
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const url = endpoint.startsWith("http") ? endpoint : `${base}${cleanEndpoint}`;
 
   let response: Response;
   try {
@@ -993,7 +1019,7 @@ export async function apiGetReviewerApplications(
 
   const qs = query.toString();
   return apiFetch<ReviewerApplicationListResponse>(
-    `/api/registration/review/applications${qs ? `?${qs}` : ""}`
+    `/api/registration/applications${qs ? `?${qs}` : ""}`
   );
 }
 
@@ -1004,7 +1030,7 @@ export async function apiGetReviewerApplicationDetail(
   applicationId: string
 ): Promise<ReviewerApplicationDetail> {
   return apiFetch<ReviewerApplicationDetail>(
-    `/api/registration/review/applications/${applicationId}`
+    `/api/registration/applications/${applicationId}`
   );
 }
 

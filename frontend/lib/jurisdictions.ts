@@ -12,6 +12,7 @@ export const CANONICAL_DIVISIONS: Record<string, string[]> = {
     "Munger",
     "Muzaffarpur",
     "Patna",
+    "Purnea",
     "Purnia",
   ],
   Delhi: [
@@ -138,6 +139,17 @@ export function getDistrictsForState(state: string): string[] {
 
 export function isValidJurisdiction(state: string, district?: string): boolean {
   if (!CANONICAL_DIVISIONS[state]) return false;
-  if (district && !CANONICAL_DIVISIONS[state].includes(district)) return false;
+  if (district) {
+    const norm = normalizeDistrictName(district);
+    const stateDistricts = (CANONICAL_DIVISIONS[state] || []).map(d => normalizeDistrictName(d));
+    if (!stateDistricts.includes(norm)) return false;
+  }
   return true;
+}
+
+export function normalizeDistrictName(district?: string | null): string {
+  if (!district) return "";
+  const d = district.trim().toLowerCase();
+  if (d === "purnea" || d === "purnia") return "Purnea";
+  return district.trim();
 }
