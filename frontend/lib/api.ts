@@ -51,7 +51,7 @@ export function getApiBase(): string {
   // In a remote/deployed browser environment (e.g. Vercel), default to the live Render backend
   if (typeof window !== "undefined") {
     if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
-      return "https://swasthya-samanvay-api.onrender.com";
+      return "https://swasthya-samanvay.onrender.com";
     }
   }
   return "http://localhost:8050";
