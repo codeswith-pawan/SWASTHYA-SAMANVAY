@@ -195,6 +195,42 @@ def seed_default_users():
             "district": "Purnia",
             "created_at": datetime.now().isoformat(),
         },
+        {
+            "user_id": "USR_REV_DIST_PURNEA",
+            "username": "district.purnea@swasthya.gov.in",
+            "password": hash_password("District@123"),
+            "name": "District Reviewer (Purnea, Bihar)",
+            "role": "DISTRICT_ADMIN",
+            "hospital_id": None,
+            "state": "Bihar",
+            "district": "Purnea",
+            "email": "district.purnea@swasthya.gov.in",
+            "created_at": datetime.now().isoformat(),
+        },
+        {
+            "user_id": "USR_REV_STATE_BIHAR",
+            "username": "state.bihar@swasthya.gov.in",
+            "password": hash_password("State@123"),
+            "name": "State Reviewer (Bihar)",
+            "role": "STATE_ADMIN",
+            "hospital_id": None,
+            "state": "Bihar",
+            "district": None,
+            "email": "state.bihar@swasthya.gov.in",
+            "created_at": datetime.now().isoformat(),
+        },
+        {
+            "user_id": "USR_REV_CENTRAL_ADMIN",
+            "username": "central.admin@swasthya.gov.in",
+            "password": hash_password("Central@123"),
+            "name": "Central Reviewer (National)",
+            "role": "CENTRAL_ADMIN",
+            "hospital_id": None,
+            "state": None,
+            "district": None,
+            "email": "central.admin@swasthya.gov.in",
+            "created_at": datetime.now().isoformat(),
+        },
     ]
 
     # If users file is empty, initialize all
@@ -225,9 +261,15 @@ DUMMY_PBKDF2_HASH = (
 def authenticate_user(username, password):
     users = seed_default_users()
 
+    clean_user = (username or "").strip()
     matched_user = None
     for user in users:
-        if user["username"] == username:
+        if (
+            user.get("username") == clean_user
+            or user.get("username", "").lower() == clean_user.lower()
+            or user.get("email") == clean_user
+            or user.get("email", "").lower() == clean_user.lower()
+        ):
             matched_user = user
             break
 
@@ -248,12 +290,16 @@ def authenticate_user(username, password):
             from sqlalchemy import func
             from src.database.pg_models import User
             db_user = db_session.query(User).filter(
-                (User.username == username) | (func.lower(User.username) == username.strip().lower())
+                (User.username == clean_user)
+                | (func.lower(User.username) == clean_user.lower())
+                | (User.email == clean_user)
+                | (func.lower(User.email) == clean_user.lower())
             ).first()
             if db_user and db_user.is_active and verify_password(password, db_user.password_hash):
                 return {
                     "user_id": db_user.user_id,
                     "username": db_user.username,
+                    "email": db_user.email,
                     "name": db_user.name,
                     "role": db_user.role_id,
                     "hospital_id": db_user.hospital_id,
@@ -287,6 +333,7 @@ def get_user_by_id(user_id):
                 return {
                     "user_id": db_user.user_id,
                     "username": db_user.username,
+                    "email": db_user.email,
                     "name": db_user.name,
                     "role": db_user.role_id,
                     "hospital_id": db_user.hospital_id,

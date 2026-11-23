@@ -510,6 +510,10 @@ def get_client_ip(req: Request) -> str:
     "/login",
     response_model=LoginResponse
 )
+@app.post(
+    "/api/auth/login",
+    response_model=LoginResponse
+)
 def login(request: LoginRequest, req: Request):
     client_ip = get_client_ip(req)
     raw_username = request.username.strip()
@@ -568,6 +572,7 @@ def login(request: LoginRequest, req: Request):
 
 
 @app.post("/logout")
+@app.post("/api/auth/logout")
 def logout(req: Request, authorization: Optional[str] = Header(default=None)):
     """
     Invalidate the current session by placing the JWT on the distributed blocklist.

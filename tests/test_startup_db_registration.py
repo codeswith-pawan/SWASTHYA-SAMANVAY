@@ -103,3 +103,81 @@ def test_fastapi_lifespan_startup_initializes_database():
     with TestClient(app) as client:
         resp = client.get("/health/live")
         assert resp.status_code == 200
+
+
+def test_baseline_reviewer_accounts_seeded_on_empty_database():
+    """Verify that default district, state, and central reviewer accounts are seeded on database initialization."""
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    init_database(engine)
+
+    with engine.connect() as conn:
+        result = conn.execute(
+            text("SELECT email, role_id, state, district, is_active FROM users WHERE email IS NOT NULL")
+        ).fetchall()
+        user_map = {r[0]: r for r in result}
+
+    expected_reviewers = {
+        "district.purnea@swasthya.gov.in": ("DISTRICT_ADMIN", "Bihar", "Purnea"),
+        "state.bihar@swasthya.gov.in": ("STATE_ADMIN", "Bihar", None),
+        "central.admin@swasthya.gov.in": ("CENTRAL_ADMIN", None, None),
+    }
+
+    for email, (exp_role, exp_state, exp_district) in expected_reviewers.items():
+        assert email in user_map, f"Reviewer user '{email}' was not seeded into database!"
+        row = user_map[email]
+        assert row[1] == exp_role, f"Expected role {exp_role} for {email}, got {row[1]}"
+        assert row[2] == exp_state, f"Expected state {exp_state} for {email}, got {row[2]}"
+        assert row[3] == exp_district, f"Expected district {exp_district} for {email}, got {row[3]}"
+        assert bool(row[4]) is True, f"Expected user {email} to be active"
+
+    # Verify idempotency: running seed_baseline_reference_data again does not duplicate or raise
+    seed_baseline_reference_data(engine)
+    with engine.connect() as conn:
+        count = conn.execute(
+            text("SELECT count(*) FROM users WHERE email IN ('district.purnea@swasthya.gov.in', 'state.bihar@swasthya.gov.in', 'central.admin@swasthya.gov.in')")
+        ).scalar()
+        assert count == 3, f"Expected exactly 3 reviewer users after second seed run, found {count}"
+
+
+def test_reviewer_accounts_login_via_api_auth_login():
+    """
+    Verify that after init_database(), all 3 default reviewer accounts can log in
+    via POST /api/auth/login with HTTP 200 and receive valid Bearer tokens and role claims.
+    """
+    from src.api.main import app
+
+    init_database()
+
+    with TestClient(app) as client:
+        accounts = [
+            ("district.purnea@swasthya.gov.in", "District@123", "DISTRICT_ADMIN", "Bihar", "Purnea"),
+            ("state.bihar@swasthya.gov.in", "State@123", "STATE_ADMIN", "Bihar", None),
+            ("central.admin@swasthya.gov.in", "Central@123", "CENTRAL_ADMIN", None, None),
+        ]
+
+        for email, password, expected_role, expected_state, expected_district in accounts:
+            response = client.post(
+                "/api/auth/login",
+                json={"username": email, "password": password},
+            )
+            assert response.status_code == 200, (
+                f"POST /api/auth/login failed for {email}: status={response.status_code}, response={response.text}"
+            )
+            data = response.json()
+            assert data["success"] is True
+            assert "access_token" in data and len(data["access_token"]) > 20
+            assert data["token_type"] == "bearer"
+
+            user_obj = data["user"]
+            assert user_obj["role"] == expected_role, (
+                f"Role mismatch for {email}: expected {expected_role}, got {user_obj.get('role')}"
+            )
+            if expected_state:
+                assert user_obj["state"] == expected_state
+            if expected_district:
+                assert user_obj["district"] == expected_district
+
